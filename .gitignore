@@ -1,0 +1,4 @@
+tools/ghidra_12.2_PUBLIC 
+tools/ghidra_12.2_PUBLIC/*
+port/build
+port/build/*
