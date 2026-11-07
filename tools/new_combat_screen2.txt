@@ -1,0 +1,182 @@
+static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D enemyTex) {
+    int W = GetScreenWidth(), H = GetScreenHeight();
+    const Color NAVY = {8, 8, 60, 255};
+    const Color PANEL = {14, 14, 92, 255};
+    const Color BORDER = {224, 192, 24, 255};
+    const Color TXT = {236, 236, 240, 255};
+    const Color DIM = {168, 168, 178, 255};
+    ClearBackground(NAVY);
+
+    int topH = (int)(H * 0.155f);
+    int midH = (int)(H * 0.60f);
+    int botY = topH + midH;
+    int botH = H - botY;
+
+    const Unit& A = gMission.units[v.atk];
+    const Unit& D = gMission.units[v.def];
+    const UnitType& TA = gTypes[A.type];
+    const UnitType& TD = gTypes[D.type];
+
+    // ----- top: names + EXP
+    DrawRectangle(0, 0, W, topH, NAVY);
+    int nameSize = (int)(topH * 0.34f);
+    DrawText(TA.name.c_str(), (int)(W * 0.06f), (int)(topH * 0.30f), nameSize, TXT);
+    DrawText(TD.name.c_str(), (int)(W * 0.72f), (int)(topH * 0.30f), nameSize, TXT);
+    DrawText("EXP", (int)(W * 0.29f), (int)(topH * 0.34f), (int)(topH * 0.26f), TXT);
+    DrawText("EXP", (int)(W * 0.64f), (int)(topH * 0.34f), (int)(topH * 0.26f), TXT);
+    auto expBox = [&](float x, int val) {
+        float s = topH * 0.66f;
+        float y = topH * 0.15f;
+        DrawRectangleLinesEx({x, y, s, s}, 3, BORDER);
+        DrawText(TextFormat("%d", val), (int)(x + s * 0.34f), (int)(y + s * 0.16f),
+                 (int)(s * 0.72f), BORDER);
+    };
+    expBox((float)(W * 0.36f), A.rank + 1);
+    expBox((float)(W * 0.56f), D.rank + 1);
+
+    // ----- middle: two 128x128 logical terrain panels at native aspect
+    DrawRectangle(0, topH, W, midH, NAVY);
+    float scale = W / 320.0f;
+    float pan = 128.0f * scale;
+    float panY = topH + (midH - pan) * 0.5f;
+    float panX = (W - pan * 2) * 0.5f;
+    auto drawPanel = [&](int idx, float x) {
+        if (gCombatPanels.empty() || !gCombatPanels[idx].id) return;
+        Texture2D& t = gCombatPanels[idx];
+        DrawTexturePro(t, {0, 0, (float)t.width, (float)t.height},
+                       {x, panY, pan, pan}, {0, 0}, 0, WHITE);
+    };
+    drawPanel(v.panelA, panX);
+    drawPanel(v.panelB, panX + pan);
+    if (v.panelA != v.panelB)
+        DrawRectangle((int)(panX + pan) - 2, (int)panY, 4, (int)pan, NAVY);
+
+    float t = v.t;
+    int nA = (v.dmgAtk > 0 && t > 1.60f) ? (v.hpA1 + 1) : (v.hpA0 + 1);
+    int nD = (t > 0.85f) ? (v.hpD1 + 1) : (v.hpD0 + 1);
+    nA = std::clamp(nA, 0, 8);
+    nD = std::clamp(nD, 0, 8);
+
+    static const float FORM[8][2] = {
+        {-1.7f, -1.3f}, {-0.5f, -1.7f}, {0.7f, -1.6f}, {1.8f, -0.9f},
+        {-1.8f, 0.2f}, {-0.2f, -0.2f}, {1.8f, 0.5f}, {-0.7f, 1.5f}
+    };
+    float us = pan * 0.13f;
+    float cy = panY + pan * 0.52f;
+    float ax = panX + pan * 0.5f;
+    float dx = panX + pan * 1.5f;
+
+    // drive-in from both sides
+    float enter = std::clamp(t / 0.55f, 0.0f, 1.0f);
+    float ease = 1.0f - (1.0f - enter) * (1.0f - enter);
+    float slideA = -(1.0f - ease) * pan * 1.2f;
+    float slideD = (1.0f - ease) * pan * 1.2f;
+
+    auto drawArmy = [&](float cx, int count, int type, Texture2D& tex, Color tint) {
+        int idx = 160 + type;
+        Rectangle src{(float)((idx % 32) * 32), (float)((idx / 32) * 32), 32, 32};
+        for (int i = 0; i < count; ++i) {
+            float ox = FORM[i][0] * us;
+            float oy = FORM[i][1] * us;
+            DrawTexturePro(tex, src,
+                           {cx + ox - us / 2, cy + oy - us / 2, us, us},
+                           {0, 0}, 0, tint);
+        }
+    };
+
+    float recoil = (t > 0.55f && t < 0.82f)
+                       ? -us * 0.22f * std::sin((t - 0.55f) / 0.27f * 3.14159f)
+                       : 0.0f;
+    Color tintA = (v.dmgAtk > 0 && t > 1.60f && t < 1.95f) ? Color{255, 140, 140, 255} : WHITE;
+    Color tintD = (t > 0.80f && t < 1.20f) ? Color{255, 140, 140, 255} : WHITE;
+    drawArmy(ax + slideA + recoil, nA, A.type, playerTex, tintA);
+    Texture2D& defTex = gEnemyFlipTex.id ? gEnemyFlipTex : enemyTex;
+    drawArmy(dx + slideD, nD, D.type, defTex, tintD);
+
+    // direct fire tracers (or indirect shell)
+    if (t > 0.55f && t < 0.82f) {
+        if (v.mode > 0) {
+            float k = (t - 0.55f) / 0.27f;
+            float sx = ax + slideA + (dx + slideD - ax - slideA) * k;
+            float sy = cy - std::sin(k * 3.14159f) * pan * 0.28f;
+            if (gFxShell.id)
+                DrawTexturePro(gFxShell, {0, 0, (float)gFxShell.width, (float)gFxShell.height},
+                               {sx - us * 0.6f, sy - us * 0.6f, us * 1.2f, us * 1.2f},
+                               {us * 0.6f, us * 0.6f}, t * 720.0f, WHITE);
+        } else {
+            for (int i = 0; i < nA; ++i) {
+                float ox = FORM[i][0] * us;
+                float oy = FORM[i][1] * us;
+                float sx = ax + slideA + recoil + ox + us * 0.45f;
+                float sy = cy + oy;
+                float tx = dx + slideD + ((i % 3) - 1) * us * 0.7f;
+                float ty = cy + oy * 0.7f;
+                DrawLineEx({sx, sy}, {tx, ty}, 2.0f, Fade(Color{255, 245, 160, 255}, 0.9f));
+            }
+        }
+    }
+    // counter fire
+    if (v.dmgAtk > 0 && t > 1.45f && t < 1.70f) {
+        for (int i = 0; i < nD; ++i) {
+            float ox = FORM[i][0] * us;
+            float oy = FORM[i][1] * us;
+            float sx = dx + slideD - ox - us * 0.45f;
+            float sy = cy - oy;
+            float tx = ax + slideA + ((i % 3) - 1) * us * 0.7f;
+            float ty = cy - oy * 0.7f;
+            DrawLineEx({sx, sy}, {tx, ty}, 2.0f, Fade(Color{255, 200, 120, 255}, 0.9f));
+        }
+    }
+
+    // explosions
+    if (t > 0.78f && t < 1.35f) {
+        for (int i = 0; i < 4; ++i) {
+            float ph = t * 7.0f + i * 1.6f;
+            drawExplosion(dx + slideD + std::sin(ph) * us * 1.8f,
+                          cy + std::cos(ph * 1.3f) * us * 1.5f,
+                          us * (0.55f + 0.15f * std::sin(ph * 2.0f)), ph);
+        }
+    }
+    if (v.dmgAtk > 0 && t > 1.50f && t < 1.95f) {
+        for (int i = 0; i < 3; ++i) {
+            float ph = t * 7.0f + i * 2.1f;
+            drawExplosion(ax + slideA + std::sin(ph) * us * 1.6f,
+                          cy + std::cos(ph) * us * 1.4f, us * 0.55f, ph);
+        }
+    }
+    if (t > 0.55f && t < 0.78f)
+        DrawCircleV({ax + slideA + us * 2.6f, cy}, us * 0.30f, YELLOW);
+
+    if (v.dmgDef > 0 && t > 0.80f)
+        DrawText(TextFormat("-%d", v.dmgDef), (int)(W * 0.62f), topH + 12,
+                 (int)(H * 0.045f), Color{255, 90, 90, 255});
+    if (v.dmgAtk > 0 && t > 1.60f)
+        DrawText(TextFormat("-%d", v.dmgAtk), (int)(W * 0.10f), topH + 12,
+                 (int)(H * 0.045f), ORANGE);
+
+    // ----- bottom: attack / defense / terrain
+    DrawRectangle(0, botY, W, botH, NAVY);
+    auto statBox = [&](float x, float w, const char* l1, const char* l2) {
+        float h = botH * 0.70f;
+        float y = botY + botH * 0.15f;
+        DrawRectangleRec({x, y, w, h}, PANEL);
+        DrawRectangleLinesEx({x, y, w, h}, 3, BORDER);
+        int fs = (int)(botH * 0.22f);
+        DrawText(l1, (int)(x + w * 0.06f), (int)(y + h * 0.16f), fs, TXT);
+        DrawText(l2, (int)(x + w * 0.06f), (int)(y + h * 0.52f), fs, TXT);
+    };
+    statBox(W * 0.03f, W * 0.25f, TextFormat("ATK %d", v.atkStrength),
+            TextFormat("DEF %d", v.defStrength));
+    statBox(W * 0.72f, W * 0.25f, TextFormat("ATK %d", v.ctrStrength),
+            TextFormat("DEF %d", v.ctrDefStrength));
+
+    DrawText("TERRAIN", (int)(W * 0.43f), (int)(botY + botH * 0.14f),
+             (int)(botH * 0.22f), TXT);
+    DrawText(TextFormat("%d%%", gTerrain[std::clamp(v.terrainA, 0, 15)].def),
+             (int)(W * 0.39f), (int)(botY + botH * 0.54f), (int)(botH * 0.22f), DIM);
+    DrawText(TextFormat("%d%%", gTerrain[std::clamp(v.terrainB, 0, 15)].def),
+             (int)(W * 0.54f), (int)(botY + botH * 0.54f), (int)(botH * 0.22f), DIM);
+
+    DrawText("SPACE / click", W / 2 - 70, H - (int)(botH * 0.18f),
+             (int)(botH * 0.15f), DIM);
+}

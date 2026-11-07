@@ -1,0 +1,20 @@
+{
+  "hp_damage_multiplier": [
+    100,
+    105,
+    110,
+    120,
+    130,
+    140,
+    160,
+    200
+  ],
+  "variance": {
+    "20-24": 15,
+    "60-64": 20,
+    "80-82": 2,
+    "98-99": 40,
+    "default": "(150-roll)/10"
+  },
+  "formula": "see RE_FINDINGS.md section 5"
+}

@@ -1,0 +1,197 @@
+static void drawEffect(Texture2D& tex, float x, float y, float s, float rot, Color tint) {
+    if (!tex.id) return;
+    DrawTexturePro(tex, {0, 0, (float)tex.width, (float)tex.height},
+                   {x, y, s, s}, {s / 2, s / 2}, rot, tint);
+}
+
+static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D enemyTex) {
+    int W = GetScreenWidth(), H = GetScreenHeight();
+    const Color NAVY = {0, 0, 80, 255};
+    const Color PANEL = {0, 0, 64, 255};
+    const Color BORDER = {224, 192, 24, 255};
+    const Color TXT = {236, 236, 240, 255};
+    const Color DIM = {168, 168, 178, 255};
+    ClearBackground(BLACK);
+
+    // Original layout: a 512x480 playfield centred in the 640x480 screen.
+    // The combat field is exactly two 256x256 panels (logical 128x128 each).
+    float playX = W * 0.10f;
+    float playW = W * 0.80f;
+    float topH  = H * 0.20f;      // 96 / 480
+    float pan   = playW * 0.50f;  // 256 physical, also 128 logical
+    float panY  = H * 0.30f;      // 144 / 480
+    float botY  = H * 0.8333f;    // 400 / 480
+    float botH  = H - botY;
+
+    const Unit& A = gMission.units[v.atk];
+    const Unit& D = gMission.units[v.def];
+    const UnitType& TA = gTypes[A.type];
+    const UnitType& TD = gTypes[D.type];
+
+    // ----- top: names + EXP
+    DrawRectangle((int)playX, 0, (int)playW, (int)topH, NAVY);
+    int nameSize = (int)(topH * 0.30f);
+    DrawText(TA.name.c_str(), (int)(playX + playW * 0.03f), (int)(topH * 0.34f), nameSize, TXT);
+    DrawText(TD.name.c_str(), (int)(playX + playW * 0.76f), (int)(topH * 0.34f), nameSize, TXT);
+    int expSize = (int)(topH * 0.22f);
+    DrawText("EXP", (int)(playX + playW * 0.30f), (int)(topH * 0.38f), expSize, TXT);
+    DrawText("EXP", (int)(playX + playW * 0.659f), (int)(topH * 0.38f), expSize, TXT);
+    auto expBox = [&](float fx, int val) {
+        float s = topH * 0.46f;
+        float x = playX + playW * fx;
+        float y = topH * 0.22f;
+        DrawRectangleRec({x, y, s, s}, PANEL);
+        DrawRectangleLinesEx({x, y, s, s}, std::max(2.0f, topH * 0.035f), BORDER);
+        DrawText(TextFormat("%d", val), (int)(x + s * 0.33f), (int)(y + s * 0.12f),
+                 (int)(s * 0.70f), BORDER);
+    };
+    expBox(0.335f, A.rank + 1);
+    expBox(0.613f, D.rank + 1);
+
+    // ----- middle: black field, two colour-keyed terrain panels
+    float t = v.t;
+    int nA = (v.dmgAtk > 0 && t > 1.60f) ? (v.hpA1 + 1) : (v.hpA0 + 1);
+    int nD = (t > 0.85f) ? (v.hpD1 + 1) : (v.hpD0 + 1);
+    nA = std::clamp(nA, 0, 8);
+    nD = std::clamp(nD, 0, 8);
+
+    // 8 formation slots in panel-relative coordinates, scattered like the
+    // original battle screen.  The defender uses the mirrored layout.
+    static const float FORM[8][2] = {
+        {0.16f, 0.40f}, {0.24f, 0.23f}, {0.31f, 0.33f}, {0.40f, 0.50f},
+        {0.49f, 0.29f}, {0.57f, 0.23f}, {0.63f, 0.55f}, {0.20f, 0.58f}
+    };
+    float us = pan * 0.125f;
+    float axPanel = playX;
+    float dxPanel = playX + pan;
+
+    // drive-in from both sides
+    float enter = std::clamp(t / 0.55f, 0.0f, 1.0f);
+    float ease = 1.0f - (1.0f - enter) * (1.0f - enter);
+    float slideA = -(1.0f - ease) * pan * 1.15f;
+    float slideD = (1.0f - ease) * pan * 1.15f;
+
+    auto panelPoint = [&](float px, float slotX, float slotY) {
+        return Vector2{px + slotX * pan, panY + slotY * pan};
+    };
+
+    auto drawArmy = [&](float px, int count, int type, Texture2D& tex, Color tint,
+                        float slide, bool mirror) {
+        int idx = 160 + type;
+        Rectangle src{(float)((idx % 32) * 32), (float)((idx / 32) * 32), 32, 32};
+        for (int i = 0; i < count; ++i) {
+            float sx = mirror ? (1.0f - FORM[i][0]) : FORM[i][0];
+            Vector2 p = panelPoint(px, sx, FORM[i][1]);
+            p.x += slide;
+            DrawTexturePro(tex, src, {p.x - us / 2, p.y - us / 2, us, us},
+                           {0, 0}, 0, tint);
+        }
+    };
+
+    float fireT = 0.55f, fireDur = 0.27f;
+    float recoil = (t > fireT && t < fireT + fireDur)
+                       ? -us * 0.22f * std::sin((t - fireT) / fireDur * 3.14159f)
+                       : 0.0f;
+    Color tintA = (v.dmgAtk > 0 && t > 1.60f && t < 1.95f) ? Color{255, 140, 140, 255} : WHITE;
+    Color tintD = (t > 0.80f && t < 1.20f) ? Color{255, 140, 140, 255} : WHITE;
+
+    // draw terrain first, then armies on top
+    auto drawPanel = [&](int idx, float x) {
+        if (gCombatPanels.empty() || !gCombatPanels[idx].id) return;
+        Texture2D& tex = gCombatPanels[idx];
+        DrawTexturePro(tex, {0, 0, (float)tex.width, (float)tex.height},
+                       {x, panY, pan, pan}, {0, 0}, 0, WHITE);
+    };
+    drawPanel(v.panelA, axPanel);
+    drawPanel(v.panelB, dxPanel);
+    if (v.panelA != v.panelB)
+        DrawRectangle((int)(dxPanel) - 1, (int)panY, 2, (int)pan, BLACK);
+
+    drawArmy(axPanel, nA, A.type, playerTex, tintA, slideA + recoil, false);
+    Texture2D& defTex = gEnemyFlipTex.id ? gEnemyFlipTex : enemyTex;
+    drawArmy(dxPanel, nD, D.type, defTex, tintD, slideD, true);
+
+    // ----- direct fire: muzzle flash + projectile streak; indirect: shell arc
+    if (t > fireT && t < fireT + fireDur) {
+        float k = (t - fireT) / fireDur;
+        if (v.mode > 0) {
+            float sx = axPanel + pan * 0.55f + slideA;
+            float exx = dxPanel + pan * 0.45f + slideD;
+            float x = sx + (exx - sx) * k;
+            float y = panY + pan * 0.45f - std::sin(k * 3.14159f) * pan * 0.30f;
+            drawEffect(gFxShell, x, y, us * 0.55f, k * 900.0f, WHITE);
+        } else {
+            Vector2 p = panelPoint(axPanel, FORM[0][0], FORM[0][1]);
+            p.x += slideA + recoil;
+            drawEffect(gFxFlash, p.x + us * 0.5f, p.y, us * 1.15f,
+                       k * 360.0f, Fade(WHITE, 0.95f));
+            float sx = p.x + us * 0.4f;
+            float exx = dxPanel + pan * 0.35f;
+            float x = sx + (exx - sx) * k;
+            float y = p.y + (panY + pan * 0.45f - p.y) * k;
+            drawEffect(gFxStreak, x, y, us * 1.0f, 0.0f, WHITE);
+        }
+    }
+    // counter fire
+    if (v.dmgAtk > 0 && t > 1.45f && t < 1.70f) {
+        float k = (t - 1.45f) / 0.25f;
+        Vector2 p = panelPoint(dxPanel, 1.0f - FORM[0][0], FORM[0][1]);
+        p.x += slideD;
+        drawEffect(gFxFlash, p.x - us * 0.5f, p.y, us * 0.9f, k * 360.0f,
+                   Fade(WHITE, 0.95f));
+        float exx = axPanel + pan * 0.65f;
+        float x = p.x - us * 0.4f + (exx - p.x + us * 0.4f) * k;
+        float y = p.y + (panY + pan * 0.50f - p.y) * k;
+        drawEffect(gFxStreak, x, y, us * 0.9f, 0.0f, WHITE);
+    }
+
+    // ----- explosions (original 196 starburst + 197 debris)
+    if (t > 0.78f && t < 1.35f) {
+        for (int i = 0; i < 4; ++i) {
+            float ph = t * 7.0f + i * 1.6f;
+            drawExplosion(dxPanel + pan * (0.32f + 0.05f * i) + std::sin(ph) * us * 1.2f,
+                          panY + pan * 0.45f + std::cos(ph * 1.3f) * us * 1.1f,
+                          us * (0.55f + 0.15f * std::sin(ph * 2.0f)), ph);
+        }
+    }
+    if (v.dmgAtk > 0 && t > 1.50f && t < 1.95f) {
+        for (int i = 0; i < 3; ++i) {
+            float ph = t * 7.0f + i * 2.1f;
+            drawExplosion(axPanel + pan * (0.30f + 0.06f * i) + std::sin(ph) * us * 1.0f,
+                          panY + pan * 0.48f + std::cos(ph) * us, us * 0.55f, ph);
+        }
+    }
+
+    if (v.dmgDef > 0 && t > 0.80f)
+        DrawText(TextFormat("-%d", v.dmgDef), (int)(dxPanel + pan * 0.30f), (int)(panY + 6),
+                 (int)(H * 0.042f), Color{255, 90, 90, 255});
+    if (v.dmgAtk > 0 && t > 1.60f)
+        DrawText(TextFormat("-%d", v.dmgAtk), (int)(axPanel + pan * 0.06f), (int)(panY + 6),
+                 (int)(H * 0.042f), ORANGE);
+
+    // ----- bottom: attack / defense / terrain
+    DrawRectangle((int)playX, (int)botY, (int)playW, (int)botH, NAVY);
+    auto statBox = [&](float x, float w, const char* l1, const char* l2) {
+        float h = botH * 0.72f;
+        float y = botY + botH * 0.14f;
+        DrawRectangleRec({x, y, w, h}, PANEL);
+        DrawRectangleLinesEx({x, y, w, h}, std::max(2.0f, botH * 0.06f), BORDER);
+        int fs = (int)(botH * 0.24f);
+        DrawText(l1, (int)(x + w * 0.06f), (int)(y + h * 0.16f), fs, TXT);
+        DrawText(l2, (int)(x + w * 0.06f), (int)(y + h * 0.52f), fs, TXT);
+    };
+    statBox(playX + playW * 0.02f, playW * 0.30f,
+            TextFormat("ATK %d", v.atkStrength), TextFormat("DEF %d", v.defStrength));
+    statBox(playX + playW * 0.68f, playW * 0.30f,
+            TextFormat("ATK %d", v.ctrStrength), TextFormat("DEF %d", v.ctrDefStrength));
+
+    DrawText("TERRAIN", (int)(playX + playW * 0.42f), (int)(botY + botH * 0.10f),
+             (int)(botH * 0.20f), TXT);
+    DrawText(TextFormat("%d%%", gTerrain[std::clamp(v.terrainA, 0, 15)].def),
+             (int)(playX + playW * 0.40f), (int)(botY + botH * 0.52f), (int)(botH * 0.22f), DIM);
+    DrawText(TextFormat("%d%%", gTerrain[std::clamp(v.terrainB, 0, 15)].def),
+             (int)(playX + playW * 0.55f), (int)(botY + botH * 0.52f), (int)(botH * 0.22f), DIM);
+
+    DrawText("SPACE / click", (int)(playX + playW * 0.40f), (int)(H - botH * 0.20f),
+             (int)(botH * 0.14f), DIM);
+}
