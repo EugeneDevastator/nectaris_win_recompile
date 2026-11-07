@@ -3,8 +3,19 @@ from PIL import Image
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 b = open(os.path.join(ROOT, 'game', 'Nec.exe'), 'rb').read()
-bgr = open(os.path.join(ROOT, 'dump', 'palette_bgr.bin'), 'rb').read()
-PAL = [(bgr[i*4+2], bgr[i*4+1], bgr[i*4]) for i in range(256)]
+# Combat terrain is drawn with the *live* battle palette (captured from
+# 0x480f20 while the combat screen was up).  dump/palette_bgr.bin is the
+# boot/default palette and gives completely wrong terrain colours.
+pal_battle = os.path.join(ROOT, 'dump', 'palette_battle.bin')
+if os.path.exists(pal_battle):
+    raw = open(pal_battle, 'rb').read()
+    # LOGPALETTE: palVersion(2), palNumEntries(2) then 256 x RGBQUAD
+    PAL = [(raw[4 + i * 4], raw[5 + i * 4], raw[6 + i * 4]) for i in range(256)]
+    print('palette: dump/palette_battle.bin (live combat)')
+else:
+    bgr = open(os.path.join(ROOT, 'dump', 'palette_bgr.bin'), 'rb').read()
+    PAL = [(bgr[i*4+2], bgr[i*4+1], bgr[i*4]) for i in range(256)]
+    print('palette: dump/palette_bgr.bin (fallback)')
 tb_path = os.path.join(ROOT, 'dump', 'tilebank_battle.bin')
 if not os.path.exists(tb_path):
     tb_path = os.path.join(ROOT, 'dump', 'tilebank.bin')
@@ -64,7 +75,11 @@ for i, p in enumerate(ptrs):
     for ty in range(16):
         for tx in range(16):
             e = struct.unpack_from('<H', raw, (ty*16+tx)*2)[0]
-            tile = e & 0x7ff; bank = (e >> 0xb) + 1
+            tile = e & 0x7ff
+            # In this version the combat terrain close-ups all use the ground
+            # palette (bank 1).  The high bits in the tilemap are not a second
+            # palette (bank 3 would turn the canyon/water green).
+            bank = 1
             base = tile*256
             for y in range(16):
                 for x in range(16):

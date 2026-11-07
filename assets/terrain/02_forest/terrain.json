@@ -1,0 +1,16 @@
+{
+  "id": 2,
+  "name": "forest",
+  "defense": 20,
+  "move_cost": [
+    2,
+    2,
+    4,
+    1
+  ],
+  "battle_left": "battle_left.png",
+  "battle_right": "battle_right.png",
+  "world_map": "world_map.png",
+  "combat_panel_left": 0,
+  "combat_panel_right": 1
+}

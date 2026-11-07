@@ -53,6 +53,13 @@ Headless AI demo (prints 3 rounds of enemy actions, including ranged fire):
 port/build/nectaris.exe assets assets/maps/all_units_test.json --demo
 ```
 
+Combat screenshot (last argument: `0` = direct layout, `1` = ranged layout):
+
+```powershell
+port/build/nectaris.exe assets assets/maps/all_units_test.json --combatshot direct.png 1.4 0
+port/build/nectaris.exe assets assets/maps/all_units_test.json --combatshot ranged.png 1.4 1
+```
+
 ## Mission format
 
 `assets/maps/<name>.json`:
@@ -116,6 +123,24 @@ line. No rebuild needed.
 * `ability_flags` are the original bit flags (0x20 attack-capable, 0x40
   indirect, 0x80/0x10/0x01 special).
 
+## Terrain (per-type folders)
+
+```
+assets/terrain/00_void … 15_x14/
+  terrain.json       id, name, defense, move costs, panel ids
+  battle_left.png    combat backdrop (attacker side)
+  battle_right.png   combat backdrop (defender side)
+  world_map.png      placeholder world-map texture
+```
+
+The 24 pair-specific combat panels remain in `assets/art/combat_terrain/`
+(`panel_00..23.png`), decoded with the **live combat palette** captured from the
+original while a battle was running (`dump/palette_battle.bin`, a LOGPALETTE
+from `0x480f20`). The boot/default palette in `dump/palette_bgr.bin` gives
+wrong (gray/green) terrain colours, so don't use it for the battle backdrops.
+Transparent areas are filled by tiling the terrain vertically and diffusing any
+interior holes, so no black bands appear in battle.
+
 ## Art (per-unit folders)
 
 Each unit lives in its own folder under `assets/units/unit_XX/` and has exactly
@@ -168,20 +193,23 @@ Every resolved attack switches to a battle screen modeled on the original:
   **128×128 logical (256×256 pixel) panels** side by side.
 * **top bar**: both unit names and the yellow **HP boxes** (value = HP + 1)
 * **middle**: the two original combat terrain close-ups, drawn at native
-  aspect with the magenta colour key (`palette 0x18`) transparent, over black.
+  aspect (terrain texture fills every pixel - no black bands).
   Each side has **8 vehicles** using the per-unit horizontal sprite
   (`assets/units/unit_XX/horizontal.png`), blue for the player and the same
   sprite flipped + tinted green for the enemy; losses remove vehicles as HP drops.
 * **ride-in**: vehicles drive in from the screen edges to their staggered 2×4
   formation slots, arriving one by one at the old materialise beats.
+* **ranged layout**: indirect/ranged battles open a wider black gap between the
+  two terrain panels (the panels shrink slightly so the pair still fits the
+  playfield); direct battles stay edge-to-edge.
 * **simultaneous combat**: both sides fire at the same moment, both take
   explosions and HP damage together (no attacker-then-counter sequence); the
   two sprites are drawn facing each other (player and enemy are both flipped).
 * **bottom bar**: `ATK` / `DEF` boxes for both sides and the terrain-effect
   percentages.
 * **animation**: muzzle flash (`193`) + projectile (`195`), the original
-  **orange/white explosion (`194`) + flames (`196`)** on the defender, HP box
-  drop, then the counterattack; `SPACE` / click skips.
+  **orange/white explosion (`194`) + flames (`196`)** on both sides at once,
+  then both HP boxes drop; `SPACE` / click skips.
 
 Panel selection is the original algorithm (`FUN_00415790`): the first panel is
 `table[remap[atk]*16 + remap[def] + 8]`, the second

@@ -705,6 +705,16 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
     float botY  = H * 0.8333f;    // 400 / 480
     float botH  = H - botY;
 
+    // Ranged (indirect) battles open a wider black gap between the two
+    // close-up panels.  The panels shrink slightly so the pair still fits in
+    // the playfield and stays aligned with the top/bottom bars.
+    bool ranged = v.mode > 0;
+    float gap = ranged ? playW * 0.05f : 0.0f;
+    if (ranged) {
+        pan = (playW - gap) * 0.5f;
+        panY = topH + ((botY - topH) - pan) * 0.5f;
+    }
+
     const Unit& A = gMission.units[v.atk];
     const Unit& D = gMission.units[v.def];
     const UnitType& TA = gTypes[A.type];
@@ -745,7 +755,7 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
     };
     float us = pan * 0.125f;
     float axPanel = playX;
-    float dxPanel = playX + pan;
+    float dxPanel = playX + pan + gap;
 
     // The original materialises the vehicles one by one over ~2 s.
     auto panelPoint = [&](float px, float slotX, float slotY) {
@@ -804,7 +814,7 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
     };
     drawPanel(v.panelA, axPanel);
     drawPanel(v.panelB, dxPanel);
-    if (v.panelA != v.panelB)
+    if (!ranged && v.panelA != v.panelB)
         DrawRectangle((int)(dxPanel) - 1, (int)panY, 2, (int)pan, BLACK);
 
     drawArmy(axPanel, nA, A.type, playerTex, tintA, recoilA, false);
@@ -1102,6 +1112,7 @@ int main(int argc, char** argv) {
             gCv.panelB = combatPanelFor(td, ta, false, false);
             gCv.t = 2.7f;
             if (argc > 5) gCv.t = (float)atof(argv[5]);
+            if (argc > 6) gCv.mode = atoi(argv[6]);  // screenshot hook: 1 = ranged layout
             for (int k = 0; k < 6; ++k) {
                 BeginDrawing();
                 drawCombatScreen(gCv, playerTex, enemyTex);

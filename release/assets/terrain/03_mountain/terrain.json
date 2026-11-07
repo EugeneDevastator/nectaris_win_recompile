@@ -1,0 +1,16 @@
+{
+  "id": 3,
+  "name": "mountain",
+  "defense": 30,
+  "move_cost": [
+    3,
+    3,
+    255,
+    2
+  ],
+  "battle_left": "battle_left.png",
+  "battle_right": "battle_right.png",
+  "world_map": "world_map.png",
+  "combat_panel_left": 2,
+  "combat_panel_right": 3
+}

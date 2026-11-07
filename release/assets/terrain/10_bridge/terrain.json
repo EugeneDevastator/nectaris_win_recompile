@@ -1,0 +1,16 @@
+{
+  "id": 10,
+  "name": "bridge",
+  "defense": 35,
+  "move_cost": [
+    1,
+    1,
+    1,
+    1
+  ],
+  "battle_left": "battle_left.png",
+  "battle_right": "battle_right.png",
+  "world_map": "world_map.png",
+  "combat_panel_left": 10,
+  "combat_panel_right": 11
+}
