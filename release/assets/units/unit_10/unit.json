@@ -1,0 +1,27 @@
+{
+  "id": 10,
+  "name": "TT-1",
+  "attack_ground": 45,
+  "attack_air": 0,
+  "defense": 30,
+  "counter_ground": 1,
+  "counter_air": 1,
+  "movement": 5,
+  "movement_class": 0,
+  "ability_flags": 17,
+  "max_hp": 7,
+  "folder": "unit_10",
+  "combat_chunks": [
+    616,
+    617,
+    618,
+    619
+  ],
+  "combat_sprite_group": 243,
+  "world_map_base": 160,
+  "sprites": [
+    "horizontal.png",
+    "vertical.png"
+  ],
+  "palette": "blue default; tint for enemy"
+}

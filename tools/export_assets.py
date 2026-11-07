@@ -161,11 +161,13 @@ print('exported maps:', len(maps), 'with units:', sum(1 for m in maps if m['unit
 
 # ---------------- all-units test mission ----------------
 W, H = 15, 10
+import random
+random.seed(20240101)
 test = {
     'name': 'all_units_test',
     'width': W, 'height': H,
     'background': '',
-    'terrain': [[1]*W for _ in range(H)],
+    'terrain': [[random.randint(1, 12) for _ in range(W)] for _ in range(H)],
     'units': [],
 }
 # 12 player units + 12 enemy units of each available type, laid out on two rows

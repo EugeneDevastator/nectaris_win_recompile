@@ -1,0 +1,27 @@
+{
+  "id": 16,
+  "name": "MM107",
+  "attack_ground": 0,
+  "attack_air": 85,
+  "defense": 30,
+  "counter_ground": 1,
+  "counter_air": 5,
+  "movement": 5,
+  "movement_class": 0,
+  "ability_flags": 26,
+  "max_hp": 7,
+  "folder": "unit_16",
+  "combat_chunks": [
+    640,
+    641,
+    642,
+    643
+  ],
+  "combat_sprite_group": 249,
+  "world_map_base": 96,
+  "sprites": [
+    "horizontal.png",
+    "vertical.png"
+  ],
+  "palette": "blue default; tint for enemy"
+}

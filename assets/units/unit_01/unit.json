@@ -1,0 +1,27 @@
+{
+  "id": 1,
+  "name": "FX-1",
+  "attack_ground": 0,
+  "attack_air": 90,
+  "defense": 30,
+  "counter_ground": 1,
+  "counter_air": 1,
+  "movement": 12,
+  "movement_class": 4,
+  "ability_flags": 82,
+  "max_hp": 7,
+  "folder": "unit_01",
+  "combat_chunks": [
+    580,
+    581,
+    582,
+    583
+  ],
+  "combat_sprite_group": 234,
+  "world_map_base": 88,
+  "sprites": [
+    "horizontal.png",
+    "vertical.png"
+  ],
+  "palette": "blue default; tint for enemy"
+}

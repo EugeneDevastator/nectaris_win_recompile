@@ -1,0 +1,27 @@
+{
+  "id": 14,
+  "name": "MB-4",
+  "attack_ground": 40,
+  "attack_air": 10,
+  "defense": 20,
+  "counter_ground": 2,
+  "counter_air": 1,
+  "movement": 6,
+  "movement_class": 1,
+  "ability_flags": 29,
+  "max_hp": 7,
+  "folder": "unit_14",
+  "combat_chunks": [
+    632,
+    633,
+    634,
+    635
+  ],
+  "combat_sprite_group": 247,
+  "world_map_base": 80,
+  "sprites": [
+    "horizontal.png",
+    "vertical.png"
+  ],
+  "palette": "blue default; tint for enemy"
+}

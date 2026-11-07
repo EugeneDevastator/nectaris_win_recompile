@@ -1,0 +1,27 @@
+{
+  "id": 21,
+  "name": "NC-1",
+  "attack_ground": 10,
+  "attack_air": 10,
+  "defense": 10,
+  "counter_ground": 1,
+  "counter_air": 1,
+  "movement": 6,
+  "movement_class": 2,
+  "ability_flags": 32,
+  "max_hp": 7,
+  "folder": "unit_21",
+  "combat_chunks": [
+    660,
+    661,
+    662,
+    663
+  ],
+  "combat_sprite_group": 254,
+  "world_map_base": 136,
+  "sprites": [
+    "horizontal.png",
+    "vertical.png"
+  ],
+  "palette": "blue default; tint for enemy"
+}

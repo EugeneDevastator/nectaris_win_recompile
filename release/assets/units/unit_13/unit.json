@@ -1,0 +1,27 @@
+{
+  "id": 13,
+  "name": "MB-5",
+  "attack_ground": 70,
+  "attack_air": 10,
+  "defense": 20,
+  "counter_ground": 1,
+  "counter_air": 1,
+  "movement": 8,
+  "movement_class": 1,
+  "ability_flags": 21,
+  "max_hp": 7,
+  "folder": "unit_13",
+  "combat_chunks": [
+    628,
+    629,
+    630,
+    631
+  ],
+  "combat_sprite_group": 246,
+  "world_map_base": 184,
+  "sprites": [
+    "horizontal.png",
+    "vertical.png"
+  ],
+  "palette": "blue default; tint for enemy"
+}

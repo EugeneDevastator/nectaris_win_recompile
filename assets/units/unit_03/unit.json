@@ -1,0 +1,27 @@
+{
+  "id": 3,
+  "name": "EF-88",
+  "attack_ground": 70,
+  "attack_air": 70,
+  "defense": 50,
+  "counter_ground": 1,
+  "counter_air": 1,
+  "movement": 11,
+  "movement_class": 4,
+  "ability_flags": 83,
+  "max_hp": 7,
+  "folder": "unit_03",
+  "combat_chunks": [
+    588,
+    589,
+    590,
+    591
+  ],
+  "combat_sprite_group": 236,
+  "world_map_base": 104,
+  "sprites": [
+    "horizontal.png",
+    "vertical.png"
+  ],
+  "palette": "blue default; tint for enemy"
+}

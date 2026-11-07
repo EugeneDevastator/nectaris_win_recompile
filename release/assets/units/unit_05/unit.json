@@ -1,0 +1,27 @@
+{
+  "id": 5,
+  "name": "PT-6",
+  "attack_ground": 60,
+  "attack_air": 0,
+  "defense": 60,
+  "counter_ground": 1,
+  "counter_air": 1,
+  "movement": 4,
+  "movement_class": 0,
+  "ability_flags": 17,
+  "max_hp": 7,
+  "folder": "unit_05",
+  "combat_chunks": [
+    596,
+    597,
+    598,
+    599
+  ],
+  "combat_sprite_group": 238,
+  "world_map_base": 120,
+  "sprites": [
+    "horizontal.png",
+    "vertical.png"
+  ],
+  "palette": "blue default; tint for enemy"
+}

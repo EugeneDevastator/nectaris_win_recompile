@@ -1,0 +1,27 @@
+{
+  "id": 7,
+  "name": "GS-81",
+  "attack_ground": 50,
+  "attack_air": 0,
+  "defense": 50,
+  "counter_ground": 1,
+  "counter_air": 1,
+  "movement": 7,
+  "movement_class": 0,
+  "ability_flags": 17,
+  "max_hp": 7,
+  "folder": "unit_07",
+  "combat_chunks": [
+    604,
+    605,
+    606,
+    607
+  ],
+  "combat_sprite_group": 240,
+  "world_map_base": 136,
+  "sprites": [
+    "horizontal.png",
+    "vertical.png"
+  ],
+  "palette": "blue default; tint for enemy"
+}

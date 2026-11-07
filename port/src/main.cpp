@@ -58,6 +58,7 @@ struct Unit {
     int rank = 0;           // 0..7 (damage multiplier tier)
     bool acted = false;
     float px = -1, py = -1; // smoothed pixel position
+    float facing = 0;       // map icon rotation (degrees)
 };
 
 struct Mission {
@@ -79,6 +80,10 @@ static std::vector<Texture2D> gCombatPanels;
 static Texture2D gFxBoom = {0}, gFxDebris = {0};
 static Texture2D gEnemyFlipTex = {0};
 static Texture2D gFxShell = {0}, gFxFlash = {0}, gFxStreak = {0};
+static Texture2D gUnitSprite[24];
+static Texture2D gUnitSpriteFlip[24];
+static Texture2D gUnitMapTex[24], gUnitMapFlipTex[24];
+static Texture2D gVfx[16];
 
 static const char* kGameDir = nullptr;
 static std::string gAssetDir;
@@ -555,18 +560,18 @@ static void drawTerrainColors(const Mission& m) {
 }
 
 static void drawUnitSprite(const Mission& m, const Unit& u, Texture2D playerTex, Texture2D enemyTex) {
-    int idx = 128 + u.type;
-    int sx = (idx % 32) * 32;
-    int sy = (idx / 32) * 32;
+    Texture2D& tex = (u.owner == 0) ? gUnitMapTex[u.type] : gUnitMapFlipTex[u.type];
+    if (!tex.id) return;
     float size = gHexSize * 1.75f;
     float hx, hy;
     hexCenter(u.x, u.y, hx, hy);
-    float dx = (u.px >= 0) ? u.px : hx - size / 2;
-    float dy = (u.py >= 0) ? u.py : hy - size / 2;
-    Rectangle src{(float)sx, (float)sy, 32, 32};
-    Rectangle dst{dx, dy, size, size};
-    Texture2D& tex = (u.owner == 0) ? playerTex : enemyTex;
-    DrawTexturePro(tex, src, dst, {0, 0}, 0, WHITE);
+    // raylib subtracts `origin` from the destination, so pass the centre point
+    float cx = (u.px >= 0) ? u.px + size / 2 : hx;
+    float cy = (u.py >= 0) ? u.py + size / 2 : hy;
+    Rectangle src{0, 0, (float)tex.width, (float)tex.height};
+    Rectangle dst{cx, cy, size, size};
+    Color tint = (u.owner == 0) ? WHITE : Color{150, 255, 150, 255};
+    DrawTexturePro(tex, src, dst, {size / 2, size / 2}, u.facing, tint);
 }
 
 // ------------------------------------------------------------------ combat screen
@@ -649,17 +654,18 @@ static void drawHpBar(float x, float y, float w, float h, int hp0, int hp1, floa
 }
 
 static void drawExplosion(float x, float y, float r, float phase) {
+    int fi = std::clamp((int)(phase * 3.0f), 0, 15);
+    if (gVfx[fi].id) {
+        float s = r * 2.6f;
+        DrawTexturePro(gVfx[fi], {0, 0, (float)gVfx[fi].width, (float)gVfx[fi].height},
+                       {x - s / 2, y - s / 2, s, s}, {0, 0}, 0, WHITE);
+        return;
+    }
     if (gFxBoom.id) {
         float s = r * 1.9f;
         DrawTexturePro(gFxBoom, {0, 0, (float)gFxBoom.width, (float)gFxBoom.height},
                        {x - s / 2, y - s / 2, s, s}, {s / 2, s / 2},
                        phase * 57.29578f, Fade(WHITE, 0.95f));
-        if (gFxDebris.id) {
-            float s2 = r * 1.5f;
-            DrawTexturePro(gFxDebris, {0, 0, (float)gFxDebris.width, (float)gFxDebris.height},
-                           {x - s2 / 2, y - s2 / 2, s2, s2}, {s2 / 2, s2 / 2},
-                           -phase * 23.0f, Fade(WHITE, 0.7f));
-        }
         return;
     }
     DrawCircleV({x, y}, r, Color{255, 160, 30, 255});
@@ -721,12 +727,12 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
         DrawText(TextFormat("%d", val), (int)(x + s * 0.33f), (int)(y + s * 0.12f),
                  (int)(s * 0.70f), BORDER);
     };
-    expBox(0.335f, (v.dmgAtk > 0 && v.t > 3.30f) ? v.hpA1 + 1 : v.hpA0 + 1);
+    expBox(0.335f, (v.dmgAtk > 0 && v.t > 2.45f) ? v.hpA1 + 1 : v.hpA0 + 1);
     expBox(0.613f, (v.t > 2.45f) ? v.hpD1 + 1 : v.hpD0 + 1);
 
     // ----- middle: black field, two colour-keyed terrain panels
     float t = v.t;
-    int nA = (v.dmgAtk > 0 && t > 3.30f) ? (v.hpA1 + 1) : (v.hpA0 + 1);
+    int nA = (v.dmgAtk > 0 && t > 2.45f) ? (v.hpA1 + 1) : (v.hpA0 + 1);
     int nD = (t > 2.45f) ? (v.hpD1 + 1) : (v.hpD0 + 1);
     nA = std::clamp(nA, 0, 8);
     nD = std::clamp(nD, 0, 8);
@@ -742,38 +748,52 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
     float dxPanel = playX + pan;
 
     // The original materialises the vehicles one by one over ~2 s.
-    float revealT = std::clamp((t - 0.05f) / 0.235f, 0.0f, 8.0f);
-
     auto panelPoint = [&](float px, float slotX, float slotY) {
         return Vector2{px + slotX * pan, panY + slotY * pan};
     };
 
-    auto drawArmy = [&](float px, int count, int type, Texture2D& tex, Color tint,
+    // units ride in from the screen edges and arrive at their slot at the time
+    // they used to pop in (0.05 + i*0.235 s)
+    auto drawArmy = [&](float px, int count, int type, Texture2D& tex, Color flash,
                         float nudge, bool mirror) {
-        int idx = 160 + type;
-        Rectangle src{(float)((idx % 32) * 32), (float)((idx / 32) * 32), 32, 32};
-        int shown = (int)revealT;
-        for (int i = 0; i < count && i < shown; ++i) {
-            float age = revealT - i;                 // 0..1 for the newest unit
-            float k = std::clamp(age, 0.0f, 1.0f);
-            float s = us * (0.55f + 0.45f * k);      // materialise with a pop
-            float a = std::clamp(age * 1.8f, 0.0f, 1.0f);
+        Texture2D& bt = (type >= 0 && type < 24)
+                            ? (mirror ? gUnitSprite[type] : gUnitSpriteFlip[type])
+                            : tex;
+        if (!bt.id) return;
+        Color team = mirror ? Color{150, 255, 150, 255} : WHITE;
+        Color c = {
+            (unsigned char)(team.r * flash.r / 255),
+            (unsigned char)(team.g * flash.g / 255),
+            (unsigned char)(team.b * flash.b / 255),
+            (unsigned char)flash.a
+        };
+        Rectangle src = {0, 0, (float)bt.width, (float)bt.height};
+        const float dur = 0.70f;
+        for (int i = 0; i < count; ++i) {
+            float arrive = 0.05f + i * 0.235f;
+            float start = arrive - dur;
+            if (t < start) continue;
+            float k = std::clamp((t - start) / dur, 0.0f, 1.0f);
+            float ease = 1.0f - (1.0f - k) * (1.0f - k);
             float sx = mirror ? (1.0f - FORM[i][0]) : FORM[i][0];
-            Vector2 p = panelPoint(px, sx, FORM[i][1]);
-            p.x += nudge;
-            Color c = tint;
-            c.a = (unsigned char)(255 * a);
-            DrawTexturePro(tex, src, {p.x - s / 2, p.y - s / 2, s, s},
-                           {0, 0}, 0, c);
+            Vector2 dest = panelPoint(px, sx, FORM[i][1]);
+            float startX = mirror ? (float)W + us : -(float)us;
+            float x = startX + (dest.x - startX) * ease;
+            float y = dest.y + std::sin(k * 3.14159f * 2.0f) * us * 0.05f;
+            x += nudge;
+            float s = us * 1.3f;
+            DrawTexturePro(bt, src, {x - s / 2, y - s / 2, s, s}, {0, 0}, 0, c);
         }
     };
 
-    float fireT = 2.15f, fireDur = 0.30f;
-    float recoil = (t > fireT && t < fireT + fireDur)
-                       ? -us * 0.22f * std::sin((t - fireT) / fireDur * 3.14159f)
-                       : 0.0f;
-    Color tintA = (v.dmgAtk > 0 && t > 3.35f && t < 3.75f) ? Color{255, 140, 140, 255} : WHITE;
-    Color tintD = (t > 2.45f && t < 2.90f) ? Color{255, 140, 140, 255} : WHITE;
+    float fireT = 2.15f, fireDur = 0.35f;
+    float rk = (t > fireT && t < fireT + fireDur)
+                   ? std::sin((t - fireT) / fireDur * 3.14159f)
+                   : 0.0f;
+    float recoilA = -us * 0.22f * rk;
+    float recoilD = us * 0.22f * rk;
+    Color tintA = (t > 2.45f && t < 2.95f) ? Color{255, 140, 140, 255} : WHITE;
+    Color tintD = tintA;
 
     // draw terrain first, then armies on top
     auto drawPanel = [&](int idx, float x) {
@@ -787,68 +807,45 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
     if (v.panelA != v.panelB)
         DrawRectangle((int)(dxPanel) - 1, (int)panY, 2, (int)pan, BLACK);
 
-    drawArmy(axPanel, nA, A.type, playerTex, tintA, recoil, false);
-    Texture2D& defTex = gEnemyFlipTex.id ? gEnemyFlipTex : enemyTex;
-    drawArmy(dxPanel, nD, D.type, defTex, tintD, 0.0f, true);
+    drawArmy(axPanel, nA, A.type, playerTex, tintA, recoilA, false);
+    drawArmy(dxPanel, nD, D.type, enemyTex, tintD, recoilD, true);
 
-    // ----- direct fire: muzzle flash + projectile streak; indirect: shell arc
+    // ----- both sides fire at the same time
     if (t > fireT && t < fireT + fireDur) {
         float k = (t - fireT) / fireDur;
-        if (v.mode > 0) {
-            float sx = axPanel + pan * 0.55f;
-            float exx = dxPanel + pan * 0.60f;
-            float x = sx + (exx - sx) * k;
-            float y = panY + pan * 0.45f - std::sin(k * 3.14159f) * pan * 0.30f;
-            drawEffect(gFxShell, x, y, us * 0.55f, k * 900.0f, WHITE);
-        } else {
-            Vector2 p = panelPoint(axPanel, FORM[0][0], FORM[0][1]);
-            p.x += recoil;
-            drawEffect(gFxFlash, p.x + us * 0.5f, p.y, us * 1.15f,
-                       k * 360.0f, Fade(WHITE, 0.95f));
-            float sx = p.x + us * 0.4f;
-            float exx = dxPanel + pan * 0.60f;
-            float x = sx + (exx - sx) * k;
-            float y = p.y + (panY + pan * 0.45f - p.y) * k;
-            drawEffect(gFxStreak, x, y, us * 1.0f, 0.0f, WHITE);
-        }
-    }
-    // counter fire
-    if (v.dmgAtk > 0 && t > 3.20f && t < 3.45f) {
-        float k = (t - 3.20f) / 0.25f;
-        Vector2 p = panelPoint(dxPanel, 1.0f - FORM[0][0], FORM[0][1]);
-        drawEffect(gFxFlash, p.x - us * 0.5f, p.y, us * 0.9f, k * 360.0f,
-                   Fade(WHITE, 0.95f));
-        float exx = axPanel + pan * 0.65f;
-        float x = p.x - us * 0.4f + (exx - p.x + us * 0.4f) * k;
-        float y = p.y + (panY + pan * 0.50f - p.y) * k;
-        drawEffect(gFxStreak, x, y, us * 0.9f, 0.0f, WHITE);
+        Vector2 pa = panelPoint(axPanel, FORM[0][0], FORM[0][1]);
+        pa.x += recoilA;
+        drawEffect(gVfx[1], pa.x + us * 0.5f, pa.y, us * 1.15f, 0.0f, WHITE);
+        float ax0 = pa.x + us * 0.4f, ax1 = dxPanel + pan * 0.60f;
+        drawEffect(gVfx[2], ax0 + (ax1 - ax0) * k, pa.y, us, 0.0f, WHITE);
+
+        Vector2 pd = panelPoint(dxPanel, 1.0f - FORM[0][0], FORM[0][1]);
+        pd.x += recoilD;
+        drawEffect(gVfx[1], pd.x - us * 0.5f, pd.y, us * 1.15f, 0.0f, WHITE);
+        float dx0 = pd.x - us * 0.4f, dx1 = axPanel + pan * 0.40f;
+        drawEffect(gVfx[2], dx0 + (dx1 - dx0) * k, pd.y, us, 0.0f, WHITE);
     }
 
-    // ----- explosions (original 194 starburst + 196 flames)
+    // ----- explosions on both sides at the same time
     if (t > 2.45f && t < 3.20f) {
-        for (int i = 0; i < 4; ++i) {
-            int j = i * 2;
-            Vector2 q = panelPoint(dxPanel, 1.0f - FORM[j][0], FORM[j][1]);
-            float ph = (t - 2.45f) * 7.0f + i * 1.6f;
-            drawExplosion(q.x + std::sin(ph) * us * 0.5f,
-                          q.y + std::cos(ph * 1.3f) * us * 0.4f,
-                          us * (0.55f + 0.15f * std::sin(ph * 2.0f)), ph);
-        }
-    }
-    if (v.dmgAtk > 0 && t > 3.30f && t < 3.85f) {
-        for (int i = 0; i < 3; ++i) {
-            int j = i * 2;
-            Vector2 q = panelPoint(axPanel, FORM[j][0], FORM[j][1]);
-            float ph = (t - 3.30f) * 7.0f + i * 2.1f;
-            drawExplosion(q.x + std::sin(ph) * us * 0.5f,
-                          q.y + std::cos(ph) * us * 0.4f, us * 0.55f, ph);
+        for (int side = 0; side < 2; ++side) {
+            float pxp = side == 0 ? axPanel : dxPanel;
+            for (int i = 0; i < 4; ++i) {
+                int j = i * 2;
+                float sx = side == 0 ? FORM[j][0] : (1.0f - FORM[j][0]);
+                Vector2 q = panelPoint(pxp, sx, FORM[j][1]);
+                float ph = (t - 2.45f) * 7.0f + i * 1.6f;
+                drawExplosion(q.x + std::sin(ph) * us * 0.5f,
+                              q.y + std::cos(ph * 1.3f) * us * 0.4f,
+                              us * (0.55f + 0.15f * std::sin(ph * 2.0f)), ph);
+            }
         }
     }
 
     if (v.dmgDef > 0 && t > 2.45f)
         DrawText(TextFormat("-%d", v.dmgDef), (int)(dxPanel + pan * 0.30f), (int)(panY + 6),
                  (int)(H * 0.042f), Color{255, 90, 90, 255});
-    if (v.dmgAtk > 0 && t > 3.30f)
+    if (v.dmgAtk > 0 && t > 2.45f)
         DrawText(TextFormat("-%d", v.dmgAtk), (int)(axPanel + pan * 0.06f), (int)(panY + 6),
                  (int)(H * 0.042f), ORANGE);
 
@@ -909,6 +906,7 @@ static std::string resolveAssets(int argc, char** argv) {
 }
 
 int main(int argc, char** argv) {
+    SetTraceLogLevel(LOG_WARNING);
     gAssetDir = resolveAssets(argc, argv);
     if (gAssetDir.empty()) {
 #ifdef _WIN32
@@ -925,6 +923,7 @@ int main(int argc, char** argv) {
 
     bool shotMode = (argc > 3 && std::string(argv[3]) == "--shot");
     bool combatshot = (argc > 3 && std::string(argv[3]) == "--combatshot");
+    bool unitshot = (argc > 3 && std::string(argv[3]) == "--unitshot");
     std::string shotPath = (argc > 4) ? argv[4] : "port_shot.png";
     bool selftest = (argc > 3 && std::string(argv[3]) == "--selftest");
 
@@ -995,6 +994,7 @@ int main(int argc, char** argv) {
     }
     if (shotMode) SetConfigFlags(FLAG_WINDOW_HIDDEN);
     if (combatshot) SetConfigFlags(FLAG_WINDOW_HIDDEN);
+    if (unitshot) SetConfigFlags(FLAG_WINDOW_HIDDEN);
     SetConfigFlags(FLAG_WINDOW_HIGHDPI);
     InitWindow(mapW + panelW, std::max(mapH, 720), "Nectaris - portable");
     SetTargetFPS(60);
@@ -1016,9 +1016,60 @@ int main(int argc, char** argv) {
     gFxBoom = LoadTexture((gAssetDir + "art/combat_effects/effect_194.png").c_str());
     gFxDebris = LoadTexture((gAssetDir + "art/combat_effects/effect_196.png").c_str());
     gEnemyFlipTex = LoadTexture((gAssetDir + "art/units_bank10_flip.png").c_str());
+    for (int t = 0; t < 24; ++t) {
+        std::string p = gAssetDir + TextFormat("units/unit_%02d/horizontal.png", t);
+        gUnitSprite[t] = LoadTexture(p.c_str());
+        Image im = LoadImage(p.c_str());
+        if (im.data) {
+            ImageFlipHorizontal(&im);
+            gUnitSpriteFlip[t] = LoadTextureFromImage(im);
+            UnloadImage(im);
+        }
+        std::string v = gAssetDir + TextFormat("units/unit_%02d/vertical.png", t);
+        gUnitMapTex[t] = LoadTexture(v.c_str());
+        Image vm = LoadImage(v.c_str());
+        if (vm.data) {
+            ImageFlipHorizontal(&vm);
+            gUnitMapFlipTex[t] = LoadTextureFromImage(vm);
+            UnloadImage(vm);
+        }
+    }
+    for (int i = 0; i < 16; ++i) {
+        gVfx[i] = LoadTexture((gAssetDir + TextFormat("art/combat_effects/vfx_%02d.png", i)).c_str());
+    }
     gFxShell = LoadTexture((gAssetDir + "art/combat_effects/effect_195.png").c_str());
     gFxFlash = LoadTexture((gAssetDir + "art/combat_effects/effect_193.png").c_str());
     gFxStreak = LoadTexture((gAssetDir + "art/combat_effects/effect_195.png").c_str());
+
+    if (unitshot) {
+        int W = GetScreenWidth(), H = GetScreenHeight();
+        int cols = 12, rows = 4;
+        float cw = (float)W / cols, chh = (float)H / rows;
+        for (int frame = 0; frame < 3; ++frame) {
+            BeginDrawing();
+            ClearBackground(Color{10, 10, 18, 255});
+            for (int t = 0; t < 24; ++t) {
+                for (int side = 0; side < 2; ++side) {
+                    int idx = t + side * 24;
+                    int cx = (idx % cols) * cw, cy = (idx / cols) * chh;
+                    Texture2D& tex = gUnitSprite[t];
+                    if (tex.id) {
+                        float s = chh * 0.62f;
+                        Color tint = side == 0 ? WHITE : Color{150, 255, 150, 255};
+                        DrawTexturePro(tex, {0, 0, (float)tex.width, (float)tex.height},
+                                       {cx + cw * 0.5f - s / 2, cy + chh * 0.56f - s / 2, s, s},
+                                       {0, 0}, 0, tint);
+                    }
+                    DrawText(TextFormat("%d %s", t, gTypes[t].name.c_str()),
+                             (int)(cx + 3), (int)(cy + 2), (int)(chh * 0.10f),
+                             side == 0 ? Color{140, 210, 255, 255} : Color{150, 255, 150, 255});
+                }
+            }
+            EndDrawing();
+        }
+        TakeScreenshot(shotPath.c_str());
+        return 0;
+    }
 
     if (combatshot) {
         int a = -1, d = -1;
@@ -1178,6 +1229,10 @@ int main(int argc, char** argv) {
                     resetSelection();
                 } else if (inMap && hit < 0 &&
                            reach[my * gMission.w + mx] <= gTypes[sel.type].movePts) {
+                    float ox, oy, nx2, ny2;
+                    hexCenter(sel.x, sel.y, ox, oy);
+                    hexCenter(mx, my, nx2, ny2);
+                    sel.facing = std::atan2(ny2 - oy, nx2 - ox) * 57.29578f - 90.0f;
                     sel.x = mx;
                     sel.y = my;
                     if (IsSoundValid(sndMove)) PlaySound(sndMove);
@@ -1313,10 +1368,18 @@ int main(int argc, char** argv) {
     if (gFxShell.id) UnloadTexture(gFxShell);
     if (gFxFlash.id) UnloadTexture(gFxFlash);
     if (gFxStreak.id) UnloadTexture(gFxStreak);
+    for (int t = 0; t < 24; ++t) {
+        if (gUnitSprite[t].id) UnloadTexture(gUnitSprite[t]);
+        if (gUnitSpriteFlip[t].id) UnloadTexture(gUnitSpriteFlip[t]);
+        if (gUnitMapTex[t].id) UnloadTexture(gUnitMapTex[t]);
+        if (gUnitMapFlipTex[t].id) UnloadTexture(gUnitMapFlipTex[t]);
+    }
+    for (int i = 0; i < 16; ++i) if (gVfx[i].id) UnloadTexture(gVfx[i]);
     CloseAudioDevice();
     CloseWindow();
     return 0;
 }
+
 
 
 

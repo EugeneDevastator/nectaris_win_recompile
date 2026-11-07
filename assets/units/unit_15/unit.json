@@ -1,0 +1,27 @@
+{
+  "id": 15,
+  "name": "AAG-4",
+  "attack_ground": 30,
+  "attack_air": 65,
+  "defense": 30,
+  "counter_ground": 1,
+  "counter_air": 1,
+  "movement": 6,
+  "movement_class": 0,
+  "ability_flags": 19,
+  "max_hp": 7,
+  "folder": "unit_15",
+  "combat_chunks": [
+    636,
+    637,
+    638,
+    639
+  ],
+  "combat_sprite_group": 248,
+  "world_map_base": 88,
+  "sprites": [
+    "horizontal.png",
+    "vertical.png"
+  ],
+  "palette": "blue default; tint for enemy"
+}

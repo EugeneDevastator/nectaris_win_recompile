@@ -116,22 +116,37 @@ line. No rebuild needed.
 * `ability_flags` are the original bit flags (0x20 attack-capable, 0x40
   indirect, 0x80/0x10/0x01 special).
 
-## Art
+## Art (per-unit folders)
 
-* `assets/art/units_bank09.png` — player map/status sprites (blue)
-* `assets/art/units_bank10.png` — enemy map/status sprites (green)
-* `assets/art/units_bank10_flip.png` — per-sprite mirrored enemy sheet for combat
-* `assets/art/combat_effects/effect_19x.png` — original effect frames, now
-  exported with the correct **orange/white palette (bank 6)**:
-  * `193` muzzle flash burst
-  * `194` main explosion starburst
-  * `195` projectile / shell blob
-  * `196` flame/debris
-* map/status icon: sprite index `128 + type`
-* **combat side-view sprite: sprite index `160 + type`**
-* explosion animation: sprites `194` (starburst) + `196` (flames)
-* `assets/art/tiles_ui_bank0.png` — original 16×16 tile/font bank
-* `assets/art/map_background.png` — example reconstructed terrain
+Each unit lives in its own folder under `assets/units/unit_XX/` and has exactly
+three blue sprites:
+
+```
+assets/units/unit_06/
+  horizontal.png   32x32  (row 4, tile 160+type) — battle sprite
+  vertical.png     32x32  (rotated 90°) — world-map icon (rotated by facing)
+  unit.json        stats + sprite metadata
+```
+
+Only two sprites per unit. Only the blue palette is stored; the enemy is the
+same sprite flipped and tinted green at draw time, so no colour variants are
+needed. The map icon is the vertical sprite rotated by the unit's facing angle;
+all other directions are flips/tints of these two.
+
+The port loads `combat_blue.png` / `combat_green_flip.png` for the battle scene.
+To inspect every unit sprite, run:
+
+```
+port/build/nectaris.exe assets assets/maps/all_units_test.json --unitshot units.png
+```
+
+Other art:
+
+* `assets/art/combat_effects/vfx_sheet.png` — 16 combat VFX frames
+  (`vfx_00..15.png`), extracted from battle-bank tiles 832–896. These drive the
+  muzzle flash, projectile and explosions in the battle scene.
+* `assets/art/combat_effects/effect_19x.png` — original effect frames (bank 6)
+* `assets/art/tiles_ui_bank0.png` — original 16×16 tile/font bank (upright)
 * `assets/art/palette.json` — the game's 256-color palette
 
 To add a unit type: add a JSON entry and paint its sprite at the next free index
@@ -154,12 +169,14 @@ Every resolved attack switches to a battle screen modeled on the original:
 * **top bar**: both unit names and the yellow **HP boxes** (value = HP + 1)
 * **middle**: the two original combat terrain close-ups, drawn at native
   aspect with the magenta colour key (`palette 0x18`) transparent, over black.
-  Each side has **8 vehicles** using the original **semi-rotated combat
-  sprites** (`160 + type`), blue for the player / green for the enemy (mirrored
-  per 32×32 cell); losses remove vehicles as HP drops.
-* **materialise**: exactly like the captured original, vehicles appear **one by
-  one** at their staggered 2×4 formation slots over ~2 s (pop + fade), then the
-  attack plays.
+  Each side has **8 vehicles** using the per-unit horizontal sprite
+  (`assets/units/unit_XX/horizontal.png`), blue for the player and the same
+  sprite flipped + tinted green for the enemy; losses remove vehicles as HP drops.
+* **ride-in**: vehicles drive in from the screen edges to their staggered 2×4
+  formation slots, arriving one by one at the old materialise beats.
+* **simultaneous combat**: both sides fire at the same moment, both take
+  explosions and HP damage together (no attacker-then-counter sequence); the
+  two sprites are drawn facing each other (player and enemy are both flipped).
 * **bottom bar**: `ATK` / `DEF` boxes for both sides and the terrain-effect
   percentages.
 * **animation**: muzzle flash (`193`) + projectile (`195`), the original

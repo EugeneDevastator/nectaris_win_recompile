@@ -1,0 +1,27 @@
+{
+  "id": 12,
+  "name": "MR-22",
+  "attack_ground": 60,
+  "attack_air": 0,
+  "defense": 30,
+  "counter_ground": 4,
+  "counter_air": 1,
+  "movement": 4,
+  "movement_class": 0,
+  "ability_flags": 25,
+  "max_hp": 7,
+  "folder": "unit_12",
+  "combat_chunks": [
+    624,
+    625,
+    626,
+    627
+  ],
+  "combat_sprite_group": 245,
+  "world_map_base": 176,
+  "sprites": [
+    "horizontal.png",
+    "vertical.png"
+  ],
+  "palette": "blue default; tint for enemy"
+}

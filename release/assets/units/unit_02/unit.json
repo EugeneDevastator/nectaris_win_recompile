@@ -1,0 +1,27 @@
+{
+  "id": 2,
+  "name": "AX-87",
+  "attack_ground": 70,
+  "attack_air": 20,
+  "defense": 30,
+  "counter_ground": 1,
+  "counter_air": 1,
+  "movement": 10,
+  "movement_class": 4,
+  "ability_flags": 81,
+  "max_hp": 7,
+  "folder": "unit_02",
+  "combat_chunks": [
+    584,
+    585,
+    586,
+    587
+  ],
+  "combat_sprite_group": 235,
+  "world_map_base": 96,
+  "sprites": [
+    "horizontal.png",
+    "vertical.png"
+  ],
+  "palette": "blue default; tint for enemy"
+}

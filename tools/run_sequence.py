@@ -190,6 +190,12 @@ try:
         open(os.path.join(ROOT, 'dump', 'tilebank_battle.bin'), 'wb').write(
             dm.read_abs(h, tp, 0x80000))
         print('wrote dump/tilebank_battle.bin')
+    try:
+        paldata = dm.read(h, base, 0x480f20, 4 + 256 * 4)
+        open(os.path.join(ROOT, 'dump', 'palette_battle.bin'), 'wb').write(paldata)
+        print('wrote dump/palette_battle.bin')
+    except Exception as e:
+        print('palette dump failed', e)
 except Exception as e:
     print('bank dump failed', e)
 # capture some frames whether or not battle started

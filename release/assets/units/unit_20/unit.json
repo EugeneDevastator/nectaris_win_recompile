@@ -1,0 +1,27 @@
+{
+  "id": 20,
+  "name": "CBX-1",
+  "attack_ground": 10,
+  "attack_air": 10,
+  "defense": 8,
+  "counter_ground": 1,
+  "counter_air": 1,
+  "movement": 9,
+  "movement_class": 2,
+  "ability_flags": 128,
+  "max_hp": 7,
+  "folder": "unit_20",
+  "combat_chunks": [
+    656,
+    657,
+    658,
+    659
+  ],
+  "combat_sprite_group": 253,
+  "world_map_base": 128,
+  "sprites": [
+    "horizontal.png",
+    "vertical.png"
+  ],
+  "palette": "blue default; tint for enemy"
+}

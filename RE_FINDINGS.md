@@ -285,9 +285,17 @@ vehicles **appearing one by one** over ~2 s before the damage resolves; the port
 reproduces that materialisation, the staggered 2×4 formation and the HP-box
 behaviour from `ref/session/frame_00207..00230.png`.
 
-The strategic/tactical map icons and the battle sprites come from the same
-sprite bank (the battle candidates matched indices `164..180`); the port uses
-`160 + type` for the battle side-view sprite.
+The strategic/tactical map icons and the battle sprites are **different sets**.
+The battle sprite format was decoded from `DAT_004846f4` (composite sprite-group
+table, gids 233..255): each unit is 4× 32×32 chunks placed in the order
+upper-right, upper-left, bottom-right, bottom-left, and the bank index is
+`chunk_sprite + 512`.  All 24 types are exported to
+`assets/art/combat_units/battle_unit_XX_{blue,green,green_flip}.png`.
+
+The sprite banks are stored **bottom-up**, so every 32×32 sprite and every
+16×16 tile needs a per-tile vertical flip (this also fixes the combat terrain
+panels).  Palette index 4 is dark red in the static palette but the game's
+animated combat palette turns it orange (the infantry gun).
 
 ### Forcing the combat screen for tooling
 
