@@ -23,7 +23,7 @@ FetchContent_Declare(jsonlib
   GIT_SHALLOW TRUE)
 FetchContent_MakeAvailable(jsonlib)
 
-add_executable(nectaris src/main.cpp)
+add_executable(nectaris src/main.cpp src/combat.cpp)
 target_link_libraries(nectaris PRIVATE raylib nlohmann_json::nlohmann_json)
 if(WIN32)
   target_link_libraries(nectaris PRIVATE winmm)

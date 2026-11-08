@@ -129,72 +129,106 @@ Auxiliary tables:
 
 ---
 
-## 5. Combat formula (`FUN_0041b810`)
+## 5. Combat formula (`FUN_0041b810` + `FUN_00420cd0`)
+
+Implemented in `port/src/combat.cpp` and validated against the original's live
+registers (`tools/validate_combat_formulas.py`,
+`tools/check_combat_formula.py`).
 
 ```
-A = attacker slot, D = defender slot, mode = DAT_00481dbc (0 / 1 / 0x80)
+A = attacker slot, D = defender slot, mode = DAT_00481dbc
 
-tA = unit_type[A]; tD = unit_type[D]
-hA = hp[A]; hD = hp[D]
-mvA = movement_class[tA]; mvD = movement_class[tD]
+isAir(t) = (ability[t] & 0x40) != 0       # DAT_0042b288; selects the air attack
+                                          # column and disables terrain defence
+atkVs(x, y) = isAir(type[y]) ? atk_air[type[x]] : atk_ground[type[x]]
 
-atkVs(x, y) = (mv_y == 4) ? atk_air[t_x] : atk_ground[t_x]
+hA = hp[A] + 1; hD = hp[D] + 1            # the game works in 1..8
 
-canA = (mvD == 4) ? counter_air[tA] : counter_ground[tA]
-canD = (mvA == 4) ? counter_air[tD] : counter_ground[tD]
+canA = isAir(type[D]) ? counter_air[type[A]] : counter_ground[type[A]]
+canD = isAir(type[A]) ? counter_air[type[D]] : counter_ground[type[D]]
 
-if (mode == 0):
+if mode == 0:                             # direct / adjacent
     baseA = (canA < 2) ? atkVs(A, D) : 0
     baseD = (canD == 1) ? atkVs(D, A) : 0
-else:
+else:                                     # indirect / ranged
     baseA = (canA >= 2) ? atkVs(A, D) : 0
     baseD = 0
 
-defA = defense[tA]; defD = defense[tD]
-terA = terrain_defense[terrain[A]]
-terD = terrain_defense[terrain[D]]
+defA = defense[type[A]]; defD = defense[type[D]]
+terA = isAir(type[A]) ? 0 : terrain_def[terrain[A]]
+terD = isAir(type[D]) ? 0 : terrain_def[terrain[D]]
 
-# support fire over the 6 neighbours
-supportA = sum( atkVs(N, D) * (hp[N] + 1) ) / ((hA + 1) * 2)
-supportD = sum( defense[type[N]] * (hp[N] + 1) ) / ((hD + 1) * 2)
+# support fire: only during a direct exchange.  A support unit must be idle
+# (x-state bits 0xE0 == 0 and y bit 0x40 == 0 in the original).
+supportA = sum(atkVs(N, D) * (hp[N] + 1)) for idle friendly N adjacent to D
+supportA /= hA * 2
+supportD = sum(defense[type[N]] * (hp[N] + 1)) for idle enemy N adjacent to A
+supportD /= hA * 2                        # note: attacker HP, not defender
+
+# surround (FUN_00423a80 + FUN_0041bd40): the current player's ZOC bit 0x40 is
+# set on every cell adjacent to an idle friendly unit.  If all six neighbours
+# of D carry 0x40, D is surrounded.
+surrounded = all 6 neighbours of D are in the attacker's ZOC
 
 atkStrength = min(100, baseA + supportA)
-defStrength = min(100, baseD + defD + terD + supportD)
-if (terrain_flags[D] == 0x3f): defStrength /= 2
+defStrength = min(100, (defD + terD + supportD) / (surrounded ? 2 : 1))
 
-dmgToD = (hA + 1) * hp_mult[rank[A]] * ((100 - defStrength) * atkStrength / 100) / 100
-counter = hp_mult[rank[D]] * ((100 - min(100, defA + terA)) * baseD / 100) / 100
-dmgToA = (hD + 1) * counter
+dmgToD = hA * (hp_mult[rank[A]] * (((100 - defStrength) * atkStrength) / 100) / 100)
+
+if mode == 0:
+    ctrBase = min(100, baseD / (surrounded ? 2 : 1))
+    ctrDef  = min(100, defA + terA)
+    dmgToA = hD * (hp_mult[rank[D]] * (((100 - ctrDef) * ctrBase) / 100) / 100)
+else:
+    dmgToA = 0
 ```
 
-Then `FUN_00420cd0` applies a random multiplier to each side
-(`FUN_00421170`, 0.2×..4.0×, integer `/10`) and computes new HP:
+`mode` is `hexDistance(attacker, defender) - 1`:
+
+* `0` = adjacent / direct: normal exchange + counterattack.
+* `>0` = indirect: only units with `counter_ground/air >= 2` attack, at rings
+  `2..range`; the defender does **not** counter.
+
+`counter_ground/air` is the range: SG-4 = 5, MR-22 = 4, SS-80 = 6, MM107 = 5
+vs air.  The original's target highlighter gates the rings on
+`DAT_00495c42 != 0 || (ability & 0x14) == 0x14`; `DAT_00495c42` is a mission
+flag we do not export, so the port grants the range to every unit with
+`counter >= 2`.
+
+### Variance, HP and XP (`FUN_00420cd0` / `FUN_00415850`)
 
 ```
-newHP = (bonus + hp * 100 - damage) / 100      // integer division
-bonus = 50 if hp >= 2 else 0
-if (newHP > 8) newHP = 0                        // destroyed
+roll = FUN_0040c770()                 # (lfsr_byte * 100) >> 8, 0..99
+mult = FUN_00421170(roll)             # table below
+dmg  = (mult * dmg) / 10              # applied to each side separately
+
+v = (bonus + (hp + 1) * 100 - dmg) / 100
+bonus = 50 if hp >= 1 else 0
+if (v > 8) v = 0                      # destroyed
+newHp = v > 0 ? v - 1 : 0
 ```
 
-`mode` is 1 for a player-initiated attack, 0x80 for an AI/ambush attack,
-0 for a plain resolution. It selects the initiative branch above.
+XP (`FUN_00415850`, stored by `FUN_0040a460` in bits 3..7 of the HP byte,
+capped at 31; rank tier = `xp / 4`, i.e. bits 5..7):
 
-**Correction (verified by runtime):** the third argument is actually
-`hexDistance(attacker, defender) - 1`:
-
-* `0` = adjacent / direct fire: normal exchange + counterattack.
-* `>0` = indirect fire: only units whose `counter_ground/air >= 2` may attack,
-  they do so only at rings `2..range`, and the defender does **not** counter.
-
-That matches `counter_ground/air` acting as the range for indirect units
-(SG-4 = 5, MR-22 = 4, SS-80 = 6, MM107 = 5 vs air).
+* attacker: if it survived and the defender's HP changed — `+8` if the defender
+  was destroyed, otherwise `+4`;
+* defender: if it survived — `+8` if it took no damage, otherwise `+4`.
 
 ### RNG
 
-`FUN_0040c770` → `(rand_byte * 100) >> 8` (0..99).
-`FUN_0040cb50` is a 16/24-bit LFSR mixing `DAT_00495740/41/42`.
+`FUN_0040c770` -> `(rand_byte * 100) >> 8` (0..99).  The source is the 16-bit
+LFSR `FUN_0040cb50` over `DAT_00495740/41` (`DAT_00495742` stays 0):
 
-`FUN_00421170` maps a 0..99 roll to the damage multiplier:
+```
+t = (((b ^ a) << 8) | a) * 2          # 16-bit
+a' = (t & 0xFF) | (((b >> 6) ^ a) & 1)
+b' = t >> 8
+return a' ^ b'
+```
+
+`DAT_0048349f` is a cached roll: when non-zero, `FUN_0040cb50` returns it
+without advancing (used for deterministic replays / our validation).
 
 | roll | multiplier (÷10) |
 |---|---|
@@ -203,6 +237,26 @@ That matches `counter_ground/air` acting as the range for indirect units
 | 80..82 | 2 (0.2×) |
 | 98..99 | 40 (4.0×) |
 | else | (150 − roll) / 10 |
+
+### Validation
+
+`tools/validate_combat_formulas.py` boots the original into a battle and dumps
+every input (`dump/combat_state.json`); `tools/check_combat_formula.py`
+recomputes the formula.  Reference battle (S-61 vs GX-77, terrain 6/0):
+
+| register | game | recomputed |
+|---|---|---|
+| base attack `e4c` / counter `e50` | 50 / 10 | 50 / 10 |
+| defence `e48` / `e4e` | 40 / 4 | 40 / 4 |
+| terrain `e55` / `e5a` | 0 / 5 | 0 / 5 |
+| surround `e4a` | 0x31 (no) | no |
+| raw damage | — | 360 / 48 |
+| variance | 40× / 9× | 40× / 9× |
+| damage `e52` / `e60` | 1440 / 43 | 1440 / 43 |
+| new HP `db6` / `db2` | 8 / 0 (7 HP / dead) | 7 / dead |
+| XP awarded | — | attacker +8, defender 0 |
+
+`nectaris.exe ... --resolvetest 4 6 0 <seed>` reproduces the same numbers.
 
 ---
 

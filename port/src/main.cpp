@@ -15,10 +15,14 @@
 #include "raylib.h"
 #include <nlohmann/json.hpp>
 
+#include "combat.h"
+#include "model.h"
+
 #include <algorithm>
 #include <cctype>
 #include <cmath>
 #include <cstdint>
+#include <ctime>
 #include <deque>
 #include <filesystem>
 #include <fstream>
@@ -35,39 +39,6 @@ extern "C" __declspec(dllimport) int __stdcall MessageBoxA(void* hWnd,
 #endif
 
 using json = nlohmann::json;
-
-// ------------------------------------------------------------------ data
-struct UnitType {
-    int id = 0;
-    std::string name;
-    int atkGround = 0, atkAir = 0, def = 0;
-    int ctrGround = 1, ctrAir = 1;
-    int movePts = 0, moveClass = 0, ability = 0, maxHp = 7;
-};
-
-struct TerrainDef {
-    int def = 0;
-    int cost[4] = {1, 1, 1, 1};
-};
-
-struct Unit {
-    int type = 0;
-    int owner = 0;          // 0 player, 1 enemy
-    int x = 0, y = 0;
-    int hp = 7;             // 0..7
-    int rank = 0;           // 0..7 (damage multiplier tier)
-    bool acted = false;
-    float px = -1, py = -1; // smoothed pixel position
-    float facing = 0;       // map icon rotation (degrees)
-};
-
-struct Mission {
-    std::string name;
-    int w = 0, h = 0;
-    std::vector<int> terrain;   // w*h, 0..15
-    std::vector<Unit> units;
-    std::string background;
-};
 
 static std::vector<UnitType> gTypes;
 static std::vector<TerrainDef> gTerrain;
@@ -89,59 +60,9 @@ static const char* kGameDir = nullptr;
 static std::string gAssetDir;
 
 // ------------------------------------------------------------------ hex
-// Odd-column offset hex (matches FUN_00403490).
-static const int DX[6] = {0, 1, 1, 0, -1, -1};
-static const int DY_EVEN[6] = {-1, -1, 0, 1, 0, -1};
-static const int DY_ODD[6] = {-1, 0, 1, 1, 1, 0};
-
-static inline void hexNeighbor(int x, int y, int d, int& nx, int& ny) {
-    nx = x + DX[d];
-    ny = y + ((x & 1) ? DY_ODD[d] : DY_EVEN[d]);
-}
-
-static inline bool inBounds(const Mission& m, int x, int y) {
-    return x >= 0 && y >= 0 && x < m.w && y < m.h;
-}
-
-static inline int terrainAt(const Mission& m, int x, int y) {
-    if (!inBounds(m, x, y)) return 0;
-    int t = m.terrain[y * m.w + x];
-    return (t < 0 || t > 15) ? 0 : t;
-}
-
 static inline int moveCost(const Mission& m, int x, int y, int moveClass) {
     int c = gTerrain[terrainAt(m, x, y)].cost[std::clamp(moveClass, 0, 3)];
     return c;
-}
-
-static int unitAt(const Mission& m, int x, int y) {
-    for (int i = 0; i < (int)m.units.size(); ++i) {
-        const Unit& u = m.units[i];
-        if (u.hp > 0 && u.x == x && u.y == y) return i;
-    }
-    return -1;
-}
-
-static bool adjacent(int x1, int y1, int x2, int y2) {
-    for (int d = 0; d < 6; ++d) {
-        int nx, ny;
-        hexNeighbor(x1, y1, d, nx, ny);
-        if (nx == x2 && ny == y2) return true;
-    }
-    return false;
-}
-
-// Odd-q offset -> cube distance.
-static int hexDistance(int x1, int y1, int x2, int y2) {
-    auto cube = [](int x, int y, int& q, int& r) {
-        q = x;
-        r = y - (x - (x & 1)) / 2;
-    };
-    int q1, r1, q2, r2;
-    cube(x1, y1, q1, r1);
-    cube(x2, y2, q2, r2);
-    int dq = q1 - q2, dr = r1 - r2, ds = (-q1 - r1) - (-q2 - r2);
-    return (std::abs(dq) + std::abs(dr) + std::abs(ds)) / 2;
 }
 
 // ------------------------------------------------------------------ load
@@ -239,120 +160,29 @@ static bool loadMission(const std::string& path) {    json j = loadJson(path);
         u.x = ju.value("x", 0);
         u.y = ju.value("y", 0);
         u.hp = ju.value("hp", 7);
+        // XP lives in the original HP byte (bits 3..7); rank is xp / 4.
+        // Mission files may specify either "xp" or the older "rank" tier.
         u.rank = ju.value("rank", 0);
+        u.xp = ju.value("xp", std::clamp(u.rank, 0, 7) * 4);
+        u.rank = rankFromXp(u.xp);
         gMission.units.push_back(u);
     }
     return true;
 }
 
 // ------------------------------------------------------------------ combat
-struct CombatResult {
-    int dmgToDef = 0, dmgToAtk = 0;
-    int newHpDef = 0, newHpAtk = 0;
-    bool defDied = false, atkDied = false;
-    int atkStrength = 0, defStrength = 0;
-    int ctrStrength = 0, ctrDefStrength = 0;
-    int terrainA = 0, terrainB = 0;
-};
+// The battle simulation itself lives in combat.cpp (original FUN_0041b810 /
+// FUN_00420cd0 / FUN_00421170).  These are the glue helpers for the port's
+// mission data.
+static CombatRng gCombatRng;
 
-static int varianceMultiplier() {
-    int r = std::rand() % 100;
-    if (r >= 20 && r < 25) return 15;
-    if (r >= 60 && r < 65) return 20;
-    if (r >= 80 && r < 83) return 2;
-    if (r >= 98) return 40;
-    return (150 - r) / 10;
+static CombatResult resolveBattle(int atk, int def, int mode) {
+    return resolveCombat(gMission, gTypes, gTerrain, gHpMult, atk, def, mode,
+                         gCombatRng);
 }
 
-// Port of FUN_0041b810 + FUN_00420cd0.
-static CombatResult resolveCombat(int ai, int di, int mode) {
-    CombatResult out;
-    Unit& A = gMission.units[ai];
-    Unit& D = gMission.units[di];
-    const UnitType& TA = gTypes[A.type];
-    const UnitType& TD = gTypes[D.type];
-
-    auto atkVs = [&](int attSlot, int defSlot) -> int {
-        const UnitType& at = gTypes[gMission.units[attSlot].type];
-        const UnitType& de = gTypes[gMission.units[defSlot].type];
-        return (de.moveClass == 4) ? at.atkAir : at.atkGround;
-    };
-
-    const int hA = A.hp + 1;
-    const int hD = D.hp + 1;
-
-    const int canA = (TD.moveClass == 4) ? TA.ctrAir : TA.ctrGround;
-    const int canD = (TA.moveClass == 4) ? TD.ctrAir : TD.ctrGround;
-
-    int baseA = 0, baseD = 0;
-    if (mode == 0) {
-        if (canA < 2) baseA = atkVs(ai, di);
-        if (canD == 1) baseD = atkVs(di, ai);
-    } else {
-        if (canA >= 2) baseA = atkVs(ai, di);
-        baseD = 0;
-    }
-
-    const int defA = TA.def;
-    const int defD = TD.def;
-    const int terA = gTerrain[terrainAt(gMission, A.x, A.y)].def;
-    const int terD = gTerrain[terrainAt(gMission, D.x, D.y)].def;
-
-    int supA = 0, supD = 0;
-    for (int d = 0; d < 6; ++d) {
-        int nx, ny;
-        hexNeighbor(D.x, D.y, d, nx, ny);
-        int s = unitAt(gMission, nx, ny);
-        if (s >= 0 && s != ai && gMission.units[s].owner == A.owner)
-            supA += atkVs(s, di) * (gMission.units[s].hp + 1);
-    }
-    supA /= (hA * 2);
-    for (int d = 0; d < 6; ++d) {
-        int nx, ny;
-        hexNeighbor(A.x, A.y, d, nx, ny);
-        int s = unitAt(gMission, nx, ny);
-        if (s >= 0 && s != di && gMission.units[s].owner == D.owner)
-            supD += gTypes[gMission.units[s].type].def * (gMission.units[s].hp + 1);
-    }
-    supD /= (hD * 2);
-
-    const int atkStr = std::min(100, baseA + supA);
-    const int defStr = std::min(100, defD + terD + supD);
-
-    const int hpMultA = gHpMult[std::clamp(A.rank, 0, (int)gHpMult.size() - 1)];
-    const int hpMultD = gHpMult[std::clamp(D.rank, 0, (int)gHpMult.size() - 1)];
-
-    int dmgToD = hA * hpMultA * ((100 - defStr) * atkStr / 100) / 100;
-    int ctrDef = std::min(100, defA + terA);
-    int ctrVal = hpMultD * ((100 - ctrDef) * baseD / 100) / 100;
-    int dmgToA = hD * ctrVal;
-
-    dmgToD = varianceMultiplier() * dmgToD / 10;
-    dmgToA = varianceMultiplier() * dmgToA / 10;
-
-    auto apply = [](int hp, int dmg) {
-        int bonus = (hp >= 2) ? 50 : 0;
-        int nh = (bonus + hp * 100 - dmg) / 100;
-        if (nh > 8) nh = 0;
-        return std::clamp(nh, 0, 7);
-    };
-
-    out.dmgToDef = dmgToD;
-    out.dmgToAtk = dmgToA;
-    out.newHpDef = apply(D.hp, dmgToD);
-    out.newHpAtk = apply(A.hp, dmgToA);
-    out.defDied = out.newHpDef <= 0;
-    out.atkDied = out.newHpAtk <= 0;
-    out.atkStrength = atkStr;
-    out.defStrength = defStr;
-    out.ctrStrength = baseD;
-    out.ctrDefStrength = ctrDef;
-    out.terrainA = terA;
-    out.terrainB = terD;
-
-    A.hp = out.newHpAtk;
-    D.hp = out.newHpDef;
-    return out;
+static std::vector<int> attackable(const Mission& m, int slot) {
+    return attackableTargets(m, gTypes, slot);
 }
 
 // ------------------------------------------------------------------ movement
@@ -385,29 +215,6 @@ static std::vector<int> reachable(const Mission& m, int slot) {
         }
     }
     return dist;
-}
-
-static std::vector<int> attackable(const Mission& m, int slot) {
-    std::vector<int> out;
-    const Unit& u = m.units[slot];
-    const UnitType& t = gTypes[u.type];
-    for (int i = 0; i < (int)m.units.size(); ++i) {
-        if (i == slot || m.units[i].hp <= 0) continue;
-        const Unit& e = m.units[i];
-        if (e.owner == u.owner) continue;
-        bool air = gTypes[e.type].moveClass == 4;
-        int atk = air ? t.atkAir : t.atkGround;
-        int range = air ? t.ctrAir : t.ctrGround;
-        if (atk == 0 || range < 1) continue;
-        int d = hexDistance(u.x, u.y, e.x, e.y);
-        // direct-fire units only hit adjacent; indirect units only hit rings 2..range
-        if (range == 1) {
-            if (d == 1) out.push_back(i);
-        } else if (d >= 2 && d <= range) {
-            out.push_back(i);
-        }
-    }
-    return out;
 }
 
 // ------------------------------------------------------------------ AI
@@ -460,11 +267,12 @@ static void aiTurn() {
             Unit& D = gMission.units[tgt];
             int mode = hexDistance(u.x, u.y, D.x, D.y) - 1;
             int hpA0 = u.hp, hpD0 = D.hp;
-            CombatResult r = resolveCombat(i, tgt, mode);
+            CombatResult r = resolveBattle(i, tgt, mode);
+            applyCombatResult(gMission, r);
             queueCombat(i, tgt, hpA0, hpD0, u.hp, D.hp, r, mode);
             std::cout << "[AI] " << gTypes[u.type].name << " -> " << gTypes[D.type].name
                       << "  dmg " << r.dmgToDef << "/" << r.dmgToAtk
-                      << "  hp " << D.hp << "/" << u.hp << "\n";
+                      << "  hp " << r.newHpDef << "/" << r.newHpAtk << "\n";
         }
         u.acted = true;
     }
@@ -625,8 +433,8 @@ static void queueCombat(int atk, int def, int hpA0, int hpD0, int hpA1, int hpD1
     v.hpA0 = hpA0; v.hpD0 = hpD0; v.hpA1 = hpA1; v.hpD1 = hpD1;
     v.dmgDef = r.dmgToDef; v.dmgAtk = r.dmgToAtk;
     v.atkStrength = r.atkStrength; v.defStrength = r.defStrength;
-    v.ctrStrength = r.ctrStrength; v.ctrDefStrength = r.ctrDefStrength;
-    v.terrainA = r.terrainA; v.terrainB = r.terrainB;
+    v.ctrStrength = r.ctrStrength; v.ctrDefStrength = r.ctrDefense;
+    v.terrainA = r.terrainDefA; v.terrainB = r.terrainDefD;
     v.mode = mode;
     int ta = terrainAt(gMission, gMission.units[atk].x, gMission.units[atk].y);
     int td = terrainAt(gMission, gMission.units[def].x, gMission.units[def].y);
@@ -877,9 +685,9 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
 
     DrawText("TERRAIN", (int)(playX + playW * 0.42f), (int)(botY + botH * 0.10f),
              (int)(botH * 0.20f), TXT);
-    DrawText(TextFormat("%d%%", gTerrain[std::clamp(v.terrainA, 0, 15)].def),
+    DrawText(TextFormat("%d%%", v.terrainA),
              (int)(playX + playW * 0.40f), (int)(botY + botH * 0.52f), (int)(botH * 0.22f), DIM);
-    DrawText(TextFormat("%d%%", gTerrain[std::clamp(v.terrainB, 0, 15)].def),
+    DrawText(TextFormat("%d%%", v.terrainB),
              (int)(playX + playW * 0.55f), (int)(botY + botH * 0.52f), (int)(botH * 0.22f), DIM);
 
     DrawText("SPACE / click", (int)(playX + playW * 0.40f), (int)(H - botH * 0.20f),
@@ -943,11 +751,37 @@ int main(int argc, char** argv) {
         std::cerr << "cannot load mission " << missionPath << "\n";
         return 1;
     }
+    gCombatRng.seed((uint32_t)std::time(nullptr));
 
     auto campaign = listCampaign(gAssetDir + "maps");
     int campaignIdx = 0;
     for (int i = 0; i < (int)campaign.size(); ++i)
         if (campaign[i] == missionPath) campaignIdx = i;
+
+    if (argc > 7 && std::string(argv[3]) == "--resolvetest") {
+        int a = std::atoi(argv[4]);
+        int d = std::atoi(argv[5]);
+        int mode = std::atoi(argv[6]);
+        uint32_t seed = (uint32_t)std::strtoul(argv[7], nullptr, 0);
+        CombatRng rng;
+        rng.seed(seed);
+        CombatResult r = resolveCombat(gMission, gTypes, gTerrain, gHpMult,
+                                       a, d, mode, rng);
+        std::cout << "raw_def=" << r.rawDmgToDef << " raw_atk=" << r.rawDmgToAtk
+                  << " var_def=" << r.varToDef << " var_atk=" << r.varToAtk
+                  << " dmg_def=" << r.dmgToDef << " dmg_atk=" << r.dmgToAtk
+                  << " hp_def=" << r.newHpDef << " hp_atk=" << r.newHpAtk
+                  << " base_atk=" << r.baseAtk << " base_ctr=" << r.baseCtr
+                  << " sup_atk=" << r.supportAtk << " sup_def=" << r.supportDef
+                  << " atk_str=" << r.atkStrength << " def_str=" << r.defStrength
+                  << " ctr_def=" << r.ctrDefense
+                  << " ter_a=" << r.terrainDefA << " ter_d=" << r.terrainDefD
+                  << " rank_a=" << r.rankA << " rank_d=" << r.rankD
+                  << " surround=" << r.surrounded
+                  << " xp_atk=" << r.xpToAtk << " xp_def=" << r.xpToDef
+                  << "\n";
+        return 0;
+    }
 
     if (selftest) {
         Mission saved = gMission;
@@ -955,11 +789,14 @@ int main(int argc, char** argv) {
         gMission.units.push_back(Unit{0, 0, 1, 1, 7, 0, false});
         gMission.units.push_back(Unit{0, 1, 2, 1, 7, 0, false});
         std::cout << "attacker,defender,dmg_def,dmg_atk,new_hp_def,new_hp_atk\n";
+        CombatRng testRng;
+        testRng.seed(12345);
         for (int a = 0; a < (int)gTypes.size(); ++a) {
             for (int d = 0; d < (int)gTypes.size(); ++d) {
                 gMission.units[0] = Unit{a, 0, 1, 1, 7, 0, false};
                 gMission.units[1] = Unit{d, 1, 2, 1, 7, 0, false};
-                CombatResult r = resolveCombat(0, 1, 0);
+                CombatResult r = resolveCombat(gMission, gTypes, gTerrain, gHpMult,
+                                               0, 1, 0, testRng);
                 std::cout << gTypes[a].name << "," << gTypes[d].name << ","
                           << r.dmgToDef << "," << r.dmgToAtk << ","
                           << r.newHpDef << "," << r.newHpAtk << "\n";
@@ -1104,8 +941,10 @@ int main(int argc, char** argv) {
             gCv.dmgDef = 312; gCv.dmgAtk = 148; gCv.mode = 0;
             gCv.atkStrength = 720; gCv.defStrength = 240;
             gCv.ctrStrength = 560; gCv.ctrDefStrength = 400;
-            gCv.terrainA = terrainAt(gMission, gMission.units[a].x, gMission.units[a].y);
-            gCv.terrainB = terrainAt(gMission, gMission.units[d].x, gMission.units[d].y);
+            gCv.terrainA = gTerrain[terrainAt(gMission, gMission.units[a].x,
+                                               gMission.units[a].y)].def;
+            gCv.terrainB = gTerrain[terrainAt(gMission, gMission.units[d].x,
+                                               gMission.units[d].y)].def;
             int ta = terrainAt(gMission, gMission.units[a].x, gMission.units[a].y);
             int td = terrainAt(gMission, gMission.units[d].x, gMission.units[d].y);
             gCv.panelA = combatPanelFor(ta, td, false, true);
@@ -1223,11 +1062,12 @@ int main(int argc, char** argv) {
                     float dy = (float)gMission.units[hit].y;
                     float ax = (float)sel.x, ay = (float)sel.y;
                     int hpA0 = sel.hp, hpD0 = gMission.units[hit].hp;
-                    CombatResult r = resolveCombat(selected, hit, mode);
+                    CombatResult r = resolveBattle(selected, hit, mode);
+                    applyCombatResult(gMission, r);
                     std::cout << "[combat] " << gTypes[sel.type].name << " vs "
                               << gTypes[gMission.units[hit].type].name
                               << "  dmg " << r.dmgToDef << "/" << r.dmgToAtk
-                              << "  hp " << gMission.units[hit].hp << "/" << sel.hp << "\n";
+                              << "  hp " << r.newHpDef << "/" << r.newHpAtk << "\n";
                     fx.push_back({1.1f, dx, dy, r.dmgToDef, true});
                     fx.push_back({1.1f, ax, ay, r.dmgToAtk, false});
                     if (IsSoundValid(sndHit)) PlaySound(sndHit);

@@ -60,6 +60,24 @@ port/build/nectaris.exe assets assets/maps/all_units_test.json --combatshot dire
 port/build/nectaris.exe assets assets/maps/all_units_test.json --combatshot ranged.png 1.4 1
 ```
 
+## Combat simulation
+
+All battle maths lives in `port/src/combat.cpp` (declared in `combat.h`);
+`model.h` holds the shared unit/mission structs and hex helpers. It is a
+line-for-line port of the original:
+
+* `FUN_0041b810` — attack/defence strengths, support fire, surround penalty
+* `FUN_00420cd0` / `FUN_00421170` — variance rolls and HP loss
+* `FUN_0040cb50` / `FUN_0040c770` — the original 16-bit LFSR
+* `FUN_00415850` / `FUN_0040a460` — XP gain and rank tiers (`rank = xp / 4`)
+
+The full pseudocode and register-level validation are in `RE_FINDINGS.md` §5.
+Reproduce a specific battle state:
+
+```powershell
+port/build/nectaris.exe assets dump/_validation_mission.json --resolvetest 4 6 0 32024
+```
+
 ## Mission format
 
 `assets/maps/<name>.json`:
@@ -86,7 +104,8 @@ port/build/nectaris.exe assets assets/maps/all_units_test.json --combatshot rang
 * `units[].owner`: `0` = player, `1` = enemy.
 * `units[].type`: index into `assets/data/units.json` (0..23).
 * `units[].hp`: 0..7 (7 = full).
-* `units[].rank`: 0..7 (damage multiplier tier).
+* `units[].rank`: legacy alias for the damage tier (0..7); XP is `rank * 4`.
+* `units[].xp`: optional 0..31; rank tier is `xp / 4` (matches the original).
 * `background`: optional PNG path relative to `assets/`; empty = colored terrain.
 
 Campaign maps exported from the original are `assets/maps/<name>.json`;
