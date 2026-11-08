@@ -33,8 +33,13 @@ struct Unit {
     int rank = 0;           // 0..7 damage-multiplier tier (XP / 4)
     bool acted = false;
     float px = -1, py = -1; // smoothed pixel position
-    float facing = 0;       // map icon rotation (degrees)
+    float facing = 90;      // map heading: atan2(dy,dx) - 90 (0 = down, 90 = left)
     int xp = 0;             // 0..31 (original: bits 3..7 of the HP byte)
+
+    // Transport state.  A transport stores one cargo formation by slot index;
+    // the cargo unit stays in Mission::units but is hidden and inactive.
+    int cargo = -1;
+    bool carried = false;
 };
 
 struct Mission {
@@ -71,7 +76,7 @@ inline int terrainAt(const Mission& m, int x, int y) {
 inline int unitAt(const Mission& m, int x, int y) {
     for (int i = 0; i < (int)m.units.size(); ++i) {
         const Unit& u = m.units[i];
-        if (u.hp > 0 && u.x == x && u.y == y) return i;
+        if (u.hp > 0 && !u.carried && u.x == x && u.y == y) return i;
     }
     return -1;
 }

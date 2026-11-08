@@ -59,7 +59,7 @@ int attackValue(const Mission& m, const std::vector<UnitType>& types,
 bool inAttackerZoc(const Mission& m, int owner, int cx, int cy, int atkSlot) {
     for (int i = 0; i < (int)m.units.size(); ++i) {
         const Unit& u = m.units[i];
-        if (u.hp <= 0 || u.owner != owner || u.acted) continue;
+        if (u.hp <= 0 || u.owner != owner || u.acted || u.carried) continue;
         if (hexDistance(u.x, u.y, cx, cy) <= 1) return true;
     }
     (void)atkSlot;
@@ -81,6 +81,7 @@ CombatResult resolveCombat(const Mission& m,
 
     const Unit& A = m.units[atkSlot];
     const Unit& D = m.units[defSlot];
+    if (A.carried || D.carried) return out;
     if (A.type < 0 || A.type >= (int)types.size()) return out;
     if (D.type < 0 || D.type >= (int)types.size()) return out;
     const UnitType& TA = types[A.type];
@@ -267,6 +268,7 @@ bool canAttackTarget(const Mission& m, const std::vector<UnitType>& types,
     const Unit& A = m.units[atkSlot];
     const Unit& D = m.units[defSlot];
     if (A.hp <= 0 || D.hp <= 0 || A.owner == D.owner) return false;
+    if (A.carried || D.carried) return false;
     if (A.type < 0 || A.type >= (int)types.size()) return false;
     if (D.type < 0 || D.type >= (int)types.size()) return false;
     const UnitType& TA = types[A.type];

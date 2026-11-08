@@ -42,13 +42,29 @@ Controls:
 | LMB on own unit | select, or switch selection if one is already active |
 | LMB on blue cell | move |
 | LMB on adjacent enemy | attack |
+| LMB own unit -> friendly transport | load it (transport must be in shift range) |
+| LMB the same unit again | deselect |
+| SPACE | deselect if a unit is selected, otherwise end turn |
+| U | unload the selected transport's cargo onto an adjacent deployment hex |
 | RMB drag | pan the map |
 | ESC | deselect |
-| SPACE | end turn (enemy AI acts) |
 | N | next map (test map first, then campaign 1-16) |
 | B | previous map |
 | R | restart mission |
 | F1 | debug cell info |
+
+## Transports
+
+A transport carries exactly one unit formation. The cargo is hidden and inactive;
+it is destroyed only when the whole transport formation is wiped out. Loading
+uses the cargo unit's shift range (click the unit, then the transport). Unloading
+requires the cargo to have waited at least one full turn (`U`), and only flat
+ground/pavement/factory/city/bridge/base hexes are valid drop zones.
+
+| transport | carries |
+|---|---|
+| NC-1 Mule | mines, infantry, motorcycles and field guns; never the HMB-2 Giant |
+| C-61 Pelican | every unit except aircraft |
 
 ## Combat self-test
 
@@ -400,6 +416,26 @@ indexes an 8x8 4bpp descriptor table at `0x43aae8` / `0x43f2a8`. The port
 renders terrain colours from the decoded grid; exact original backdrop
 rendering (palette/interlace) is still being matched.
 
+## Loading missions in the original game
+
+`orig_play_mission.py` (and the `play_mission.bat` wrapper) attaches to the
+running 1997 `game/Nec.exe` (or launches it), skips the intro, patches the
+mission index and remote-calls the original mission-start routine
+`FUN_00405ad0`. The script then exits and leaves the game running so the mission
+can be played normally:
+
+```powershell
+python tools/orig_play_mission.py 1     # mission 1 (REVOLT)
+python tools/orig_play_mission.py 16    # final mission (NECTOR)
+python tools/orig_play_mission.py 3 --restart
+play_mission.bat --list
+```
+
+The first argument is the 1-based campaign number. Extra slots `17..32` can be
+loaded too if the installed data has editor/extra missions. `--restart` kills an
+existing `Nec.exe` first; without it the tool switches the running instance.
+`--no-preview` skips the framebuffer PNG saved under `dump/orig_maps/`.
+
 ## Implemented
 
 * map loading, terrain move costs, hex adjacency (odd-column offset)
@@ -412,6 +448,8 @@ rendering (palette/interlace) is still being matched.
 * campaign sequencing (`N` next / `B` previous) over the test map, the 16 decoded
   campaign missions and the editor maps, including garrison squads; RMB drag
   pans the map
+* transport loading/unloading (one cargo formation, cargo hidden and lost only
+  with the transport)
 * combat self-test matrix
 
 ## TODO

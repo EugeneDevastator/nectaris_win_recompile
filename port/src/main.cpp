@@ -204,7 +204,7 @@ static bool loadMission(const std::string& path) {    json j = loadJson(path);
         u.x = ju.value("x", 0);
         u.y = ju.value("y", 0);
         u.hp = ju.value("hp", 7);
-        u.facing = ju.value("facing", 0.0f);
+        u.facing = ju.value("facing", 90.0f);
         // XP lives in the original HP byte (bits 3..7); rank is xp / 4.
         // Mission files may specify either "xp" or the older "rank" tier.
         u.rank = ju.value("rank", 0);
@@ -277,6 +277,95 @@ static std::vector<int> reachable(const Mission& m, int slot) {
     return dist;
 }
 
+// ------------------------------------------------------------------ transport
+static bool isTransport(const UnitType& t) { return (t.ability & 0x20) != 0; }
+
+// NC-1 Mule (ability 0x20, ground mover): mines, infantry, motorcycles and
+// field guns.  C-61 Pelican (air mover): everything except other aircraft.
+// The cargo id list is the original unit table's categories.
+static bool canCarry(const UnitType& carrier, const UnitType& cargo) {
+    if (!isTransport(carrier)) return false;
+    if (carrier.moveClass == 4 || carrier.id == 22) {
+        return cargo.moveClass != 4;                 // Pelican: no aircraft
+    }
+    switch (cargo.id) {
+        case 0:   // M-77 Trigger (mines)
+        case 11:  // SG-4 Hadrian (field gun)
+        case 12:  // MR-22 Octopus (field gun)
+        case 17:  // SS-80 Atlas (field gun)
+        case 18:  // GX-77 Charlie (infantry)
+        case 19:  // GX-87 Kilroy (infantry)
+        case 20:  // CBX-1 Panther (motorcycle)
+            return cargo.id != 9;                    // never the Giant
+        default:
+            return false;
+    }
+}
+
+// A unit can shift into a transport when the transport's cell is inside its
+// movement range (the original "Shift" command).  The transport's own cell is
+// occupied, so test the cost from each adjacent reachable cell instead.
+static bool inShiftRange(const Mission& m, int cargoSlot, int transSlot) {
+    const Unit& c = m.units[cargoSlot];
+    const Unit& t = m.units[transSlot];
+    const UnitType& ct = gTypes[c.type];
+    int enter = moveCost(m, t.x, t.y, ct.moveClass);
+    if (enter >= 0x7f) return false;
+    std::vector<int> dist = reachable(m, cargoSlot);
+    for (int d = 0; d < 6; ++d) {
+        int nx, ny;
+        hexNeighbor(t.x, t.y, d, nx, ny);
+        if (!inBounds(m, nx, ny)) continue;
+        if (dist[ny * m.w + nx] + enter <= ct.movePts) return true;
+    }
+    return false;
+}
+
+// Cargo may only be dropped on the original deployment terrain: pavement,
+// flat ground, factory/base or city.  Water, forest, mountains and ruins are
+// not valid drop zones.
+static bool canUnloadTerrain(int t) {
+    return t == 1 || t == 5 || t == 6 || t == 7 || t == 9 || t == 10 || t == 11;
+}
+
+static int findUnloadHex(const Mission& m, int transSlot, int preferX, int preferY) {
+    const Unit& t = m.units[transSlot];
+    auto valid = [&](int x, int y) {
+        if (!inBounds(m, x, y)) return false;
+        if (unitAt(m, x, y) >= 0) return false;
+        return canUnloadTerrain(terrainAt(m, x, y));
+    };
+    if (hexDistance(preferX, preferY, t.x, t.y) == 1 && valid(preferX, preferY))
+        return preferY * m.w + preferX;
+    for (int d = 0; d < 6; ++d) {
+        int nx, ny;
+        hexNeighbor(t.x, t.y, d, nx, ny);
+        if (valid(nx, ny)) return ny * m.w + nx;
+    }
+    return -1;
+}
+
+// Keep cargo glued to its transport and destroy it only when the whole
+// transport formation is wiped out.
+static void syncCargo(Mission& m) {
+    for (int i = 0; i < (int)m.units.size(); ++i) {
+        Unit& u = m.units[i];
+        if (u.cargo < 0) continue;
+        if (u.cargo >= (int)m.units.size()) { u.cargo = -1; continue; }
+        Unit& c = m.units[u.cargo];
+        if (u.hp <= 0) {                 // transport destroyed -> cargo lost
+            c.hp = 0;
+            c.carried = false;
+            u.cargo = -1;
+            continue;
+        }
+        if (c.hp <= 0) { u.cargo = -1; c.carried = false; continue; }
+        c.carried = true;
+        c.x = u.x;
+        c.y = u.y;
+    }
+}
+
 // ------------------------------------------------------------------ AI
 static void queueCombat(int atk, int def, int hpA0, int hpD0, int hpA1, int hpD1,
                         const CombatResult& r, int mode);
@@ -285,12 +374,12 @@ static void aiTurn() {
     // Simple: each enemy moves one step toward the nearest player unit and attacks if adjacent.
     for (int i = 0; i < (int)gMission.units.size(); ++i) {
         Unit& u = gMission.units[i];
-        if (u.hp <= 0 || u.owner != 1 || u.acted) continue;
+        if (u.hp <= 0 || u.owner != 1 || u.acted || u.carried) continue;
 
         int best = -1, bestD = 1 << 20;
         for (int j = 0; j < (int)gMission.units.size(); ++j) {
             const Unit& p = gMission.units[j];
-            if (p.hp <= 0 || p.owner != 1) continue;
+            if (p.hp <= 0 || p.owner != 1 || p.carried) continue;
             int d = std::abs(p.x - u.x) + std::abs(p.y - u.y);
             if (d < bestD) { bestD = d; best = j; }
         }
@@ -468,10 +557,17 @@ static void drawTerrainColors(const Mission& m) {
 }
 
 static void drawUnitSprite(const Mission& m, const Unit& u, Texture2D playerTex, Texture2D enemyTex) {
-    // The bank icons are left-facing side views.  Use the mirrored texture when
-    // the unit is heading right (u.facing = movementAngle - 90).
-    bool headingRight = std::sin(u.facing * 0.0174532925f) < -0.15f;
-    Texture2D& tex = headingRight ? gUnitMapFlipTex[u.type] : gUnitMapTex[u.type];
+    // The bank icons are left-facing side views.  The original map only turns
+    // the icon in 45-degree sectors: straight left/right stay horizontal, the
+    // four diagonals tilt by 30 degrees, and straight up/down by 90 degrees
+    // (where the mirrored copy looks identical, so we always use the base).
+    float a = u.facing;
+    while (a <= -180.0f) a += 360.0f;
+    while (a > 180.0f) a -= 360.0f;
+    int sector = (int)std::lround((a + 135.0f) / 45.0f) & 7;
+    static const bool mirror[8] = {true, true, true, false, false, false, false, false};
+    static const float turn[8] = {-30.0f, 0.0f, 30.0f, -90.0f, -30.0f, 0.0f, 30.0f, 90.0f};
+    Texture2D& tex = mirror[sector] ? gUnitMapFlipTex[u.type] : gUnitMapTex[u.type];
     if (!tex.id) return;
     float size = gHexSize * 1.75f;
     float hx, hy;
@@ -482,7 +578,7 @@ static void drawUnitSprite(const Mission& m, const Unit& u, Texture2D playerTex,
     Rectangle src{0, 0, (float)tex.width, (float)tex.height};
     Rectangle dst{cx, cy, size, size};
     Color tint = (u.owner == 0) ? WHITE : Color{150, 255, 150, 255};
-    DrawTexturePro(tex, src, dst, {size / 2, size / 2}, 0.0f, tint);
+    DrawTexturePro(tex, src, dst, {size / 2, size / 2}, turn[sector], tint);
 }
 
 // ------------------------------------------------------------------ combat screen
@@ -1203,6 +1299,8 @@ int main(int argc, char** argv) {
     bool debug = false;
     std::vector<int> reach;
     std::vector<int> targets;
+    std::string notice;
+    float noticeT = 0.0f;
 
     struct Fx { float t; float x, y; int dmg; bool onDefender; };
     std::vector<Fx> fx;
@@ -1223,6 +1321,39 @@ int main(int argc, char** argv) {
         reach = reachable(gMission, slot);
         targets = attackable(gMission, slot);
         showReach = true;
+    };
+
+    auto say = [&](const std::string& s) {
+        notice = s;
+        noticeT = 2.5f;
+    };
+
+    // Move a friendly unit onto an eligible, empty transport in shift range.
+    auto boardCargo = [&](int cargoSlot, int transSlot) -> bool {
+        Unit& c = gMission.units[cargoSlot];
+        Unit& t = gMission.units[transSlot];
+        if (c.carried || t.carried || c.owner != t.owner) return false;
+        if (!isTransport(gTypes[t.type])) return false;
+        if (t.cargo >= 0) { say("Transport is already carrying a unit"); return false; }
+        if (c.cargo >= 0) { say("A loaded transport cannot be loaded again"); return false; }
+        if (!canCarry(gTypes[t.type], gTypes[c.type])) {
+            say(gTypes[t.type].name + " cannot carry " + gTypes[c.type].name);
+            return false;
+        }
+        if (!inShiftRange(gMission, cargoSlot, transSlot)) {
+            say("Transport is outside the unit's shift range");
+            return false;
+        }
+        t.cargo = cargoSlot;
+        c.carried = true;
+        c.acted = true;
+        c.x = t.x;
+        c.y = t.y;
+        if (IsSoundValid(sndSelect)) PlaySound(sndSelect);
+        say(gTypes[c.type].name + " loaded onto " + gTypes[t.type].name);
+        if (!t.acted) selectUnit(transSlot);
+        else resetSelection();
+        return true;
     };
 
     std::cout << "loaded " << gMission.name << " " << gMission.w << "x" << gMission.h
@@ -1258,8 +1389,9 @@ int main(int argc, char** argv) {
         bool inMap = pixelToHex(mouse.x, mouse.y, gMission.w, gMission.h, mx, my);
 
         if (IsKeyPressed(KEY_SPACE)) {
-            resetSelection();
-            if (currentPlayer == 0) {
+            if (selected >= 0) {
+                resetSelection();          // SPACE cancels a selection first
+            } else if (currentPlayer == 0) {
                 currentPlayer = 1;
                 for (auto& u : gMission.units) u.acted = (u.owner == 0);
                 aiTurn();
@@ -1304,17 +1436,28 @@ int main(int argc, char** argv) {
             int hit = inMap ? unitAt(gMission, mx, my) : -1;
             if (selected < 0) {
                 if (hit >= 0 && gMission.units[hit].owner == currentPlayer &&
-                    !gMission.units[hit].acted) {
+                    !gMission.units[hit].acted && !gMission.units[hit].carried) {
                     selectUnit(hit);
                     if (IsSoundValid(sndSelect)) PlaySound(sndSelect);
                 }
             } else {
                 Unit& sel = gMission.units[selected];
-                // clicking another friendly unit switches the selection
-                if (hit >= 0 && hit != selected && gMission.units[hit].owner == currentPlayer &&
-                    !gMission.units[hit].acted) {
-                    selectUnit(hit);
-                    if (IsSoundValid(sndSelect)) PlaySound(sndSelect);
+                if (hit == selected) {
+                    resetSelection();      // clicking the same unit again deselects
+                }
+                // Clicking another friendly unit selects it; clicking a friendly
+                // transport tries to shift the selected unit aboard instead.
+                else if (hit >= 0 && gMission.units[hit].owner == currentPlayer &&
+                         !gMission.units[hit].acted && !gMission.units[hit].carried) {
+                    if (isTransport(gTypes[gMission.units[hit].type])) {
+                        if (!boardCargo(selected, hit)) {
+                            selectUnit(hit);
+                            if (IsSoundValid(sndSelect)) PlaySound(sndSelect);
+                        }
+                    } else {
+                        selectUnit(hit);
+                        if (IsSoundValid(sndSelect)) PlaySound(sndSelect);
+                    }
                 }
                 // attack?
                 else if (hit >= 0 && std::find(targets.begin(), targets.end(), hit) != targets.end()) {
@@ -1337,8 +1480,6 @@ int main(int argc, char** argv) {
                     startNextCombat();
                     sel.acted = true;
                     resetSelection();
-                } else if (hit == selected) {
-                    resetSelection();
                 } else if (inMap && hit < 0 &&
                            reach[my * gMission.w + mx] <= gTypes[sel.type].movePts) {
                     float ox, oy, nx2, ny2;
@@ -1355,6 +1496,37 @@ int main(int argc, char** argv) {
             }
         }
 
+        // U unloads the selected transport's cargo onto the hovered adjacent
+        // deployment hex, or the first valid neighbour if the cursor is away.
+        if (IsKeyPressed(KEY_U) && selected >= 0) {
+            Unit& t = gMission.units[selected];
+            if (t.cargo >= 0) {
+                Unit& c = gMission.units[t.cargo];
+                if (c.acted) {
+                    say("Cargo must wait one full turn before unloading");
+                } else {
+                    int target = findUnloadHex(gMission, selected, mx, my);
+                    if (target < 0) {
+                        say("No valid unload hex next to the transport");
+                    } else {
+                        int ux = target % gMission.w, uy = target / gMission.w;
+                        c.carried = false;
+                        c.x = ux;
+                        c.y = uy;
+                        c.px = c.py = -1;
+                        c.acted = true;
+                        t.cargo = -1;
+                        t.acted = true;
+                        if (IsSoundValid(sndMove)) PlaySound(sndMove);
+                        say(gTypes[c.type].name + " unloaded");
+                        resetSelection();
+                    }
+                }
+            }
+        }
+
+        syncCargo(gMission);
+
         // smooth movement + effect timers
         float dt = GetFrameTime();
         float usz = gHexSize * 1.75f;
@@ -1369,6 +1541,7 @@ int main(int argc, char** argv) {
         for (auto& f : fx) f.t -= dt;
         fx.erase(std::remove_if(fx.begin(), fx.end(),
                                 [](const Fx& f) { return f.t <= 0; }), fx.end());
+        if (noticeT > 0) noticeT -= dt;
 
         BeginDrawing();
         ClearBackground(Color{12, 12, 16, 255});
@@ -1393,7 +1566,7 @@ int main(int argc, char** argv) {
         }
 
         for (const auto& u : gMission.units) {
-            if (u.hp <= 0) continue;
+            if (u.hp <= 0 || u.carried) continue;
             drawUnitSprite(gMission, u, playerTex, enemyTex);
             float cx, cy;
             hexCenter(u.x, u.y, cx, cy);
@@ -1403,6 +1576,11 @@ int main(int argc, char** argv) {
             for (int i = 0; i < u.hp; ++i)
                 DrawRectangle((int)(cx - u.hp * 4 + i * 8), (int)(cy + gHexSize * 0.55f),
                               6, 5, u.owner == 0 ? kGreen : kRed);
+            if (u.cargo >= 0) {   // loaded transport marker
+                DrawCircleV({cx + gHexSize * 0.62f, cy - gHexSize * 0.55f}, 4.5f, SKYBLUE);
+                DrawCircleLines((int)(cx + gHexSize * 0.62f),
+                                (int)(cy - gHexSize * 0.55f), 4.5f, BLACK);
+            }
         }
         for (const auto& f : fx) {
             float a = std::clamp(f.t, 0.0f, 1.0f);
@@ -1433,7 +1611,7 @@ int main(int argc, char** argv) {
                px, 120, 16, LIGHTGRAY);
         int alive0 = 0, alive1 = 0;
         for (auto& u : gMission.units) {
-            if (u.hp > 0) (u.owner == 0 ? alive0 : alive1)++;
+            if (u.hp > 0 && !u.carried) (u.owner == 0 ? alive0 : alive1)++;
         }
         uiText(TextFormat("Player units: %d", alive0), px, 160, 18, RAYWHITE);
         uiText(TextFormat("Enemy units:  %d", alive1), px, 200, 18, RAYWHITE);
@@ -1456,18 +1634,30 @@ int main(int argc, char** argv) {
                      18, YELLOW);
             uiText(TextFormat("ATK G/A %d/%d  DEF %d", t.atkGround, t.atkAir, t.def), px, 330,
                      16, LIGHTGRAY);
-            uiText("LMB move / attack", px, 370, 16, GRAY);
+            if (u.cargo >= 0) {
+                const Unit& c = gMission.units[u.cargo];
+                uiText(TextFormat("Cargo: %s  HP %d", gTypes[c.type].name.c_str(), c.hp),
+                       px, 370, 16, SKYBLUE);
+                uiText("U unload next to transport", px, 400, 12, GRAY);
+            } else if (isTransport(t)) {
+                uiText("Empty transport", px, 370, 16, SKYBLUE);
+                uiText("Select a unit, then click transport", px, 400, 12, GRAY);
+            } else {
+                uiText("LMB move / attack", px, 370, 16, GRAY);
+                uiText("Click transport to load", px, 400, 12, GRAY);
+            }
         }
-        uiText("SPACE end turn   R restart", px, 430, 8, GRAY);
+        uiText("SPACE deselect / end turn   R restart", px, 430, 8, GRAY);
         uiText("ESC cancel   RMB drag: pan", px, 470, 8, GRAY);
 
         if (alive1 == 0) uiText("VICTORY", px, 520, 28, kGreen);
         if (alive0 == 0) uiText("DEFEAT", px, 520, 28, kRed);
 
+        if (noticeT > 0) uiText(notice.c_str(), px, 550, 12, ORANGE);
         if (debug) {
             uiText(TextFormat("cell %d,%d  terrain %d", mx, my,
                                 inMap ? terrainAt(gMission, mx, my) : -1),
-                     px, 570, 16, LIGHTGRAY);
+                     px, 590, 16, LIGHTGRAY);
         }
 
         EndDrawing();
