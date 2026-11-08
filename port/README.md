@@ -53,12 +53,12 @@ Headless AI demo (prints 3 rounds of enemy actions, including ranged fire):
 port/build/nectaris.exe assets assets/maps/all_units_test.json --demo
 ```
 
-Combat report screenshot (last argument: `0` = direct layout, `1` = ranged
-layout; the seconds argument is kept for compatibility and no longer animates):
+Combat screenshot (seconds = animation phase: `1.2` ride-in, `2.3` projectiles,
+`2.7` explosions, `3.6` final report; last argument `0` = direct, `1` = ranged):
 
 ```powershell
-port/build/nectaris.exe assets assets/maps/all_units_test.json --combatshot direct.png 1.4 0
-port/build/nectaris.exe assets assets/maps/all_units_test.json --combatshot ranged.png 1.4 1
+port/build/nectaris.exe assets assets/maps/all_units_test.json --combatshot direct.png 2.7 0
+port/build/nectaris.exe assets assets/maps/all_units_test.json --combatshot ranged.png 2.7 1
 ```
 
 ## Combat simulation
@@ -222,16 +222,24 @@ Every resolved attack switches to a battle screen modeled on the original:
   **128×128 logical (256×256 pixel) panels** side by side.
 * **top bar**: both unit names and the yellow **HP boxes** (initial HP + 1).
 * **middle**: the two original combat terrain close-ups, drawn at native
-  aspect (terrain texture fills every pixel - no black bands).
+  aspect (terrain texture fills every pixel - no black bands). The PNGs are
+  opaque (their transparent areas were pre-filled) and the two panels overlap
+  by one pixel to hide the seam.
   Each side shows its **initial formation** using the per-unit horizontal
   sprite (`assets/units/unit_XX/horizontal.png`), blue for the player and the
   same sprite flipped + tinted green for the enemy.
 * **ranged layout**: indirect/ranged battles open a wider black gap between the
   two terrain panels (the panels shrink slightly so the pair still fits the
   playfield); direct battles stay edge-to-edge.
-* **static report (no animation)**: the original fades its numbers out; the port
-  keeps a permanent report in the bottom bar instead. It shows the simulation
-  inputs and the final resolve:
+* **ride-in**: vehicles roll in from the screen edges to their staggered 2×4
+  formation slots at the original `0.05 + i×0.235 s` beats.
+* **simultaneous fire**: both sides fire at once, using one projectile texture
+  and one explosion texture for every unit. The killed vehicle slots
+  (`finalCount .. initialCount-1`) are targeted exactly, so their explosions
+  land on the right coordinates; all remaining shots scatter deterministically
+  across the opposing panel. HP boxes drop to the surviving vehicle count.
+* **persistent report (no disappearing numbers)**: the bottom bar stays visible
+  during and after the animation and shows the simulation inputs and resolve:
   * **attacker**: attack / own defence, support bonus, experience bonus,
     HP before → after, XP gained;
   * **simulation**: `SURROUND 0%` or `50%` with the defender's defence before
@@ -239,7 +247,8 @@ Every resolved attack switches to a battle screen modeled on the original:
     attacker, and both variance multipliers;
   * **defender**: counter attack / defence, support, experience, HP before →
     after, XP gained.
-* `SPACE` / click closes the report and returns to the map.
+* `SPACE` / click skips the animation to the result; a second press returns to
+  the map.
 
 Panel selection is the original algorithm (`FUN_00415790`): the first panel is
 `table[remap[atk]*16 + remap[def] + 8]`, the second

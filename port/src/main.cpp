@@ -417,6 +417,7 @@ struct CombatView {
     int mode = 0;
     int panelA = 0, panelB = 0;
     CombatResult r;
+    float t = 0;   // animation clock (ride-in / fire / explosions)
 };
 static std::deque<CombatView> gCombatQueue;
 static CombatView gCv;
@@ -551,7 +552,7 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
     const UnitType& TD = gTypes[D.type];
     const CombatResult& r = v.r;
 
-    // ----- top: names + initial HP (the report below shows the outcome)
+    // ----- top: names + HP (initial, then the post-combat count)
     DrawRectangle((int)playX, 0, (int)playW, (int)topH, NAVY);
     int nameSize = (int)(topH * 0.30f);
     DrawText(TA.name.c_str(), (int)(playX + playW * 0.03f), (int)(topH * 0.34f), nameSize, TXT);
@@ -568,10 +569,17 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
         DrawText(TextFormat("%d", val), (int)(x + s * 0.33f), (int)(y + s * 0.12f),
                  (int)(s * 0.70f), BORDER);
     };
-    hpBox(0.335f, std::clamp(v.hpA0 + 1, 0, 8));
-    hpBox(0.613f, std::clamp(v.hpD0 + 1, 0, 8));
 
-    // ----- middle: static terrain close-ups + initial army
+    float t = v.t;
+    int nA0 = std::clamp(v.hpA0 + 1, 0, 8);   // initial vehicles
+    int nD0 = std::clamp(v.hpD0 + 1, 0, 8);
+    int nA1 = (v.hpA1 > 0) ? std::clamp(v.hpA1 + 1, 0, 8) : 0;  // survivors
+    int nD1 = (v.hpD1 > 0) ? std::clamp(v.hpD1 + 1, 0, 8) : 0;
+    bool impact = t > 2.45f;
+    hpBox(0.335f, impact ? nA1 : nA0);
+    hpBox(0.613f, impact ? nD1 : nD0);
+
+    // ----- middle: terrain close-ups + ride-in + simultaneous fire
     static const float FORM[8][2] = {
         {0.40f, 0.37f}, {0.23f, 0.34f}, {0.40f, 0.53f}, {0.19f, 0.47f},
         {0.36f, 0.72f}, {0.16f, 0.67f}, {0.31f, 0.89f}, {0.08f, 0.83f}
@@ -584,35 +592,125 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
         return Vector2{px + slotX * pan, panY + slotY * pan};
     };
 
-    auto drawPanel = [&](int idx, float x) {
+    auto drawPanel = [&](int idx, float x, float w) {
         if (gCombatPanels.empty() || !gCombatPanels[idx].id) return;
         Texture2D& tex = gCombatPanels[idx];
         DrawTexturePro(tex, {0, 0, (float)tex.width, (float)tex.height},
-                       {x, panY, pan, pan}, {0, 0}, 0, WHITE);
+                       {x, panY, w, pan}, {0, 0}, 0, WHITE);
     };
-    drawPanel(v.panelA, axPanel);
-    drawPanel(v.panelB, dxPanel);
-    if (!ranged && v.panelA != v.panelB)
-        DrawRectangle((int)(dxPanel) - 1, (int)panY, 2, (int)pan, BLACK);
+    if (ranged) {
+        drawPanel(v.panelA, axPanel, pan);
+        drawPanel(v.panelB, dxPanel, pan);
+    } else {
+        // 1px overlap hides the floating-point seam between the two panels
+        drawPanel(v.panelA, axPanel, pan + 1.0f);
+        drawPanel(v.panelB, dxPanel, pan);
+    }
 
-    // The simulation is static: show the initial formations, no ride-in,
-    // no muzzle flashes, no disappearing floating numbers.
-    auto drawArmy = [&](float px, int count, int type, bool mirror) {
+    float fireT = 2.15f, fireDur = 0.35f;
+    float rk = (t > fireT && t < fireT + fireDur)
+                   ? std::sin((t - fireT) / fireDur * 3.14159f)
+                   : 0.0f;
+    float recoilA = -us * 0.20f * rk;
+    float recoilD = us * 0.20f * rk;
+    Color flashA = (t > 2.45f && t < 2.95f) ? Color{255, 150, 150, 255} : WHITE;
+    Color flashD = flashA;
+
+    // original materialise rhythm: arrival at 0.05 + i*0.235 s
+    auto drawArmy = [&](float px, int count, int type, bool mirror,
+                        float nudge, Color flash) {
         if (type < 0 || type >= 24) return;
         Texture2D& bt = mirror ? gUnitSprite[type] : gUnitSpriteFlip[type];
         if (!bt.id) return;
-        Color tint = mirror ? Color{150, 255, 150, 255} : WHITE;
+        Color team = mirror ? Color{150, 255, 150, 255} : WHITE;
+        Color c = {
+            (unsigned char)(team.r * flash.r / 255),
+            (unsigned char)(team.g * flash.g / 255),
+            (unsigned char)(team.b * flash.b / 255),
+            (unsigned char)flash.a
+        };
         Rectangle src = {0, 0, (float)bt.width, (float)bt.height};
+        const float dur = 0.70f;
         for (int i = 0; i < count; ++i) {
+            float arrive = 0.05f + i * 0.235f;
+            float start = arrive - dur;
+            if (t < start) continue;
+            float k = std::clamp((t - start) / dur, 0.0f, 1.0f);
+            float ease = 1.0f - (1.0f - k) * (1.0f - k);
             float sx = mirror ? (1.0f - FORM[i][0]) : FORM[i][0];
             Vector2 dest = panelPoint(px, sx, FORM[i][1]);
+            float startX = mirror ? (float)W + us : -(float)us;
+            float x = startX + (dest.x - startX) * ease;
+            float y = dest.y + std::sin(k * 3.14159f * 2.0f) * us * 0.05f;
+            x += nudge;
             float s = us * 1.3f;
-            DrawTexturePro(bt, src, {dest.x - s / 2, dest.y - s / 2, s, s},
-                           {0, 0}, 0, tint);
+            DrawTexturePro(bt, src, {x - s / 2, y - s / 2, s, s}, {0, 0}, 0, c);
         }
     };
-    drawArmy(axPanel, std::clamp(v.hpA0 + 1, 0, 8), A.type, false);
-    drawArmy(dxPanel, std::clamp(v.hpD0 + 1, 0, 8), D.type, true);
+
+    drawArmy(axPanel, impact ? nA1 : nA0, A.type, false, recoilA, flashA);
+    drawArmy(dxPanel, impact ? nD1 : nD0, D.type, true, recoilD, flashD);
+
+    // ----- simultaneous fire: every surviving shot aims at a killed vehicle
+    // slot when possible, otherwise at a deterministic scatter point.
+    auto scatter = [&](int side, int i) {
+        int h = (i * 73 + side * 41 + 17) % 100;
+        int v = (i * 47 + side * 67 + 23) % 100;
+        float rx = 0.12f + 0.76f * (h / 100.0f);
+        float ry = 0.14f + 0.72f * (v / 100.0f);
+        return panelPoint(side == 0 ? dxPanel : axPanel, rx, ry);
+    };
+
+    Vector2 fromA[8], toA[8], fromD[8], toD[8];
+    int killedD = std::max(0, nD0 - nD1);   // defender vehicles lost
+    int killedA = std::max(0, nA0 - nA1);   // attacker vehicles lost
+    for (int i = 0; i < nA0; ++i) {
+        fromA[i] = panelPoint(axPanel, FORM[i][0], FORM[i][1]);
+        if (i < killedD) {
+            int slot = nD1 + i;
+            toA[i] = panelPoint(dxPanel, 1.0f - FORM[slot][0], FORM[slot][1]);
+        } else {
+            toA[i] = scatter(0, i);
+        }
+    }
+    for (int i = 0; i < nD0; ++i) {
+        fromD[i] = panelPoint(dxPanel, 1.0f - FORM[i][0], FORM[i][1]);
+        if (i < killedA) {
+            int slot = nA1 + i;
+            toD[i] = panelPoint(axPanel, FORM[slot][0], FORM[slot][1]);
+        } else {
+            toD[i] = scatter(1, i);
+        }
+    }
+
+    if (t > fireT && t < fireT + fireDur) {
+        auto fire = [&](Vector2* from, Vector2* to, int count, float nudge) {
+            for (int i = 0; i < count; ++i) {
+                float st = fireT + i * 0.012f;
+                if (t < st) continue;
+                float k = std::clamp((t - st) / fireDur, 0.0f, 1.0f);
+                Vector2 p = {from[i].x + nudge + (to[i].x - from[i].x - nudge) * k,
+                             from[i].y + (to[i].y - from[i].y) * k};
+                if (gVfx[2].id) drawEffect(gVfx[2], p.x, p.y, us * 0.85f, 0.0f, WHITE);
+                else DrawCircleV(p, us * 0.16f, ORANGE);
+                if (k < 0.22f) {
+                    Vector2 m = {from[i].x + nudge, from[i].y};
+                    if (gVfx[1].id) drawEffect(gVfx[1], m.x, m.y, us * 1.0f, 0.0f, WHITE);
+                    else DrawCircleV(m, us * 0.20f, Color{255, 220, 120, 255});
+                }
+            }
+        };
+        fire(fromA, toA, nA0, recoilA);
+        fire(fromD, toD, nD0, recoilD);
+    }
+
+    if (t > 2.45f && t < 3.30f) {
+        float e = (t - 2.45f) * 7.0f;
+        for (int i = 0; i < nA0; ++i)
+            drawExplosion(toA[i].x, toA[i].y, us * 0.70f, e + i * 0.35f);
+        for (int i = 0; i < nD0; ++i)
+            drawExplosion(toD[i].x, toD[i].y, us * 0.70f, e + i * 0.35f);
+    }
 
     // ----- bottom: persistent simulation report
     DrawRectangle((int)playX, (int)botY, (int)playW, (int)botH, NAVY);
@@ -914,6 +1012,7 @@ int main(int argc, char** argv) {
             int td = terrainAt(gMission, gMission.units[d].x, gMission.units[d].y);
             gCv.panelA = combatPanelFor(ta, td, gCv.mode > 0, true);
             gCv.panelB = combatPanelFor(td, ta, gCv.mode > 0, false);
+            gCv.t = (argc > 5) ? (float)std::atof(argv[5]) : 2.70f;
             for (int k = 0; k < 6; ++k) {
                 BeginDrawing();
                 drawCombatScreen(gCv, playerTex, enemyTex);
@@ -958,12 +1057,17 @@ int main(int argc, char** argv) {
     int frame = 0;
     while (!WindowShouldClose()) {
         if (gCv.active) {
+            gCv.t += GetFrameTime();
             BeginDrawing();
             drawCombatScreen(gCv, playerTex, enemyTex);
             EndDrawing();
             if (IsKeyPressed(KEY_SPACE) || IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-                gCv.active = false;
-                startNextCombat();
+                if (gCv.t < 3.60f) {
+                    gCv.t = 3.60f;      // first input skips to the result
+                } else {
+                    gCv.active = false;
+                    startNextCombat();
+                }
             }
             continue;
         }
