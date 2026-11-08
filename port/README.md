@@ -42,9 +42,11 @@ Controls:
 | LMB on own unit | select, show movement range |
 | LMB on blue cell | move |
 | LMB on adjacent enemy | attack |
-| RMB / ESC | deselect |
+| RMB drag | pan the map |
+| ESC | deselect |
 | SPACE | end turn (enemy AI acts) |
-| N | next campaign map |
+| N | next map (test map first, then campaign 1-16) |
+| B | previous map |
 | R | restart mission |
 | F1 | debug cell info |
 
@@ -406,8 +408,9 @@ rendering (palette/interlace) is still being matched.
 * smooth movement interpolation, hit flash, floating damage numbers
 * SFX playback (`assets/audio/se01..se36.wav`)
 * enemy AI (advance + attack, ranged-aware), turn cycle, win/lose
-* campaign sequencing (`N`) over the exported maps, including the 16 decoded
-  campaign missions and their garrison squads
+* campaign sequencing (`N` next / `B` previous) over the test map, the 16 decoded
+  campaign missions and the editor maps, including garrison squads; RMB drag
+  pans the map
 * combat self-test matrix
 
 ## TODO

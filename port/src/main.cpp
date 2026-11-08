@@ -10,7 +10,7 @@
 //   assets/art/map_background.png
 //   assets/maps/*.json          missions
 //
-// Controls: LMB select / move / attack, RMB or ESC cancel, SPACE end turn, R restart, F1 debug.
+// Controls: LMB select / move / attack, RMB pan, ESC cancel, SPACE end turn, R restart, F1 debug.
 
 #include "raylib.h"
 #include <nlohmann/json.hpp>
@@ -62,6 +62,8 @@ static bool gUiFontReady = false;
 
 static const char* kGameDir = nullptr;
 static std::string gAssetDir;
+static float gPanX = 0.0f, gPanY = 0.0f;
+static float gMapPixelW = 0.0f, gMapPixelH = 0.0f;
 
 // Non-macro aliases (raylib's RED/GREEN are macros, so they cannot be used as
 // local constant names in some expressions).
@@ -158,10 +160,12 @@ static void loadData() {
 
 static std::vector<std::string> listCampaign(const std::string& dir) {
     std::vector<std::string> camps, maps;
+    std::string test;
     std::error_code ec;
     for (const auto& e : std::filesystem::directory_iterator(dir, ec)) {
         std::string n = e.path().filename().string();
-        if (n == "all_units_test.json" || n.rfind("deploy_", 0) == 0) continue;
+        if (n == "all_units_test.json") { test = e.path().string(); continue; }
+        if (n.rfind("deploy_", 0) == 0) continue;
         bool campaign = n.rfind("campaign_", 0) == 0;
         bool editor = n.size() == 9 && (n[0] == 'M') && n[1] >= 'a' && n[1] <= 'd' &&
                       std::isdigit((unsigned char)n[2]) && std::isdigit((unsigned char)n[3]);
@@ -170,11 +174,15 @@ static std::vector<std::string> listCampaign(const std::string& dir) {
     }
     std::sort(camps.begin(), camps.end());
     std::sort(maps.begin(), maps.end());
-    camps.insert(camps.end(), maps.begin(), maps.end());
-    return camps;
+    std::vector<std::string> out;
+    if (!test.empty()) out.push_back(test);   // test map, then campaign 1..16
+    out.insert(out.end(), camps.begin(), camps.end());
+    out.insert(out.end(), maps.begin(), maps.end());
+    return out;
 }
 
 static bool loadMission(const std::string& path) {    json j = loadJson(path);
+    gPanX = gPanY = 0.0f;
     gMission = Mission{};
     gMission.name = j.value("name", std::string("mission"));
     gMission.number = j.value("mission", 0);
@@ -337,14 +345,14 @@ static float gHexH = 51.96f;
 static float gOriginX = 20.0f, gOriginY = 20.0f;
 
 static void hexCenter(int x, int y, float& cx, float& cy) {
-    cx = gOriginX + gHexSize + x * gStepX;
-    cy = gOriginY + gHexH * 0.5f + y * gStepY + ((x & 1) ? gStepY * 0.5f : 0.0f);
+    cx = gOriginX + gPanX + gHexSize + x * gStepX;
+    cy = gOriginY + gPanY + gHexH * 0.5f + y * gStepY + ((x & 1) ? gStepY * 0.5f : 0.0f);
 }
 
 // Flat-top, odd-q offset. Returns false if outside the map.
 static bool pixelToHex(float px, float py, int w, int h, int& outX, int& outY) {
-    float rx = px - (gOriginX + gHexSize);
-    float ry = py - (gOriginY + gHexH * 0.5f);
+    float rx = px - (gOriginX + gPanX + gHexSize);
+    float ry = py - (gOriginY + gPanY + gHexH * 0.5f);
     float q = (2.0f / 3.0f * rx) / gHexSize;
     float r = (-1.0f / 3.0f * rx + 0.57735027f * ry) / gHexSize;
     float cq = q, cr = r, cs = -q - r;
@@ -403,8 +411,8 @@ static void drawHexMap(const Mission& m) {
         // and half a step up from the map origin.
         float cw = ((float)m.w + 0.5f) * gStepX;
         float ch = ((float)m.h + 0.5f) * gStepY;
-        float x0 = gOriginX + gHexSize - gStepX * 0.5f;
-        float y0 = gOriginY + gHexH * 0.5f - gStepY * 0.5f;
+        float x0 = gOriginX + gPanX + gHexSize - gStepX * 0.5f;
+        float y0 = gOriginY + gPanY + gHexH * 0.5f - gStepY * 0.5f;
         DrawTexturePro(gBackdrop, {0, 0, (float)gBackdrop.width, (float)gBackdrop.height},
                        {x0, y0, cw, ch}, {0, 0}, 0, WHITE);
     }
@@ -947,8 +955,11 @@ int main(int argc, char** argv) {
 
     auto campaign = listCampaign(gAssetDir + "maps");
     int campaignIdx = 0;
-    for (int i = 0; i < (int)campaign.size(); ++i)
-        if (campaign[i] == missionPath) campaignIdx = i;
+    {
+        std::string want = std::filesystem::path(missionPath).filename().string();
+        for (int i = 0; i < (int)campaign.size(); ++i)
+            if (std::filesystem::path(campaign[i]).filename().string() == want) campaignIdx = i;
+    }
 
     if (argc > 7 && std::string(argv[3]) == "--resolvetest") {
         int a = std::atoi(argv[4]);
@@ -1014,6 +1025,8 @@ int main(int argc, char** argv) {
     gOriginY = 24.0f;
     int mapW = (int)(gOriginX * 2 + gStepX * (gMission.w - 1) + 2 * gHexSize);
     int mapH = (int)(gOriginY * 2 + gStepY * (gMission.h - 1) + gHexH + gStepY * 0.5f);
+    gMapPixelW = (float)mapW;
+    gMapPixelH = (float)mapH;
     int panelW = 620;
 
     if (argc > 3 && std::string(argv[3]) == "--hextest") {
@@ -1227,6 +1240,14 @@ int main(int argc, char** argv) {
             continue;
         }
         Vector2 mouse = GetMousePosition();
+        if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT) && !IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
+            Vector2 d = GetMouseDelta();
+            gPanX += d.x;
+            gPanY += d.y;
+            float lx = gMapPixelW * 0.5f, ly = gMapPixelH * 0.5f;
+            gPanX = std::clamp(gPanX, -lx, lx);
+            gPanY = std::clamp(gPanY, -ly, ly);
+        }
         int mx = 0, my = 0;
         bool inMap = pixelToHex(mouse.x, mouse.y, gMission.w, gMission.h, mx, my);
 
@@ -1260,7 +1281,17 @@ int main(int argc, char** argv) {
             gCv.active = false;
             currentPlayer = 0;
         }
-        if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) || IsKeyPressed(KEY_ESCAPE))
+        if (IsKeyPressed(KEY_B) && !campaign.empty()) {
+            campaignIdx = (campaignIdx - 1 + (int)campaign.size()) % (int)campaign.size();
+            loadMission(campaign[campaignIdx]);
+            missionPath = campaign[campaignIdx];
+            resetSelection();
+            fx.clear();
+            gCombatQueue.clear();
+            gCv.active = false;
+            currentPlayer = 0;
+        }
+        if (IsKeyPressed(KEY_ESCAPE))
             resetSelection();
 
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
@@ -1400,11 +1431,11 @@ int main(int argc, char** argv) {
             uiText(TextFormat("Garrison: %d (P%d/E%d)", (int)gMission.garrison.size(), g0, g1),
                    px, 240, 16, SKYBLUE);
             if (!campaign.empty())
-                uiText(TextFormat("Campaign %d/%d  [N] next", campaignIdx + 1,
-                                    (int)campaign.size()), px, 268, 16, GRAY);
+                uiText(TextFormat("Campaign %d/%d  [N] next  [B] prev", campaignIdx + 1,
+                                    (int)campaign.size()), px, 268, 8, GRAY);
         } else if (!campaign.empty())
-            uiText(TextFormat("Campaign %d/%d  [N] next", campaignIdx + 1,
-                                (int)campaign.size()), px, 240, 16, GRAY);
+            uiText(TextFormat("Campaign %d/%d  [N] next  [B] prev", campaignIdx + 1,
+                                (int)campaign.size()), px, 240, 8, GRAY);
 
         if (selected >= 0) {
             const Unit& u = gMission.units[selected];
@@ -1415,8 +1446,8 @@ int main(int argc, char** argv) {
                      16, LIGHTGRAY);
             uiText("LMB move / attack", px, 370, 16, GRAY);
         }
-        uiText("SPACE end turn   R restart", px, 430, 16, GRAY);
-        uiText("ESC / RMB cancel", px, 470, 16, GRAY);
+        uiText("SPACE end turn   R restart", px, 430, 8, GRAY);
+        uiText("ESC cancel   RMB drag: pan", px, 470, 8, GRAY);
 
         if (alive1 == 0) uiText("VICTORY", px, 520, 28, kGreen);
         if (alive0 == 0) uiText("DEFEAT", px, 520, 28, kRed);
