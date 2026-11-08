@@ -798,6 +798,11 @@ struct FactoryLayout {
     float cellW = 0, cellH = 0;
 };
 
+struct DeployCell {
+    int x = 0, y = 0;
+    int transportSlot = -1;   // >= 0: deploy directly into this transport
+};
+
 static FactoryLayout factoryLayout(int W, int H) {
     FactoryLayout L;
     float pw = std::min((float)W - 60.0f, 1040.0f);
@@ -826,7 +831,7 @@ static Color factoryOwnerColor(int owner) {
     return Color{190, 195, 205, 255};
 }
 
-static void drawFactoryScreen(const Factory& f, int sel) {
+static void drawFactoryScreen(const Factory& f, int sel, bool canDeploy) {
     int W = GetScreenWidth(), H = GetScreenHeight();
     FactoryLayout L = factoryLayout(W, H);
     Color ownerCol = factoryOwnerColor(f.owner);
@@ -890,6 +895,12 @@ static void drawFactoryScreen(const Factory& f, int sel) {
             if (ut.indirectCapable())
                 uiText("INDIRECT FIRE", (int)L.info.x + 180, (int)L.info.y + 78, 14,
                        Color{145, 155, 170, 255});
+            if (canDeploy)
+                uiText("SPACE: deploy this unit", (int)L.info.x + 360,
+                       (int)L.info.y + 78, 14, Color{120, 235, 150, 255});
+            else
+                uiText("VIEW ONLY", (int)L.info.x + 360, (int)L.info.y + 78, 14,
+                       Color{190, 120, 120, 255});
         }
     } else {
         uiText("EMPTY SLOT", (int)L.info.x + 20, (int)L.info.y + 22, 20,
@@ -898,8 +909,61 @@ static void drawFactoryScreen(const Factory& f, int sel) {
                (int)L.info.y + 58, 14, GRAY);
     }
 
-    uiText("ARROWS select   LMB select   ESC / SPACE close",
+    uiText(canDeploy
+               ? "ARROWS select   LMB select   SPACE deploy   ESC close"
+               : "ARROWS select   LMB select   ESC / SPACE close",
            (int)L.panel.x + 28, (int)(L.panel.y + L.panel.height - 34.0f), 12, GRAY);
+}
+
+static void drawDeploymentFrame(const Mission& m, const Factory& f, int type,
+                                const std::vector<DeployCell>& cells) {
+    int W = GetScreenWidth(), H = GetScreenHeight();
+    BeginDrawing();
+    ClearBackground(Color{12, 12, 16, 255});
+    drawHexMap(m);
+
+    // Existing units, same map presentation as the tactical view.
+    float usz = gHexSize * 1.75f;
+    for (const auto& u : m.units) {
+        if (u.hp <= 0 || u.carried) continue;
+        drawUnitSprite(m, u, Texture2D{0}, Texture2D{0});
+        float cx, cy;
+        hexCenter(u.x, u.y, cx, cy);
+        if (u.px >= 0) { cx = u.px + usz / 2; cy = u.py + usz / 2; }
+        for (int i = 0; i < u.hp; ++i)
+            DrawRectangle((int)(cx - u.hp * 4 + i * 8),
+                          (int)(cy + gHexSize * 0.55f), 6, 5,
+                          u.owner == 0 ? kGreen : kRed);
+    }
+
+    // Source factory and legal deployment cells.
+    float fx, fy;
+    hexCenter(f.x, f.y, fx, fy);
+    DrawPolyLinesEx({fx, fy}, 6, gHexSize, 0, 3.5f, factoryOwnerColor(f.owner));
+    for (const DeployCell& c : cells) {
+        float cx, cy;
+        hexCenter(c.x, c.y, cx, cy);
+        Color col = c.transportSlot >= 0 ? Color{90, 210, 255, 255}
+                                         : Color{100, 245, 145, 255};
+        DrawPoly({cx, cy}, 6, gHexSize - 2, 0, Fade(col, 0.34f));
+        DrawPolyLinesEx({cx, cy}, 6, gHexSize - 2, 0, 3.0f, col);
+    }
+
+    int px = (int)gMapPixelW + 16;
+    const UnitType& ut = gTypes[type];
+    uiText("DEPLOY UNIT", px, 16, 24, Color{120, 235, 150, 255});
+    uiText(ut.name.c_str(), px, 58, 20, RAYWHITE);
+    uiText(TextFormat("MOV %d   ATK G/A %d/%d   DEF %d",
+                      ut.movePts, ut.atkGround, ut.atkAir, ut.def),
+           px, 92, 14, LIGHTGRAY);
+    uiText("Click a highlighted hex.", px, 145, 16, RAYWHITE);
+    uiText("Green = open ground", px, 185, 14, Color{120, 235, 150, 255});
+    uiText("Blue = friendly transport", px, 210, 14, Color{90, 210, 255, 255});
+    uiText("Transport must carry it.", px, 235, 12, GRAY);
+    uiText("ESC / SPACE cancel", px, 300, 12, GRAY);
+    uiText(TextFormat("Factory %d  at %d,%d", f.group, f.x, f.y),
+           px, 360, 12, GRAY);
+    EndDrawing();
 }
 
 static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D enemyTex) {
@@ -1468,7 +1532,7 @@ int main(int argc, char** argv) {
         if (f) {
             for (int k = 0; k < 6; ++k) {
                 BeginDrawing();
-                drawFactoryScreen(*f, 0);
+                drawFactoryScreen(*f, 0, f->owner == 0);
                 EndDrawing();
             }
             TakeScreenshot(shotPath.c_str());
@@ -1485,6 +1549,11 @@ int main(int argc, char** argv) {
     bool factoryOpen = false;
     int factoryIndex = -1;
     int factorySel = 0;
+    bool deployMode = false;
+    int deployFactory = -1;
+    int deploySlot = -1;
+    int deployType = -1;
+    std::vector<DeployCell> deployCells;
     std::vector<int> reach;
     std::vector<int> targets;
     std::string notice;
@@ -1511,6 +1580,11 @@ int main(int argc, char** argv) {
         showReach = true;
     };
 
+    auto say = [&](const std::string& s) {
+        notice = s;
+        noticeT = 2.5f;
+    };
+
     auto openFactory = [&](int fi) {
         if (fi < 0 || fi >= (int)gMission.factories.size()) return;
         resetSelection();
@@ -1520,9 +1594,53 @@ int main(int argc, char** argv) {
         if (IsSoundValid(sndSelect)) PlaySound(sndSelect);
     };
 
-    auto say = [&](const std::string& s) {
-        notice = s;
-        noticeT = 2.5f;
+    // Factory deployment is deliberately separate from movement: the stored
+    // unit is spawned on an adjacent cell (or directly into a transport).
+    auto startDeploy = [&](int fi, int slot) -> bool {
+        if (fi < 0 || fi >= (int)gMission.factories.size()) return false;
+        Factory& f = gMission.factories[fi];
+        if (f.owner != currentPlayer) return false;
+        if (slot < 0 || slot >= (int)f.roster.size()) return false;
+        int type = f.roster[slot];
+        if (type < 0 || type >= (int)gTypes.size()) return false;
+        const UnitType& ut = gTypes[type];
+
+        deployCells.clear();
+        for (int d = 0; d < 6; ++d) {
+            int nx, ny;
+            hexNeighbor(f.x, f.y, d, nx, ny);
+            if (!inBounds(gMission, nx, ny)) continue;
+            int ni = unitAt(gMission, nx, ny);
+            if (ni >= 0) {
+                const Unit& t = gMission.units[ni];
+                if (t.owner == f.owner && !t.carried &&
+                    isTransport(gTypes[t.type]) && t.cargo < 0 &&
+                    canCarry(gTypes[t.type], ut))
+                    deployCells.push_back({nx, ny, ni});
+                continue;                 // occupied; only empty transports
+            }
+            bool ok;
+            if (ut.airborne()) {
+                ok = true;                // aircraft ignore terrain
+            } else {
+                int terr = terrainAt(gMission, nx, ny);
+                ok = terr != 0 && terr != 4 &&
+                     moveCost(gMission, nx, ny, ut.moveClass) < 0x7f;
+            }
+            if (ok) deployCells.push_back({nx, ny, -1});
+        }
+        if (deployCells.empty()) {
+            say("No free adjacent deployment cell");
+            return false;
+        }
+        deployFactory = fi;
+        deploySlot = slot;
+        deployType = type;
+        deployMode = true;
+        factoryOpen = false;
+        resetSelection();
+        if (IsSoundValid(sndSelect)) PlaySound(sndSelect);
+        return true;
     };
 
     // Move a friendly unit onto an eligible, empty transport in shift range.
@@ -1573,14 +1691,92 @@ int main(int argc, char** argv) {
             }
             continue;
         }
+        if (deployMode) {
+            if (deployFactory < 0 || deployFactory >= (int)gMission.factories.size() ||
+                deployType < 0 || deployType >= (int)gTypes.size()) {
+                deployMode = false;
+                continue;
+            }
+            Factory& f = gMission.factories[deployFactory];
+            bool finished = false;
+            if (IsKeyPressed(KEY_ESCAPE) || IsKeyPressed(KEY_SPACE)) {
+                say("Deployment cancelled");
+                deployMode = false;
+                deployFactory = deploySlot = deployType = -1;
+                deployCells.clear();
+                finished = true;
+            } else if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+                int mx = 0, my = 0;
+                bool inMap = pixelToHex(GetMousePosition().x, GetMousePosition().y,
+                                        gMission.w, gMission.h, mx, my);
+                const DeployCell* target = nullptr;
+                if (inMap) {
+                    for (const DeployCell& c : deployCells)
+                        if (c.x == mx && c.y == my) { target = &c; break; }
+                }
+                if (target) {
+                    Unit u;
+                    u.type = deployType;
+                    u.owner = f.owner;
+                    u.hp = 7;
+                    u.rank = 0;
+                    u.xp = 0;
+                    u.acted = true;
+                    u.facing = 90.0f;
+                    u.px = u.py = -1.0f;
+                    if (target->transportSlot >= 0) {
+                        int ts = target->transportSlot;
+                        u.carried = true;
+                        u.x = gMission.units[ts].x;
+                        u.y = gMission.units[ts].y;
+                        int idx = (int)gMission.units.size();
+                        gMission.units.push_back(u);
+                        gMission.units[ts].cargo = idx;
+                        say(gTypes[deployType].name + " deployed into transport");
+                    } else {
+                        u.x = target->x;
+                        u.y = target->y;
+                        gMission.units.push_back(u);
+                        say(gTypes[deployType].name + " deployed");
+                    }
+                    if (deploySlot >= 0 && deploySlot < (int)f.roster.size())
+                        f.roster.erase(f.roster.begin() + deploySlot);
+                    // Keep the side-panel garrison count in sync with the roster.
+                    for (auto it = gMission.garrison.begin();
+                         it != gMission.garrison.end(); ++it) {
+                        if (it->type == deployType && it->x == f.x && it->y == f.y) {
+                            gMission.garrison.erase(it);
+                            break;
+                        }
+                    }
+                    if (IsSoundValid(sndMove)) PlaySound(sndMove);
+                    deployMode = false;
+                    deployFactory = deploySlot = deployType = -1;
+                    deployCells.clear();
+                    finished = true;
+                }
+            }
+            if (deployMode) {
+                drawDeploymentFrame(gMission, f, deployType, deployCells);
+                continue;
+            }
+            if (finished) continue;
+        }
         if (factoryOpen) {
             if (factoryIndex < 0 || factoryIndex >= (int)gMission.factories.size()) {
                 factoryOpen = false;
                 factoryIndex = -1;
             } else {
                 Factory& f = gMission.factories[factoryIndex];
-                if (IsKeyPressed(KEY_ESCAPE) || IsKeyPressed(KEY_SPACE)) {
+                if (IsKeyPressed(KEY_ESCAPE)) {
                     factoryOpen = false;
+                } else if (IsKeyPressed(KEY_SPACE)) {
+                    if (f.owner == currentPlayer && factorySel >= 0 &&
+                        factorySel < (int)f.roster.size()) {
+                        startDeploy(factoryIndex, factorySel);
+                    } else {
+                        factoryOpen = false;
+                    }
                 } else {
                     if (IsKeyPressed(KEY_LEFT))
                         factorySel = (factorySel % 4 == 0) ? factorySel + 3 : factorySel - 1;
@@ -1609,7 +1805,7 @@ int main(int argc, char** argv) {
                 }
                 BeginDrawing();
                 ClearBackground(Color{8, 9, 14, 255});
-                drawFactoryScreen(f, factorySel);
+                drawFactoryScreen(f, factorySel, f.owner == currentPlayer);
                 EndDrawing();
                 continue;
             }

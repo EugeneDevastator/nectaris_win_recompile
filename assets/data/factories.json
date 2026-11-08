@@ -1,10 +1,12 @@
 {
   "capacity": 12,
+  "automatic_production": false,
+  "capture": "infantry only (GX-77, GX-87, CBX-1)",
   "repair": {
     "stored_turns": 1,
     "hp": 8
   },
-  "note": "Factories do not produce new units. Captured/stored units are free; damaged stored units are repaired to full HP.",
+  "note": "Factories do not produce new units. Captured/stored units are free; a damaged unit moved into a factory is repaired to 8 HP and can be deployed again on the following turn.",
   "missions": [
     {
       "mission": 1,

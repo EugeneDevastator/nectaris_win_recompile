@@ -42,7 +42,9 @@ Controls:
 | LMB on own unit | select, or switch selection if one is already active |
 | LMB on blue cell | move |
 | LMB on adjacent enemy | attack |
-| LMB on a factory hex | view its stored units (any owner; arrows/LMB select, ESC/SPACE close) |
+| LMB on a factory hex | view its stored units (any owner; arrows/LMB select, ESC close) |
+| SPACE in an owned factory | deploy the selected stored unit |
+| LMB on a deployment hex | place the deployed unit; blue = into a friendly transport |
 | LMB own unit -> friendly transport | load it (transport must be in shift range) |
 | LMB the same unit again | deselect |
 | SPACE | deselect if a unit is selected, otherwise end turn |
@@ -481,8 +483,16 @@ Factory mechanics in the original code:
 In the port, clicking a factory hex (with no unit selected) opens its 4x3
 contents screen.  Any owner's factory can be inspected, matching the original
 game.  Arrow keys or the mouse select a slot; the info panel shows the unit's
-HP, movement, attack and defence.  `ESC` or `SPACE` closes it.  For scripted
-previews, `--factoryshot <png> <group>` renders a factory screen directly.
+HP, movement, attack and defence.  `ESC` closes it.  For scripted previews,
+`--factoryshot <png> <group>` renders a factory screen directly.
+
+Deployment is a separate action from movement.  In a factory you own, select a
+stored unit and press `SPACE`: the factory screen closes and the six adjacent
+hexes are highlighted.  Green hexes are legal terrain for that unit; blue hexes
+are empty friendly transports that can carry it.  Clicking a highlighted hex
+spawns the unit there and removes it from the factory roster.  A unit deployed
+into a transport becomes its cargo immediately, so a mine can be loaded onto a
+Mule/Pelican parked next to the factory.  `ESC` cancels deployment.
 
 ## Implemented
 
@@ -502,6 +512,8 @@ previews, `--factoryshot <png> <group>` renders a factory screen directly.
   (ownership, 12-slot capacity, repair mechanics)
 * clickable factory contents screen in the port (any owner, 4x3 roster, unit
   stats, mouse/arrow selection)
+* factory deployment: spawn a stored unit on an adjacent legal hex or directly
+  into a friendly transport
 * combat self-test matrix
 
 ## TODO
