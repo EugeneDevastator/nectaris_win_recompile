@@ -29,5 +29,16 @@
   "guide_frames": {
     "alive": "combat_alive.png",
     "wreck": "combat_wreck.png"
+  },
+  "guide": {
+    "english_name": "SG-4",
+    "movement": 4,
+    "defense": 30,
+    "attack_ground": 45,
+    "attack_air": 0,
+    "range_ground": 5,
+    "range_air": 0,
+    "frame_alive": "combat_alive.png",
+    "frame_wreck": "combat_wreck.png"
   }
 }

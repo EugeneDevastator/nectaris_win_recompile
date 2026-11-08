@@ -29,5 +29,16 @@
   "guide_frames": {
     "alive": "combat_alive.png",
     "wreck": "combat_wreck.png"
+  },
+  "guide": {
+    "english_name": "MM107",
+    "movement": 5,
+    "defense": 30,
+    "attack_ground": 0,
+    "attack_air": 85,
+    "range_ground": 0,
+    "range_air": 5,
+    "frame_alive": "combat_alive.png",
+    "frame_wreck": "combat_wreck.png"
   }
 }

@@ -192,11 +192,32 @@ assets/units/unit_06/
   unit.json         stats + sprite metadata
 ```
 
-The two 64×64 guide frames are extracted from the original WEAPON DATA screen
-with `tools/extract_guide_all.py` + `tools/extract_guide_frames.py` and replace
-the row-4 sprite in the battle animation; killed vehicles show the wreck frame.
+The two 64×64 guide frames are extracted from the raw 8-bit screen buffer
+(`DAT_00480f18`), not PrintWindow screenshots: `tools/extract_guide_all.py`
+dumps `dump/guide/fb_type_XX.bin` + palette per unit, and
+`tools/extract_guide_frames_fb.py` keys the guide box background (palette
+index 16) and writes the frames. Killed vehicles show the wreck frame.
 The live sprite/tile banks captured on that screen are in
-`dump/guide/spritebank_guide.bin`, `tilebank_guide.bin` and `palette_guide.bin`.
+`dump/guide/spritebank_guide.bin`, `tilebank_guide.bin`, `palette_guide.bin`,
+`framebuffer_guide.bin` and `atlas_guide.bin`.
+
+The WEAPON DATA stat block is written to each `unit.json` under `guide` and
+aggregated in `assets/data/units_guide.json`:
+
+```json
+"guide": {
+  "english_name": "M-77",
+  "movement": 0,
+  "defense": 80,
+  "attack_ground": 0,
+  "attack_air": 0,
+  "range_ground": 0,
+  "range_air": 0
+}
+```
+
+The guide displays movement, defence, ground/air attack and ground/air range;
+the displayed ranges are effective ranges (0 when that attack is 0).
 
 Only blue sprites are stored; the enemy is the same sprite flipped and tinted
 green at draw time, so no colour variants are

@@ -183,6 +183,11 @@ for t in range(24):
         tap(SPACE, gap=0.65)
         ok = is_guide()
     snap(os.path.join(OUT, 'type_%02d.png' % t))
+    fbp = u32(0x480f18)
+    if 0x10000 < fbp < 0x7fffffff:
+        open(os.path.join(OUT, 'fb_type_%02d.bin' % t), 'wb').write(dm.read_abs(h, fbp, 704 * 544))
+    open(os.path.join(OUT, 'pal_type_%02d.bin' % t), 'wb').write(
+        dm.read(h, base, 0x480f20, 1028))
     print('type %2d guide=%s state=%08x' % (t, ok, u32(0x483270)), flush=True)
 
 # restore and close

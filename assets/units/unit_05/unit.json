@@ -29,5 +29,16 @@
   "guide_frames": {
     "alive": "combat_alive.png",
     "wreck": "combat_wreck.png"
+  },
+  "guide": {
+    "english_name": "PT-6",
+    "movement": 4,
+    "defense": 60,
+    "attack_ground": 60,
+    "attack_air": 0,
+    "range_ground": 1,
+    "range_air": 0,
+    "frame_alive": "combat_alive.png",
+    "frame_wreck": "combat_wreck.png"
   }
 }

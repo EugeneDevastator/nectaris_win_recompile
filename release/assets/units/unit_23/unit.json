@@ -29,5 +29,16 @@
   "guide_frames": {
     "alive": "combat_alive.png",
     "wreck": "combat_wreck.png"
+  },
+  "guide": {
+    "english_name": "ﾔﾏｱﾗｼ",
+    "movement": 0,
+    "defense": 0,
+    "attack_ground": 0,
+    "attack_air": 0,
+    "range_ground": 0,
+    "range_air": 0,
+    "frame_alive": "combat_alive.png",
+    "frame_wreck": "combat_wreck.png"
   }
 }

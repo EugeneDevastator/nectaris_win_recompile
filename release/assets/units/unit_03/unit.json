@@ -29,5 +29,16 @@
   "guide_frames": {
     "alive": "combat_alive.png",
     "wreck": "combat_wreck.png"
+  },
+  "guide": {
+    "english_name": "EF-88",
+    "movement": 11,
+    "defense": 50,
+    "attack_ground": 70,
+    "attack_air": 70,
+    "range_ground": 1,
+    "range_air": 1,
+    "frame_alive": "combat_alive.png",
+    "frame_wreck": "combat_wreck.png"
   }
 }

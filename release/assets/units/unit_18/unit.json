@@ -29,5 +29,16 @@
   "guide_frames": {
     "alive": "combat_alive.png",
     "wreck": "combat_wreck.png"
+  },
+  "guide": {
+    "english_name": "GX-77",
+    "movement": 3,
+    "defense": 4,
+    "attack_ground": 10,
+    "attack_air": 10,
+    "range_ground": 1,
+    "range_air": 1,
+    "frame_alive": "combat_alive.png",
+    "frame_wreck": "combat_wreck.png"
   }
 }

@@ -29,5 +29,16 @@
   "guide_frames": {
     "alive": "combat_alive.png",
     "wreck": "combat_wreck.png"
+  },
+  "guide": {
+    "english_name": "SS-80",
+    "movement": 0,
+    "defense": 20,
+    "attack_ground": 90,
+    "attack_air": 0,
+    "range_ground": 6,
+    "range_air": 0,
+    "frame_alive": "combat_alive.png",
+    "frame_wreck": "combat_wreck.png"
   }
 }

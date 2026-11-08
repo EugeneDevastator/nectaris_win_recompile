@@ -29,5 +29,16 @@
   "guide_frames": {
     "alive": "combat_alive.png",
     "wreck": "combat_wreck.png"
+  },
+  "guide": {
+    "english_name": "MB-5",
+    "movement": 8,
+    "defense": 20,
+    "attack_ground": 70,
+    "attack_air": 10,
+    "range_ground": 1,
+    "range_air": 1,
+    "frame_alive": "combat_alive.png",
+    "frame_wreck": "combat_wreck.png"
   }
 }

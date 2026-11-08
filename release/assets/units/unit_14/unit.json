@@ -29,5 +29,16 @@
   "guide_frames": {
     "alive": "combat_alive.png",
     "wreck": "combat_wreck.png"
+  },
+  "guide": {
+    "english_name": "MB-4",
+    "movement": 6,
+    "defense": 20,
+    "attack_ground": 40,
+    "attack_air": 10,
+    "range_ground": 2,
+    "range_air": 1,
+    "frame_alive": "combat_alive.png",
+    "frame_wreck": "combat_wreck.png"
   }
 }
