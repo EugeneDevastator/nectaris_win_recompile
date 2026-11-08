@@ -342,10 +342,19 @@ dump/campaign/campaign_XX_*.png         # port-rendered full map screens
 ```
 
 Each campaign JSON has `"background": "maps/backdrops/<name>.png"`.  The port
-loads it if the file exists and draws the semi-transparent terrain hexes on
-top (`alpha = 96`), so the terrain class is still readable.  If the field is
-empty or the file is missing, the map falls back to opaque terrain hexes.
-Generate backdrops for any map with:
+loads it if the file exists (point-filtered) and draws the semi-transparent
+terrain hexes on top (`alpha = 96`), so the terrain class is still readable.
+If the field is empty or the file is missing, the map falls back to opaque
+terrain hexes.
+
+The backdrops are **captured from the original game**, not rendered by the
+port.  The original map screen composes the whole map from terrain tiles and
+scales it to the viewport (no scrolling); `tools/orig_load_mission.py` loads a
+mission via a remote call to `FUN_00405ad0`, points the mission's unit list at
+an empty terminator so no units are placed, and captures the framebuffer.
+The 480x320 map area is cropped to `assets/maps/backdrops/campaign_XX_*.png`;
+factories/HQ/bases remain visible.  `--backdropshot` can still render a
+port-style backdrop for maps without a capture:
 
 ```
 nectaris.exe assets assets/maps/campaign_10_darwin.json --backdropshot map10.png

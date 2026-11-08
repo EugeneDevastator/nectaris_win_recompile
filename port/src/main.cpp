@@ -387,7 +387,10 @@ static void ensureBackdrop() {
     if (!gMission.background.empty()) {
         std::string bp = gMission.background;
         if (bp[0] != '/' && bp.find(':') == std::string::npos) bp = gAssetDir + bp;
-        if (FileExists(bp.c_str())) gBackdrop = LoadTexture(bp.c_str());
+        if (FileExists(bp.c_str())) {
+            gBackdrop = LoadTexture(bp.c_str());
+            SetTextureFilter(gBackdrop, TEXTURE_FILTER_POINT);
+        }
     }
 }
 
