@@ -353,8 +353,19 @@ scales it to the viewport (no scrolling); `tools/orig_load_mission.py` loads a
 mission via a remote call to `FUN_00405ad0`, points the mission's unit list at
 an empty terminator so no units are placed, and captures the framebuffer.
 The 480x320 map area is cropped to `assets/maps/backdrops/campaign_XX_*.png`;
-factories/HQ/bases remain visible.  `--backdropshot` can still render a
-port-style backdrop for maps without a capture:
+factories/HQ/bases remain visible.  The port aligns the captured cell grid to
+the first hex centre and nudges it half a step right/up, extending the
+destination half a cell so the odd-q bottom/right edge is covered.
+
+Larger maps are captured as a single native 480x320 frame because the original
+fits the whole map on screen (16px cells for 30x20 maps); the port upscales it
+with point filtering.  The map structures are baked into the per-mission
+static backdrop tilemap (`0x4372a8` -> descriptors `0x43aae8` -> 8x8 tiles),
+not a separate object table; clean sprite separation needs the autotile
+descriptor renderer, so the captures keep the structures.
+
+`--backdropshot` can still render a port-style backdrop for maps without a
+capture:
 
 ```
 nectaris.exe assets assets/maps/campaign_10_darwin.json --backdropshot map10.png

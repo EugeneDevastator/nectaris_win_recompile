@@ -177,20 +177,10 @@ def probe_tilemap():
         vals = [struct.unpack_from('<H', tm, (y * stride + x) * 2)[0] for x in range(stride)]
         print('%2d: ' % y + ' '.join('%03x' % v for v in vals))
 
-def hide_structs():
-    # Mission 1's HQ is at cell (2,8); its descriptors live at row 8, x=2..3.
-    w = rd(0x495c02, 1)[0]
-    stride = 16 if w <= 15 else 32
-    plain = rd(0x4808a8 + (8 * stride + 6) * 2, 2)
-    for dx in (1, 2, 3, 4):
-        wr(0x4808a8 + (8 * stride + dx) * 2, plain)
-    rcall_va(0x419e90, 0)
-    time.sleep(0.6)
-
 if len(sys.argv) > 1:
     m = int(sys.argv[1])
     mode = sys.argv[2] if len(sys.argv) > 2 else ''
-    clean = mode in ('clean', 'pan', 'hide')
+    clean = mode in ('clean', 'pan')
     call_mission(m, clean)
     capture('mission_%02d%s' % (m + 1, '_clean' if clean else ''))
     if mode == 'pan':
@@ -204,9 +194,6 @@ if len(sys.argv) > 1:
         probe_objects()
     if mode == 'tilemap':
         probe_tilemap()
-    if mode == 'hide':
-        hide_structs()
-        capture('mission_%02d_nostruct' % (m + 1))
 else:
     for m in range(16):
         call_mission(m)
