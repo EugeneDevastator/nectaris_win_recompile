@@ -42,6 +42,15 @@ struct Unit {
     bool carried = false;
 };
 
+struct Factory {
+    int group = 0;              // 1-based factory/group id in the mission table
+    int x = 0, y = 0;
+    int terrain = 0;            // 11 player, 12 neutral, 13 enemy
+    int owner = -1;             // 0 player, 1 enemy, -1 neutral
+    int capacity = 12;
+    std::vector<int> roster;    // unit type ids stored in the factory
+};
+
 struct Mission {
     std::string name;
     int number = 0;             // campaign mission number (1-based, 0 = custom)
@@ -49,6 +58,7 @@ struct Mission {
     std::vector<int> terrain;   // w*h, 0..15
     std::vector<Unit> units;
     std::vector<Unit> garrison; // inside factories/bases (not on the field)
+    std::vector<Factory> factories;
     std::string background;
 };
 

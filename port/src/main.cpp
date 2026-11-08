@@ -21,6 +21,7 @@
 #include <algorithm>
 #include <cctype>
 #include <cmath>
+#include <cstdio>
 #include <cstdint>
 #include <ctime>
 #include <deque>
@@ -44,6 +45,8 @@ static std::vector<UnitType> gTypes;
 static std::vector<TerrainDef> gTerrain;
 static CombatRules gCombatRules;
 static Mission gMission;
+static json gFactoryData;
+static bool gFactoryDataLoaded = false;
 
 static std::vector<std::string> gTerrainNames;
 static std::vector<int> gRemap, gPanelTable, gPanelIndirect;
@@ -181,6 +184,27 @@ static std::vector<std::string> listCampaign(const std::string& dir) {
     return out;
 }
 
+static void loadFactoryData() {
+    if (gFactoryDataLoaded) return;
+    gFactoryDataLoaded = true;
+    std::string path = gAssetDir + "data/factories.json";
+    if (!std::filesystem::exists(path)) return;
+    json j = loadJson(path);
+    if (j.is_object() && j.contains("missions")) gFactoryData = std::move(j);
+}
+
+static const Factory* factoryAt(const Mission& m, int x, int y) {
+    for (const Factory& f : m.factories)
+        if (f.x == x && f.y == y) return &f;
+    return nullptr;
+}
+
+static int factoryIndexAt(const Mission& m, int x, int y) {
+    for (int i = 0; i < (int)m.factories.size(); ++i)
+        if (m.factories[i].x == x && m.factories[i].y == y) return i;
+    return -1;
+}
+
 static bool loadMission(const std::string& path) {    json j = loadJson(path);
     gPanX = gPanY = 0.0f;
     gMission = Mission{};
@@ -223,6 +247,33 @@ static bool loadMission(const std::string& path) {    json j = loadJson(path);
             u.xp = ju.value("xp", 0);
             u.rank = rankFromXp(u.xp, gCombatRules.rankDivisor);
             gMission.garrison.push_back(u);
+        }
+    }
+    // Factory definitions (assets/data/factories.json) for the campaign.
+    gMission.factories.clear();
+    loadFactoryData();
+    if (gFactoryData.is_object() && gFactoryData.contains("missions")) {
+        for (const auto& jm : gFactoryData["missions"]) {
+            if (jm.value("mission", -1) != gMission.number &&
+                jm.value("name", std::string("")) != gMission.name)
+                continue;
+            if (!jm.contains("factories")) continue;
+            for (const auto& jf : jm["factories"]) {
+                Factory f;
+                f.group = jf.value("group", (int)gMission.factories.size() + 1);
+                f.x = jf.value("x", 0);
+                f.y = jf.value("y", 0);
+                f.terrain = jf.value("terrain", 0);
+                f.capacity = jf.value("capacity", 12);
+                std::string owner = jf.value("owner", std::string("neutral"));
+                f.owner = owner == "player" ? 0 : (owner == "enemy" ? 1 : -1);
+                if (jf.contains("roster")) {
+                    for (const auto& ju : jf["roster"])
+                        f.roster.push_back(ju.value("type", 0));
+                }
+                gMission.factories.push_back(std::move(f));
+            }
+            break;
         }
     }
     // Optional full-map backdrop. Loading is deferred until the GL context
@@ -740,6 +791,117 @@ static void uiText(const char* text, int x, int y, int size, Color color) {
     }
 }
 
+struct FactoryLayout {
+    Rectangle panel;
+    Rectangle grid;
+    Rectangle info;
+    float cellW = 0, cellH = 0;
+};
+
+static FactoryLayout factoryLayout(int W, int H) {
+    FactoryLayout L;
+    float pw = std::min((float)W - 60.0f, 1040.0f);
+    float ph = std::min((float)H - 40.0f, 680.0f);
+    float px = (W - pw) * 0.5f, py = (H - ph) * 0.5f;
+    L.panel = {px, py, pw, ph};
+    float header = 78.0f, footer = 52.0f, infoH = 126.0f, pad = 28.0f;
+    L.grid = {px + pad, py + header, pw - pad * 2.0f,
+              ph - header - footer - infoH - 18.0f};
+    L.info = {px + pad, L.grid.y + L.grid.height + 10.0f,
+              pw - pad * 2.0f, infoH};
+    L.cellW = L.grid.width / 4.0f;
+    L.cellH = L.grid.height / 3.0f;
+    return L;
+}
+
+static Rectangle factorySlotRect(const FactoryLayout& L, int i) {
+    float x = L.grid.x + (i % 4) * L.cellW;
+    float y = L.grid.y + (i / 4) * L.cellH;
+    return {x + 6.0f, y + 6.0f, L.cellW - 12.0f, L.cellH - 12.0f};
+}
+
+static Color factoryOwnerColor(int owner) {
+    if (owner == 0) return Color{145, 210, 255, 255};
+    if (owner == 1) return Color{255, 205, 80, 255};
+    return Color{190, 195, 205, 255};
+}
+
+static void drawFactoryScreen(const Factory& f, int sel) {
+    int W = GetScreenWidth(), H = GetScreenHeight();
+    FactoryLayout L = factoryLayout(W, H);
+    Color ownerCol = factoryOwnerColor(f.owner);
+
+    DrawRectangle(0, 0, W, H, Color{8, 9, 14, 255});
+    DrawRectangleRounded(L.panel, 0.025f, 8, Color{20, 23, 32, 255});
+    DrawRectangleLinesEx(L.panel, 2.0f, Color{70, 76, 92, 255});
+
+    char title[128];
+    snprintf(title, sizeof(title), "FACTORY %d  -  %s", f.group,
+             f.owner == 0 ? "PLAYER" : (f.owner == 1 ? "ENEMY" : "NEUTRAL"));
+    uiText(title, (int)L.panel.x + 28, (int)L.panel.y + 20, 24, ownerCol);
+    char sub[128];
+    snprintf(sub, sizeof(sub), "HEX %d,%d   STORED %d/%d   CLICK A UNIT",
+             f.x, f.y, (int)f.roster.size(), f.capacity);
+    uiText(sub, (int)L.panel.x + 28, (int)L.panel.y + 50, 14, LIGHTGRAY);
+
+    for (int i = 0; i < 12; ++i) {
+        Rectangle r = factorySlotRect(L, i);
+        DrawRectangleRounded(r, 0.06f, 6, Color{42, 45, 58, 255});
+        if (i == sel) {
+            DrawRectangleRoundedLinesEx(r, 0.06f, 6, 3.0f, ownerCol);
+        } else {
+            DrawRectangleRoundedLinesEx(r, 0.06f, 6, 1.5f, Color{78, 82, 96, 255});
+        }
+        if (i < (int)f.roster.size()) {
+            int t = f.roster[i];
+            if (t < 0 || t >= 24) continue;
+            Texture2D* tex = &gUnitMapTex[t];
+            if (!tex->id) tex = &gUnitSprite[t];
+            if (tex->id) {
+                float icon = std::min(r.width, r.height) * 0.58f;
+                float ix = r.x + (r.width - icon) * 0.5f;
+                float iy = r.y + 8.0f;
+                Rectangle src{0, 0, (float)tex->width, (float)tex->height};
+                DrawTexturePro(*tex, src, {ix, iy, icon, icon}, {0, 0}, 0.0f, WHITE);
+            }
+            const char* nm = (t < (int)gTypes.size()) ? gTypes[t].name.c_str() : "?";
+            uiText(nm, (int)r.x + 8, (int)(r.y + r.height - 26.0f), 16, RAYWHITE);
+        } else {
+            uiText("-", (int)(r.x + r.width * 0.5f - 4.0f),
+                   (int)(r.y + r.height * 0.5f - 12.0f), 16, Color{90, 94, 106, 255});
+        }
+    }
+
+    DrawRectangleRounded(L.info, 0.03f, 6, Color{14, 16, 23, 255});
+    DrawRectangleLinesEx(L.info, 1.5f, Color{62, 68, 82, 255});
+    if (sel >= 0 && sel < (int)f.roster.size()) {
+        int t = f.roster[sel];
+        if (t >= 0 && t < (int)gTypes.size()) {
+            const UnitType& ut = gTypes[t];
+            uiText(ut.name.c_str(), (int)L.info.x + 20, (int)L.info.y + 14, 22, ownerCol);
+            char stats[192];
+            snprintf(stats, sizeof(stats),
+                     "HP 8/8    MOV %d    ATK G/A %d/%d    DEF %d",
+                     ut.movePts, ut.atkGround, ut.atkAir, ut.def);
+            uiText(stats, (int)L.info.x + 20, (int)L.info.y + 48, 16, LIGHTGRAY);
+            const char* kind = ut.airborne() ? "AIR UNIT" : "GROUND UNIT";
+            uiText(kind, (int)L.info.x + 20, (int)L.info.y + 78, 14,
+                   Color{145, 155, 170, 255});
+            if (ut.indirectCapable())
+                uiText("INDIRECT FIRE", (int)L.info.x + 180, (int)L.info.y + 78, 14,
+                       Color{145, 155, 170, 255});
+        }
+    } else {
+        uiText("EMPTY SLOT", (int)L.info.x + 20, (int)L.info.y + 22, 20,
+               Color{120, 124, 136, 255});
+        uiText("No unit stored in this slot.", (int)L.info.x + 20,
+               (int)L.info.y + 58, 14, GRAY);
+    }
+
+    uiText("ARROWS select   LMB select   ESC / SPACE close",
+           (int)L.panel.x + 28, (int)(L.panel.y + L.panel.height - 34.0f), 12, GRAY);
+}
+
 static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D enemyTex) {
     (void)playerTex;
     (void)enemyTex;
@@ -1042,6 +1204,7 @@ int main(int argc, char** argv) {
     bool combatshot = (argc > 3 && std::string(argv[3]) == "--combatshot");
     bool unitshot = (argc > 3 && std::string(argv[3]) == "--unitshot");
     bool backdropshot = (argc > 3 && std::string(argv[3]) == "--backdropshot");
+    bool factoryshot = (argc > 3 && std::string(argv[3]) == "--factoryshot");
     std::string shotPath = (argc > 4) ? argv[4] : "port_shot.png";
     bool selftest = (argc > 3 && std::string(argv[3]) == "--selftest");
 
@@ -1147,8 +1310,10 @@ int main(int argc, char** argv) {
     if (combatshot) SetConfigFlags(FLAG_WINDOW_HIDDEN);
     if (unitshot) SetConfigFlags(FLAG_WINDOW_HIDDEN);
     if (backdropshot) SetConfigFlags(FLAG_WINDOW_HIDDEN);
+    if (factoryshot) SetConfigFlags(FLAG_WINDOW_HIDDEN);
     SetConfigFlags(FLAG_WINDOW_HIGHDPI);
     InitWindow(mapW + panelW, std::max(mapH, 720), "Nectaris - portable");
+    SetExitKey(KEY_NULL);          // ESC is the in-game cancel key, not quit
     SetTargetFPS(60);
     loadUiFont();
 
@@ -1293,10 +1458,33 @@ int main(int argc, char** argv) {
         return 0;
     }
 
+    if (factoryshot) {
+        int want = (argc > 5) ? std::atoi(argv[5]) : 1;
+        const Factory* f = nullptr;
+        for (const Factory& cf : gMission.factories) {
+            if (cf.group == want) { f = &cf; break; }
+        }
+        if (!f && !gMission.factories.empty()) f = &gMission.factories.front();
+        if (f) {
+            for (int k = 0; k < 6; ++k) {
+                BeginDrawing();
+                drawFactoryScreen(*f, 0);
+                EndDrawing();
+            }
+            TakeScreenshot(shotPath.c_str());
+        } else {
+            std::cerr << "factory not found for mission " << gMission.name << "\n";
+        }
+        return f ? 0 : 1;
+    }
+
     int selected = -1;
     int currentPlayer = 0;
     bool showReach = false;
     bool debug = false;
+    bool factoryOpen = false;
+    int factoryIndex = -1;
+    int factorySel = 0;
     std::vector<int> reach;
     std::vector<int> targets;
     std::string notice;
@@ -1321,6 +1509,15 @@ int main(int argc, char** argv) {
         reach = reachable(gMission, slot);
         targets = attackable(gMission, slot);
         showReach = true;
+    };
+
+    auto openFactory = [&](int fi) {
+        if (fi < 0 || fi >= (int)gMission.factories.size()) return;
+        resetSelection();
+        factoryOpen = true;
+        factoryIndex = fi;
+        factorySel = 0;
+        if (IsSoundValid(sndSelect)) PlaySound(sndSelect);
     };
 
     auto say = [&](const std::string& s) {
@@ -1375,6 +1572,47 @@ int main(int argc, char** argv) {
                 }
             }
             continue;
+        }
+        if (factoryOpen) {
+            if (factoryIndex < 0 || factoryIndex >= (int)gMission.factories.size()) {
+                factoryOpen = false;
+                factoryIndex = -1;
+            } else {
+                Factory& f = gMission.factories[factoryIndex];
+                if (IsKeyPressed(KEY_ESCAPE) || IsKeyPressed(KEY_SPACE)) {
+                    factoryOpen = false;
+                } else {
+                    if (IsKeyPressed(KEY_LEFT))
+                        factorySel = (factorySel % 4 == 0) ? factorySel + 3 : factorySel - 1;
+                    if (IsKeyPressed(KEY_RIGHT))
+                        factorySel = (factorySel % 4 == 3) ? factorySel - 3 : factorySel + 1;
+                    if (IsKeyPressed(KEY_UP))
+                        factorySel = (factorySel < 4) ? factorySel + 8 : factorySel - 4;
+                    if (IsKeyPressed(KEY_DOWN))
+                        factorySel = (factorySel >= 8) ? factorySel - 8 : factorySel + 4;
+                    factorySel = std::clamp(factorySel, 0, 11);
+
+                    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+                        Vector2 m = GetMousePosition();
+                        FactoryLayout L = factoryLayout(GetScreenWidth(), GetScreenHeight());
+                        bool hitSlot = false;
+                        for (int i = 0; i < 12; ++i) {
+                            if (CheckCollisionPointRec(m, factorySlotRect(L, i))) {
+                                factorySel = i;
+                                hitSlot = true;
+                                break;
+                            }
+                        }
+                        if (!hitSlot && !CheckCollisionPointRec(m, L.panel))
+                            factoryOpen = false;
+                    }
+                }
+                BeginDrawing();
+                ClearBackground(Color{8, 9, 14, 255});
+                drawFactoryScreen(f, factorySel);
+                EndDrawing();
+                continue;
+            }
         }
         Vector2 mouse = GetMousePosition();
         if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT) && !IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
@@ -1439,6 +1677,9 @@ int main(int argc, char** argv) {
                     !gMission.units[hit].acted && !gMission.units[hit].carried) {
                     selectUnit(hit);
                     if (IsSoundValid(sndSelect)) PlaySound(sndSelect);
+                } else if (inMap) {
+                    int fi = factoryIndexAt(gMission, mx, my);
+                    if (fi >= 0) openFactory(fi);
                 }
             } else {
                 Unit& sel = gMission.units[selected];
@@ -1492,6 +1733,9 @@ int main(int argc, char** argv) {
                     // after moving, allow an immediate attack
                     targets = attackable(gMission, selected);
                     showReach = false;
+                } else if (inMap) {
+                    int fi = factoryIndexAt(gMission, mx, my);
+                    if (fi >= 0) openFactory(fi);
                 }
             }
         }
@@ -1646,6 +1890,8 @@ int main(int argc, char** argv) {
                 uiText("LMB move / attack", px, 370, 16, GRAY);
                 uiText("Click transport to load", px, 400, 12, GRAY);
             }
+        } else if (!gMission.factories.empty()) {
+            uiText("Click factory: view units", px, 290, 12, SKYBLUE);
         }
         uiText("SPACE deselect / end turn   R restart", px, 430, 8, GRAY);
         uiText("ESC cancel   RMB drag: pan", px, 470, 8, GRAY);

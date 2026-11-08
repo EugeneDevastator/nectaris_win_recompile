@@ -42,6 +42,7 @@ Controls:
 | LMB on own unit | select, or switch selection if one is already active |
 | LMB on blue cell | move |
 | LMB on adjacent enemy | attack |
+| LMB on a factory hex | view its stored units (any owner; arrows/LMB select, ESC/SPACE close) |
 | LMB own unit -> friendly transport | load it (transport must be in shift range) |
 | LMB the same unit again | deselect |
 | SPACE | deselect if a unit is selected, otherwise end turn |
@@ -477,6 +478,12 @@ Factory mechanics in the original code:
   the "replenish" behaviour, not a timed production queue.
 * Only infantry (GX-77, GX-87, CBX-1) can capture a factory.
 
+In the port, clicking a factory hex (with no unit selected) opens its 4x3
+contents screen.  Any owner's factory can be inspected, matching the original
+game.  Arrow keys or the mouse select a slot; the info panel shows the unit's
+HP, movement, attack and defence.  `ESC` or `SPACE` closes it.  For scripted
+previews, `--factoryshot <png> <group>` renders a factory screen directly.
+
 ## Implemented
 
 * map loading, terrain move costs, hex adjacency (odd-column offset)
@@ -493,6 +500,8 @@ Factory mechanics in the original code:
   with the transport)
 * factory tables and stored rosters exported to `assets/data/factories.json`
   (ownership, 12-slot capacity, repair mechanics)
+* clickable factory contents screen in the port (any owner, 4x3 roster, unit
+  stats, mouse/arrow selection)
 * combat self-test matrix
 
 ## TODO
