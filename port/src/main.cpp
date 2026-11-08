@@ -204,6 +204,7 @@ static bool loadMission(const std::string& path) {    json j = loadJson(path);
         u.x = ju.value("x", 0);
         u.y = ju.value("y", 0);
         u.hp = ju.value("hp", 7);
+        u.facing = ju.value("facing", 0.0f);
         // XP lives in the original HP byte (bits 3..7); rank is xp / 4.
         // Mission files may specify either "xp" or the older "rank" tier.
         u.rank = ju.value("rank", 0);
@@ -467,7 +468,10 @@ static void drawTerrainColors(const Mission& m) {
 }
 
 static void drawUnitSprite(const Mission& m, const Unit& u, Texture2D playerTex, Texture2D enemyTex) {
-    Texture2D& tex = (u.owner == 0) ? gUnitMapTex[u.type] : gUnitMapFlipTex[u.type];
+    // The bank icons are left-facing side views.  Use the mirrored texture when
+    // the unit is heading right (u.facing = movementAngle - 90).
+    bool headingRight = std::sin(u.facing * 0.0174532925f) < -0.15f;
+    Texture2D& tex = headingRight ? gUnitMapFlipTex[u.type] : gUnitMapTex[u.type];
     if (!tex.id) return;
     float size = gHexSize * 1.75f;
     float hx, hy;
@@ -478,7 +482,7 @@ static void drawUnitSprite(const Mission& m, const Unit& u, Texture2D playerTex,
     Rectangle src{0, 0, (float)tex.width, (float)tex.height};
     Rectangle dst{cx, cy, size, size};
     Color tint = (u.owner == 0) ? WHITE : Color{150, 255, 150, 255};
-    DrawTexturePro(tex, src, dst, {size / 2, size / 2}, u.facing, tint);
+    DrawTexturePro(tex, src, dst, {size / 2, size / 2}, 0.0f, tint);
 }
 
 // ------------------------------------------------------------------ combat screen
@@ -1100,7 +1104,9 @@ int main(int argc, char** argv) {
             gUnitSpriteFlip[t] = LoadTextureFromImage(im);
             UnloadImage(im);
         }
-        std::string v = gAssetDir + TextFormat("units/unit_%02d/vertical.png", t);
+        std::string v = gAssetDir + TextFormat("units/unit_%02d/horizontal.png", t);
+        if (!FileExists(v.c_str()))
+            v = gAssetDir + TextFormat("units/unit_%02d/vertical.png", t);
         gUnitMapTex[t] = LoadTexture(v.c_str());
         Image vm = LoadImage(v.c_str());
         if (vm.data) {
@@ -1304,8 +1310,14 @@ int main(int argc, char** argv) {
                 }
             } else {
                 Unit& sel = gMission.units[selected];
+                // clicking another friendly unit switches the selection
+                if (hit >= 0 && hit != selected && gMission.units[hit].owner == currentPlayer &&
+                    !gMission.units[hit].acted) {
+                    selectUnit(hit);
+                    if (IsSoundValid(sndSelect)) PlaySound(sndSelect);
+                }
                 // attack?
-                if (hit >= 0 && std::find(targets.begin(), targets.end(), hit) != targets.end()) {
+                else if (hit >= 0 && std::find(targets.begin(), targets.end(), hit) != targets.end()) {
                     int mode = hexDistance(sel.x, sel.y, gMission.units[hit].x, gMission.units[hit].y) - 1;
                     float dx = (float)gMission.units[hit].x;
                     float dy = (float)gMission.units[hit].y;

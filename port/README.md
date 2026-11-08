@@ -39,7 +39,7 @@ Controls:
 
 | input | action |
 |---|---|
-| LMB on own unit | select, show movement range |
+| LMB on own unit | select, or switch selection if one is already active |
 | LMB on blue cell | move |
 | LMB on adjacent enemy | attack |
 | RMB drag | pan the map |
@@ -187,8 +187,8 @@ Each unit lives in its own folder under `assets/units/unit_XX/`:
 
 ```
 assets/units/unit_06/
-  horizontal.png        32x32  legacy row-4 combat sprite
-  vertical.png          32x32  world-map icon (rotated by facing)
+  horizontal.png        32x32  side-view map icon (left-facing; mirrored when heading right)
+  vertical.png          32x32  vertical world-map icon (unused by the port map)
   combat_alive.png      64x64  WEAPON DATA horizontal guide frame
   combat_diagonal.png   64x64  WEAPON DATA diagonal guide frame
   unit.json             stats + sprite metadata
@@ -279,8 +279,9 @@ Every resolved attack switches to a battle screen modeled on the original:
   opaque (their transparent areas were pre-filled) and the two panels overlap
   by one pixel to hide the seam.
   Each side shows its **initial formation** using the per-unit horizontal
-  sprite (`assets/units/unit_XX/horizontal.png`), blue for the player and the
-  same sprite flipped + tinted green for the enemy.
+  sprite (`assets/units/unit_XX/horizontal.png`), left-facing by default and
+  horizontally mirrored when the unit heads right; blue tint for the player and
+  green for the enemy.
 * **ranged layout**: indirect/ranged battles open a wider black gap between the
   two terrain panels (the panels shrink slightly so the pair still fits the
   playfield); direct battles stay edge-to-edge.
