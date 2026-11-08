@@ -60,7 +60,9 @@ Controls:
 
 A transport carries exactly one unit formation. The cargo is hidden and inactive;
 it is destroyed only when the whole transport formation is wiped out. Loading
-uses the cargo unit's shift range (click the unit, then the transport). Unloading
+uses the cargo unit's shift range (click the unit, then the transport); the unit
+slides into the transport and is hidden only when the animation finishes.
+Unloading
 requires the cargo to have waited at least one full turn: press `U`, click a
 highlighted adjacent hex, and the cargo icon animates from the transport to the
 target. Only flat ground/pavement/factory/city/bridge/base hexes are valid drop
@@ -509,7 +511,8 @@ Mule/Pelican parked next to the factory.  `ESC` cancels deployment.
   campaign missions and the editor maps, including garrison squads; RMB drag
   pans the map
 * transport loading/unloading (one cargo formation, cargo hidden and lost only
-  with the transport; unload target selection with slide-out animation)
+  with the transport; load slide-in and unload target selection with slide-out
+  animation)
 * factory tables and stored rosters exported to `assets/data/factories.json`
   (ownership, 12-slot capacity, repair mechanics)
 * clickable factory contents screen in the port (any owner, 4x3 roster, unit

@@ -1551,6 +1551,9 @@ int main(int argc, char** argv) {
     int unloadAnimSlot = -1;
     float unloadAnimT = 0.0f, unloadAnimDur = 0.70f;
     float unloadSX = 0, unloadSY = 0, unloadTX = 0, unloadTY = 0;
+    int boardAnimSlot = -1, boardAnimTransport = -1;
+    float boardAnimT = 0.0f, boardAnimDur = 0.60f;
+    float boardSX = 0, boardSY = 0, boardTX = 0, boardTY = 0;
     std::vector<int> reach;
     std::vector<int> targets;
     std::string notice;
@@ -1580,6 +1583,20 @@ int main(int argc, char** argv) {
     auto say = [&](const std::string& s) {
         notice = s;
         noticeT = 2.5f;
+    };
+
+    auto resetActionModes = [&]() {
+        factoryOpen = false;
+        factoryIndex = -1;
+        factorySel = 0;
+        deployMode = false;
+        deployFactory = deploySlot = deployType = -1;
+        deployCells.clear();
+        unloadMode = false;
+        unloadTransport = unloadCargo = -1;
+        unloadCells.clear();
+        boardAnimSlot = boardAnimTransport = -1;
+        unloadAnimSlot = -1;
     };
 
     auto openFactory = [&](int fi) {
@@ -1686,11 +1703,22 @@ int main(int argc, char** argv) {
             say("Transport is outside the unit's shift range");
             return false;
         }
-        t.cargo = cargoSlot;
-        c.carried = true;
+        float sx, sy, tx, ty;
+        hexCenter(c.x, c.y, sx, sy);
+        hexCenter(t.x, t.y, tx, ty);
+        float usz = gHexSize * 1.75f;
+        boardSX = (c.px >= 0) ? c.px : sx - usz / 2;
+        boardSY = (c.py >= 0) ? c.py : sy - usz / 2;
+        boardTX = (t.px >= 0) ? t.px : tx - usz / 2;
+        boardTY = (t.py >= 0) ? t.py : ty - usz / 2;
+        boardAnimSlot = cargoSlot;
+        boardAnimTransport = transSlot;
+        boardAnimT = 0.0f;
+        // Keep the cargo visible until the slide into the transport ends.
+        c.carried = false;
         c.acted = true;
-        c.x = t.x;
-        c.y = t.y;
+        c.px = boardSX;
+        c.py = boardSY;
         if (IsSoundValid(sndSelect)) PlaySound(sndSelect);
         say(gTypes[c.type].name + " loaded onto " + gTypes[t.type].name);
         if (!t.acted) selectUnit(transSlot);
@@ -1753,12 +1781,25 @@ int main(int argc, char** argv) {
                     u.px = u.py = -1.0f;
                     if (target->transportSlot >= 0) {
                         int ts = target->transportSlot;
-                        u.carried = true;
-                        u.x = gMission.units[ts].x;
-                        u.y = gMission.units[ts].y;
+                        float sx, sy, tx, ty;
+                        hexCenter(f.x, f.y, sx, sy);
+                        hexCenter(gMission.units[ts].x, gMission.units[ts].y, tx, ty);
+                        float usz = gHexSize * 1.75f;
+                        u.x = f.x;
+                        u.y = f.y;
+                        boardSX = sx - usz / 2;
+                        boardSY = sy - usz / 2;
+                        boardTX = (gMission.units[ts].px >= 0)
+                                      ? gMission.units[ts].px : tx - usz / 2;
+                        boardTY = (gMission.units[ts].py >= 0)
+                                      ? gMission.units[ts].py : ty - usz / 2;
+                        u.px = boardSX;
+                        u.py = boardSY;
                         int idx = (int)gMission.units.size();
                         gMission.units.push_back(u);
-                        gMission.units[ts].cargo = idx;
+                        boardAnimSlot = idx;
+                        boardAnimTransport = ts;
+                        boardAnimT = 0.0f;
                         say(gTypes[deployType].name + " deployed into transport");
                     } else {
                         u.x = target->x;
@@ -1932,6 +1973,7 @@ int main(int argc, char** argv) {
         if (IsKeyPressed(KEY_R)) {
             loadMission(missionPath);
             resetSelection();
+            resetActionModes();
             gCombatQueue.clear();
             gCv.active = false;
             currentPlayer = 0;
@@ -1942,6 +1984,7 @@ int main(int argc, char** argv) {
             loadMission(campaign[campaignIdx]);
             missionPath = campaign[campaignIdx];
             resetSelection();
+            resetActionModes();
             fx.clear();
             gCombatQueue.clear();
             gCv.active = false;
@@ -1952,6 +1995,7 @@ int main(int argc, char** argv) {
             loadMission(campaign[campaignIdx]);
             missionPath = campaign[campaignIdx];
             resetSelection();
+            resetActionModes();
             fx.clear();
             gCombatQueue.clear();
             gCv.active = false;
@@ -2052,6 +2096,24 @@ int main(int argc, char** argv) {
                 u.px = unloadSX + (unloadTX - unloadSX) * e;
                 u.py = unloadSY + (unloadTY - unloadSY) * e;
                 if (k >= 1.0f) unloadAnimSlot = -1;
+            } else if (ui == boardAnimSlot && boardAnimT < boardAnimDur) {
+                boardAnimT += dt;
+                float k = std::clamp(boardAnimT / boardAnimDur, 0.0f, 1.0f);
+                float e = k * k * (3.0f - 2.0f * k);   // smoothstep
+                u.px = boardSX + (boardTX - boardSX) * e;
+                u.py = boardSY + (boardTY - boardSY) * e;
+                if (k >= 1.0f) {
+                    if (boardAnimTransport >= 0 &&
+                        boardAnimTransport < (int)gMission.units.size()) {
+                        Unit& tr = gMission.units[boardAnimTransport];
+                        u.x = tr.x;
+                        u.y = tr.y;
+                        u.carried = true;      // hide only after the slide
+                        tr.cargo = ui;
+                    }
+                    boardAnimSlot = -1;
+                    boardAnimTransport = -1;
+                }
             } else {
                 if (u.px < 0) { u.px = tx; u.py = ty; }
                 u.px += (tx - u.px) * 0.25f;
