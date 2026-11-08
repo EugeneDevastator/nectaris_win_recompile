@@ -418,11 +418,12 @@ rendering (palette/interlace) is still being matched.
 
 ## Loading missions in the original game
 
-`orig_play_mission.py` (and the `play_mission.bat` wrapper) attaches to the
-running 1997 `game/Nec.exe` (or launches it), skips the intro, patches the
-mission index and remote-calls the original mission-start routine
-`FUN_00405ad0`. The script then exits and leaves the game running so the mission
-can be played normally:
+`orig_play_mission.py` (and the `play_mission.bat` wrapper) restarts the 1997
+`game/Nec.exe`, patches the new-game initialiser immediate
+`MOV byte ptr [0x495c52], 0` (VA `0x403d5d`) before the intro, and keeps the
+mission index selected while the intro runs.  This uses the normal mission-start
+path, so the cursor and selection state remain valid.  The script then exits and
+leaves the game running so the mission can be played normally:
 
 ```powershell
 python tools/orig_play_mission.py 1     # mission 1 (REVOLT)
@@ -431,10 +432,50 @@ python tools/orig_play_mission.py 3 --restart
 play_mission.bat --list
 ```
 
-The first argument is the 1-based campaign number. Extra slots `17..32` can be
-loaded too if the installed data has editor/extra missions. `--restart` kills an
-existing `Nec.exe` first; without it the tool switches the running instance.
-`--no-preview` skips the framebuffer PNG saved under `dump/orig_maps/`.
+The first argument is the 1-based campaign number.  The tool always restarts
+`Nec.exe` for a clean load; switching mission in-place can leave the original
+game's cursor state inconsistent.  `--no-preview` skips the framebuffer PNG
+saved under `dump/orig_maps/`.
+
+## Factories (decoded)
+
+`tools/export_factories.py` writes `assets/data/factories.json` for all 16
+campaign missions.  The static factory table is `0x47f7d0 + mission*0x10`:
+up to eight `(x, y)` pairs, terminated by `0xff 0xff`.  The terrain class at
+the factory cell gives its owner:
+
+| class | owner |
+|---|---|
+| `0xb` (11) | player |
+| `0xc` (12) | neutral |
+| `0xd` (13) | enemy |
+
+Reserve unit records (`xraw & 0xe0 != 0`) whose group (`xraw >> 5`) and `(x,y)`
+match a factory are that factory's stored roster.  The 4x3 factory screen holds
+up to 12 units.  Records with a group but a non-factory spawn cell are exported
+separately as `reinforcements` (they are later arrival waves, not factory
+contents).
+
+Mission 10 **DARWIN** has seven factories:
+
+| # | cell | owner | roster |
+|---|---|---|---|
+| 1 | (2,1) | player | FX-1, AX-87, T-79, CBX-1, NC-1 |
+| 2 | (6,15) | neutral | AX-87, SG-4, MB-5, MB-4, MM107, C-61, SS-80, GX-77 |
+| 3 | (13,10) | neutral | M-77, AX-87, C-61, MR-22 |
+| 4 | (17,11) | neutral | EF-88, MM107, C-61, GX-77 |
+| 5 | (20,4) | neutral | MR-22, C-61, SS-80, NC-1, GX-87 |
+| 6 | (23,12) | enemy | EF-88, MM107, CBX-1, NC-1 |
+| 7 | (28,2) | neutral | EF-88, SG-4, MR-22, C-61, M-77, MB-5, MM107 |
+
+Factory mechanics in the original code:
+
+* Factories do **not** produce new units; the roster is fixed by the mission.
+  Captured factories only give you the units already inside.
+* Moving any unit into a factory you own stores it and sets its HP to full
+  (`FUN_004025f0`); it cannot be deployed again until the next turn.  This is
+  the "replenish" behaviour, not a timed production queue.
+* Only infantry (GX-77, GX-87, CBX-1) can capture a factory.
 
 ## Implemented
 
@@ -450,6 +491,8 @@ existing `Nec.exe` first; without it the tool switches the running instance.
   pans the map
 * transport loading/unloading (one cargo formation, cargo hidden and lost only
   with the transport)
+* factory tables and stored rosters exported to `assets/data/factories.json`
+  (ownership, 12-slot capacity, repair mechanics)
 * combat self-test matrix
 
 ## TODO

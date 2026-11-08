@@ -1,15 +1,17 @@
-"""Load any campaign mission in the original 1997 Nec.exe and leave it running.
+"""Start the original 1997 Nec.exe directly at a campaign mission.
+
+This uses the clean-load path: the game is restarted, the immediate of the
+new-game initialiser `MOV byte ptr [0x495c52], 0` (VA 0x403d57, immediate at
+0x403d5d) is patched to the wanted mission index, and the normal intro/loading
+path then starts that mission with a working cursor.
 
 Usage:
     python tools/orig_play_mission.py 3        # mission 3 (1-based)
     python tools/orig_play_mission.py 16       # final mission
-    python tools/orig_play_mission.py 3 --restart
     python tools/orig_play_mission.py --list
 
-The script attaches to a running Nec.exe (or launches one), skips the intro,
-patches the mission index (DAT_00495c52/DAT_00495c6a), and remote-calls the
-original mission start routine FUN_00405ad0.  It then exits without touching the
-game, so the loaded mission stays playable in its own window.
+The script exits without touching the game, so the loaded mission stays
+playable in its own window.
 """
 import ctypes, ctypes.wintypes as wt, os, sys, time, struct, subprocess
 sys.path.insert(0, os.path.dirname(__file__))
@@ -21,6 +23,7 @@ GAME_DIR = os.path.join(ROOT, 'game')
 EXE = os.path.join(GAME_DIR, 'Nec.exe')
 OUT = os.path.join(ROOT, 'dump', 'orig_maps')
 MAP_STATE = 0x416700
+PATCH_VA = 0x403d5d   # immediate of MOV byte ptr [0x495c52], 0
 
 MISSIONS = [
     'REVOLT', 'ICARUS', 'ARARAT', 'RHEA', 'LACUS', 'NEREID', 'KERES',
@@ -34,7 +37,6 @@ def usage():
     print('\nCampaign missions:')
     for i, name in enumerate(MISSIONS, 1):
         print(f'  {i:2d}  {name}')
-    print('  17..32  original editor/extra mission slots (if present)')
 
 
 # ---- fake input proxy shared memory (same layout as the other tools) ----
@@ -75,19 +77,12 @@ U32.SetForegroundWindow.argtypes = [wt.HWND]
 U32.BringWindowToTop.argtypes = [wt.HWND]
 U32.ShowWindow.argtypes = [wt.HWND, ctypes.c_int]
 K32.GetCurrentThreadId.restype = wt.DWORD
+K32.VirtualProtectEx.restype = wt.BOOL
+K32.VirtualProtectEx.argtypes = [wt.HANDLE, ctypes.c_void_p, ctypes.c_size_t,
+                                 wt.DWORD, ctypes.POINTER(wt.DWORD)]
 dm.k32.WriteProcessMemory.argtypes = [wt.HANDLE, ctypes.c_void_p, ctypes.c_void_p,
                                       ctypes.c_size_t, ctypes.POINTER(ctypes.c_size_t)]
 dm.k32.WriteProcessMemory.restype = wt.BOOL
-
-kernel32 = ctypes.WinDLL('kernel32', use_last_error=True)
-kernel32.VirtualAllocEx.restype = ctypes.c_void_p
-kernel32.VirtualAllocEx.argtypes = [wt.HANDLE, ctypes.c_void_p, ctypes.c_size_t, wt.DWORD, wt.DWORD]
-kernel32.WriteProcessMemory.argtypes = [wt.HANDLE, ctypes.c_void_p, ctypes.c_void_p,
-                                        ctypes.c_size_t, ctypes.POINTER(ctypes.c_size_t)]
-kernel32.CreateRemoteThread.restype = wt.HANDLE
-kernel32.CreateRemoteThread.argtypes = [wt.HANDLE, ctypes.c_void_p, ctypes.c_size_t,
-                                        ctypes.c_void_p, ctypes.c_void_p, wt.DWORD, ctypes.c_void_p]
-kernel32.WaitForSingleObject.argtypes = [wt.HANDLE, wt.DWORD]
 
 
 def find_pid():
@@ -114,28 +109,12 @@ def find_window(pid):
         if p.value == pid:
             b = ctypes.create_unicode_buffer(256)
             U32.GetWindowTextW(hwnd, b, 256)
-            if 'nectaris' in b.value.lower() or b.value:
+            if 'nectaris' in b.value.lower():
                 found.append(hwnd)
         return True
 
     U32.EnumWindows(cb, 0)
     return found[0] if found else None
-
-
-def ensure_game():
-    pid = find_pid()
-    if pid is None:
-        print('launching', EXE)
-        subprocess.Popen([EXE], cwd=GAME_DIR)
-        for _ in range(60):
-            time.sleep(0.5)
-            pid = find_pid()
-            if pid is not None:
-                break
-    if pid is None:
-        raise SystemExit('could not start Nec.exe')
-    print('attached to pid', pid)
-    return pid
 
 
 def main():
@@ -144,7 +123,6 @@ def main():
         usage()
         return 0
 
-    restart = '--restart' in args
     no_preview = '--no-preview' in args
     args = [a for a in args if not a.startswith('--')]
     if not args:
@@ -155,22 +133,23 @@ def main():
     except ValueError:
         print('mission number must be an integer')
         return 1
-    if number < 1 or number > 32:
-        print('mission number must be 1..32')
+    if number < 1 or number > len(MISSIONS):
+        print(f'mission number must be 1..{len(MISSIONS)}')
         return 1
 
-    if restart:
-        subprocess.run(['taskkill', '/IM', 'Nec.exe', '/F'],
-                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        time.sleep(1.0)
+    # The clean path needs a fresh process: patching a mission in-place while
+    # the map is running leaves the original cursor state inconsistent.
+    subprocess.run(['taskkill', '/F', '/IM', 'Nec.exe'],
+                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    time.sleep(0.4)
+    print('launching', EXE)
+    subprocess.Popen([EXE], cwd=GAME_DIR)
+    time.sleep(4.5)
 
-    pid = ensure_game()
+    pid = find_pid()
+    if pid is None:
+        raise SystemExit('could not start Nec.exe')
     hwnd = find_window(pid)
-    for _ in range(40):
-        if hwnd:
-            break
-        time.sleep(0.5)
-        hwnd = find_window(pid)
     if not hwnd:
         raise SystemExit('game window not found')
 
@@ -185,13 +164,25 @@ def main():
     def u8(va):
         return dm.read(h, base, va, 1)[0]
 
+    def rd(va, n):
+        return dm.read(h, base, va, n)
+
     def wr(va, data):
         got = ctypes.c_size_t()
         dm.k32.WriteProcessMemory(h, ctypes.c_void_p(base + (va - 0x400000)),
                                   data, len(data), ctypes.byref(got))
 
-    def rd(va, n):
-        return dm.read(h, base, va, n)
+    # Patch the mission index that the normal new-game path writes.
+    index = number - 1
+    addr = base + (PATCH_VA - 0x400000)
+    old = wt.DWORD()
+    if not K32.VirtualProtectEx(h, ctypes.c_void_p(addr), 1, 0x40, ctypes.byref(old)):
+        raise OSError('VirtualProtectEx failed')
+    got = ctypes.c_size_t()
+    dm.k32.WriteProcessMemory(h, ctypes.c_void_p(addr), bytes([index & 0xF]), 1,
+                              ctypes.byref(got))
+    K32.VirtualProtectEx(h, ctypes.c_void_p(addr), 1, old.value, ctypes.byref(old))
+    print('patched new-game mission immediate to', index)
 
     def focus():
         fg = U32.GetForegroundWindow()
@@ -206,7 +197,7 @@ def main():
         U32.PostMessageW(hwnd, 0x0006, 1, 0)
         U32.PostMessageW(hwnd, 0x0007, 0, 0)
 
-    def tap(vk, hold=0.10, gap=0.22):
+    def tap(vk, hold=0.10, gap=0.20):
         focus()
         sc = U32.MapVirtualKeyW(vk, 0) & 0xFF
         key(vk, 1)
@@ -220,43 +211,19 @@ def main():
     def is_map():
         return u32(0x483270) == MAP_STATE
 
-    # Skip title/intro until the tactical map is active.
-    for _ in range(80):
+    for _ in range(45):
         if is_map():
             break
+        # Keep the selected mission through the intro/new-game initialisation.
+        wr(0x495c52, bytes([index & 0xF]))
+        wr(0x495c6a, b'\x00')
         tap(0x20)
-    time.sleep(0.7)
-    if not is_map():
-        print('warning: map state not detected, trying the mission call anyway')
-
-    def rcall_va(target_va, argc=0):
-        target = base + (target_va - 0x400000)
-        mem = kernel32.VirtualAllocEx(h, None, 0x1000, 0x3000, 0x40)
-        code = bytearray()
-        for _ in range(argc):
-            code += bytes([0x6A, 0])
-        code += bytes([0xE8, 0, 0, 0, 0, 0x83, 0xC4, argc * 4, 0xC3])
-        off = argc * 2
-        struct.pack_into('<i', code, off + 1, target - (mem + off + 5))
-        got = ctypes.c_size_t()
-        kernel32.WriteProcessMemory(h, ctypes.c_void_p(mem), bytes(code),
-                                    len(code), ctypes.byref(got))
-        th = kernel32.CreateRemoteThread(h, None, 0, ctypes.c_void_p(mem),
-                                         None, 0, None)
-        kernel32.WaitForSingleObject(th, 5000)
-        kernel32.CloseHandle(th)
-        time.sleep(0.9)
-
-    index = number - 1
-    wr(0x495c52, bytes([index & 0xF]))
-    wr(0x495c6a, bytes([index >> 4]))
-    wr(0x42fb74, b'\x00')
-    wr(0x42a4e0, b'\x00')
-    rcall_va(0x405ad0, 5)
     time.sleep(0.8)
+    if not is_map():
+        print('warning: map state not detected yet')
 
-    name = MISSIONS[index] if index < len(MISSIONS) else f'mission {number}'
-    print(f'loaded mission {number}: {name}')
+    print('loaded mission %d: %s (loaded index %d, cursor %d,%d)' %
+          (number, MISSIONS[index], u8(0x495c52), u8(0x481a72), u8(0x481a71)))
 
     if not no_preview:
         try:
