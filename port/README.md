@@ -185,21 +185,35 @@ Each unit lives in its own folder under `assets/units/unit_XX/`:
 
 ```
 assets/units/unit_06/
-  horizontal.png    32x32  legacy row-4 combat sprite
-  vertical.png      32x32  world-map icon (rotated by facing)
-  combat_alive.png  64x64  WEAPON DATA guide frame (alive)
-  combat_wreck.png  64x64  WEAPON DATA guide frame (destroyed)
-  unit.json         stats + sprite metadata
+  horizontal.png        32x32  legacy row-4 combat sprite
+  vertical.png          32x32  world-map icon (rotated by facing)
+  combat_alive.png      64x64  WEAPON DATA horizontal guide frame
+  combat_diagonal.png   64x64  WEAPON DATA diagonal guide frame
+  unit.json             stats + sprite metadata
 ```
 
-The two 64×64 guide frames are extracted from the raw 8-bit screen buffer
-(`DAT_00480f18`), not PrintWindow screenshots: `tools/extract_guide_all.py`
-dumps `dump/guide/fb_type_XX.bin` + palette per unit, and
-`tools/extract_guide_frames_fb.py` keys the guide box background (palette
-index 16) and writes the frames. Killed vehicles show the wreck frame.
-The live sprite/tile banks captured on that screen are in
-`dump/guide/spritebank_guide.bin`, `tilebank_guide.bin`, `palette_guide.bin`,
-`framebuffer_guide.bin` and `atlas_guide.bin`.
+The two 64×64 guide frames are extracted **raw from process memory**, not from
+PrintWindow screenshots.  The authoritative source is the 8-bit framebuffer
+(`DAT_00480f18`, dumped per type to `dump/guide/fb_type_XX.bin`);
+`tools/extract_guide_frames_fb.py` keys out the guide-box background (palette
+index 16) and writes `combat_alive.png` (horizontal) and
+`combat_diagonal.png` (diagonal).
+
+The art is not read directly from the map/battle sprite bank.  When the guide
+opens, `FUN_004218c0` calls `FUN_0040cd80` to decompress per-type art into the
+sprite bank (`DAT_00480f14`) and tile bank (`DAT_00481500`); the tile span and
+layout depend on the art size.  For the standard 64×64 frames the bank holds
+the four 32×32 quadrants `384..387` (horizontal) and `388..391` (diagonal) at
+offsets `(4,0) (36,0) (4,32) (36,32)`, palette bank `0xE0`, stored bottom-up.
+`tools/extract_guide_from_bank.py` reads those tiles while the guide is open
+and saved the raw `dump/guide/bank_type_XX.bin` dumps; it reproduces the frames
+exactly for the standard layout, while large units (e.g. HMB-2, SS-80) use a
+different span, which is why the framebuffer pass remains the final source.
+
+The sprite-list descriptors and the compressed resource directory were also
+mapped (`tools/decode_spritelists.py`, `tools/decode_resources_lzss.py`), but
+the guide frames themselves are decompressed into the framebuffer, not stored
+as a static bank.
 
 The WEAPON DATA stat block is written to each `unit.json` under `guide` and
 aggregated in `assets/data/units_guide.json`:
