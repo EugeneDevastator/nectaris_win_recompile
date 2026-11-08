@@ -379,23 +379,6 @@ static bool canUnloadTerrain(int t) {
     return t == 1 || t == 5 || t == 6 || t == 7 || t == 9 || t == 10 || t == 11;
 }
 
-static int findUnloadHex(const Mission& m, int transSlot, int preferX, int preferY) {
-    const Unit& t = m.units[transSlot];
-    auto valid = [&](int x, int y) {
-        if (!inBounds(m, x, y)) return false;
-        if (unitAt(m, x, y) >= 0) return false;
-        return canUnloadTerrain(terrainAt(m, x, y));
-    };
-    if (hexDistance(preferX, preferY, t.x, t.y) == 1 && valid(preferX, preferY))
-        return preferY * m.w + preferX;
-    for (int d = 0; d < 6; ++d) {
-        int nx, ny;
-        hexNeighbor(t.x, t.y, d, nx, ny);
-        if (valid(nx, ny)) return ny * m.w + nx;
-    }
-    return -1;
-}
-
 // Keep cargo glued to its transport and destroy it only when the whole
 // transport formation is wiped out.
 static void syncCargo(Mission& m) {
@@ -915,9 +898,10 @@ static void drawFactoryScreen(const Factory& f, int sel, bool canDeploy) {
            (int)L.panel.x + 28, (int)(L.panel.y + L.panel.height - 34.0f), 12, GRAY);
 }
 
-static void drawDeploymentFrame(const Mission& m, const Factory& f, int type,
-                                const std::vector<DeployCell>& cells) {
-    int W = GetScreenWidth(), H = GetScreenHeight();
+static void drawTargetingFrame(const Mission& m, int srcX, int srcY, int type,
+                               const std::vector<DeployCell>& cells,
+                               const char* title, bool unloading, Color srcCol,
+                               const char* sourceLabel) {
     BeginDrawing();
     ClearBackground(Color{12, 12, 16, 255});
     drawHexMap(m);
@@ -936,10 +920,10 @@ static void drawDeploymentFrame(const Mission& m, const Factory& f, int type,
                           u.owner == 0 ? kGreen : kRed);
     }
 
-    // Source factory and legal deployment cells.
+    // Source cell and legal target cells.
     float fx, fy;
-    hexCenter(f.x, f.y, fx, fy);
-    DrawPolyLinesEx({fx, fy}, 6, gHexSize, 0, 3.5f, factoryOwnerColor(f.owner));
+    hexCenter(srcX, srcY, fx, fy);
+    DrawPolyLinesEx({fx, fy}, 6, gHexSize, 0, 3.5f, srcCol);
     for (const DeployCell& c : cells) {
         float cx, cy;
         hexCenter(c.x, c.y, cx, cy);
@@ -951,18 +935,24 @@ static void drawDeploymentFrame(const Mission& m, const Factory& f, int type,
 
     int px = (int)gMapPixelW + 16;
     const UnitType& ut = gTypes[type];
-    uiText("DEPLOY UNIT", px, 16, 24, Color{120, 235, 150, 255});
+    Color titleCol = unloading ? Color{90, 210, 255, 255}
+                               : Color{120, 235, 150, 255};
+    uiText(title, px, 16, 24, titleCol);
     uiText(ut.name.c_str(), px, 58, 20, RAYWHITE);
     uiText(TextFormat("MOV %d   ATK G/A %d/%d   DEF %d",
                       ut.movePts, ut.atkGround, ut.atkAir, ut.def),
            px, 92, 14, LIGHTGRAY);
     uiText("Click a highlighted hex.", px, 145, 16, RAYWHITE);
-    uiText("Green = open ground", px, 185, 14, Color{120, 235, 150, 255});
-    uiText("Blue = friendly transport", px, 210, 14, Color{90, 210, 255, 255});
-    uiText("Transport must carry it.", px, 235, 12, GRAY);
-    uiText("ESC / SPACE cancel", px, 300, 12, GRAY);
-    uiText(TextFormat("Factory %d  at %d,%d", f.group, f.x, f.y),
-           px, 360, 12, GRAY);
+    uiText("Green = valid ground", px, 185, 14, Color{120, 235, 150, 255});
+    if (!unloading) {
+        uiText("Blue = friendly transport", px, 210, 14, Color{90, 210, 255, 255});
+        uiText("Transport must carry it.", px, 235, 12, GRAY);
+        uiText("ESC / SPACE cancel", px, 300, 12, GRAY);
+        uiText(sourceLabel, px, 360, 12, GRAY);
+    } else {
+        uiText("ESC / SPACE cancel", px, 240, 12, GRAY);
+        uiText(sourceLabel, px, 290, 12, GRAY);
+    }
     EndDrawing();
 }
 
@@ -1554,6 +1544,13 @@ int main(int argc, char** argv) {
     int deploySlot = -1;
     int deployType = -1;
     std::vector<DeployCell> deployCells;
+    bool unloadMode = false;
+    int unloadTransport = -1;
+    int unloadCargo = -1;
+    std::vector<DeployCell> unloadCells;
+    int unloadAnimSlot = -1;
+    float unloadAnimT = 0.0f, unloadAnimDur = 0.70f;
+    float unloadSX = 0, unloadSY = 0, unloadTX = 0, unloadTY = 0;
     std::vector<int> reach;
     std::vector<int> targets;
     std::string notice;
@@ -1638,6 +1635,36 @@ int main(int argc, char** argv) {
         deployType = type;
         deployMode = true;
         factoryOpen = false;
+        resetSelection();
+        if (IsSoundValid(sndSelect)) PlaySound(sndSelect);
+        return true;
+    };
+
+    auto startUnload = [&](int transSlot) -> bool {
+        if (transSlot < 0 || transSlot >= (int)gMission.units.size()) return false;
+        Unit& t = gMission.units[transSlot];
+        if (t.cargo < 0 || t.cargo >= (int)gMission.units.size()) return false;
+        Unit& c = gMission.units[t.cargo];
+        if (c.acted) {
+            say("Cargo must wait one full turn before unloading");
+            return false;
+        }
+        unloadCells.clear();
+        for (int d = 0; d < 6; ++d) {
+            int nx, ny;
+            hexNeighbor(t.x, t.y, d, nx, ny);
+            if (!inBounds(gMission, nx, ny)) continue;
+            if (unitAt(gMission, nx, ny) >= 0) continue;
+            if (!canUnloadTerrain(terrainAt(gMission, nx, ny))) continue;
+            unloadCells.push_back({nx, ny, -1});
+        }
+        if (unloadCells.empty()) {
+            say("No valid unload hex next to the transport");
+            return false;
+        }
+        unloadTransport = transSlot;
+        unloadCargo = t.cargo;
+        unloadMode = true;
         resetSelection();
         if (IsSoundValid(sndSelect)) PlaySound(sndSelect);
         return true;
@@ -1757,7 +1784,74 @@ int main(int argc, char** argv) {
                 }
             }
             if (deployMode) {
-                drawDeploymentFrame(gMission, f, deployType, deployCells);
+                drawTargetingFrame(gMission, f.x, f.y, deployType, deployCells,
+                                   "DEPLOY UNIT", false,
+                                   factoryOwnerColor(f.owner),
+                                   TextFormat("Factory %d  at %d,%d",
+                                              f.group, f.x, f.y));
+                continue;
+            }
+            if (finished) continue;
+        }
+        if (unloadMode) {
+            if (unloadTransport < 0 || unloadTransport >= (int)gMission.units.size() ||
+                unloadCargo < 0 || unloadCargo >= (int)gMission.units.size()) {
+                unloadMode = false;
+                continue;
+            }
+            Unit& t = gMission.units[unloadTransport];
+            Unit& c = gMission.units[unloadCargo];
+            bool finished = false;
+            if (IsKeyPressed(KEY_ESCAPE) || IsKeyPressed(KEY_SPACE)) {
+                say("Unload cancelled");
+                unloadMode = false;
+                unloadTransport = unloadCargo = -1;
+                unloadCells.clear();
+                finished = true;
+            } else if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+                int mx = 0, my = 0;
+                bool inMap = pixelToHex(GetMousePosition().x, GetMousePosition().y,
+                                        gMission.w, gMission.h, mx, my);
+                const DeployCell* target = nullptr;
+                if (inMap) {
+                    for (const DeployCell& cell : unloadCells)
+                        if (cell.x == mx && cell.y == my) { target = &cell; break; }
+                }
+                if (target) {
+                    float sx, sy, tx, ty;
+                    hexCenter(t.x, t.y, sx, sy);
+                    hexCenter(target->x, target->y, tx, ty);
+                    float usz = gHexSize * 1.75f;
+                    // Dedicated slide-out animation from the transport cell to
+                    // the chosen target hex.
+                    unloadSX = (t.px >= 0) ? t.px : sx - usz / 2;
+                    unloadSY = (t.py >= 0) ? t.py : sy - usz / 2;
+                    unloadTX = tx - usz / 2;
+                    unloadTY = ty - usz / 2;
+                    unloadAnimSlot = unloadCargo;
+                    unloadAnimT = 0.0f;
+                    c.px = unloadSX;
+                    c.py = unloadSY;
+                    c.x = target->x;
+                    c.y = target->y;
+                    c.carried = false;
+                    c.acted = true;
+                    c.facing = std::atan2(ty - sy, tx - sx) * 57.29578f - 90.0f;
+                    t.cargo = -1;
+                    t.acted = true;
+                    if (IsSoundValid(sndMove)) PlaySound(sndMove);
+                    say(gTypes[c.type].name + " unloaded");
+                    unloadMode = false;
+                    unloadTransport = unloadCargo = -1;
+                    unloadCells.clear();
+                    finished = true;
+                }
+            }
+            if (unloadMode) {
+                drawTargetingFrame(gMission, t.x, t.y, c.type, unloadCells,
+                                   "UNLOAD UNIT", true, Color{90, 210, 255, 255},
+                                   TextFormat("Transport %s  at %d,%d",
+                                              gTypes[t.type].name.c_str(), t.x, t.y));
                 continue;
             }
             if (finished) continue;
@@ -1936,33 +2030,9 @@ int main(int argc, char** argv) {
             }
         }
 
-        // U unloads the selected transport's cargo onto the hovered adjacent
-        // deployment hex, or the first valid neighbour if the cursor is away.
+        // U opens the adjacent unload-target selection for the chosen transport.
         if (IsKeyPressed(KEY_U) && selected >= 0) {
-            Unit& t = gMission.units[selected];
-            if (t.cargo >= 0) {
-                Unit& c = gMission.units[t.cargo];
-                if (c.acted) {
-                    say("Cargo must wait one full turn before unloading");
-                } else {
-                    int target = findUnloadHex(gMission, selected, mx, my);
-                    if (target < 0) {
-                        say("No valid unload hex next to the transport");
-                    } else {
-                        int ux = target % gMission.w, uy = target / gMission.w;
-                        c.carried = false;
-                        c.x = ux;
-                        c.y = uy;
-                        c.px = c.py = -1;
-                        c.acted = true;
-                        t.cargo = -1;
-                        t.acted = true;
-                        if (IsSoundValid(sndMove)) PlaySound(sndMove);
-                        say(gTypes[c.type].name + " unloaded");
-                        resetSelection();
-                    }
-                }
-            }
+            startUnload(selected);
         }
 
         syncCargo(gMission);
@@ -1970,13 +2040,23 @@ int main(int argc, char** argv) {
         // smooth movement + effect timers
         float dt = GetFrameTime();
         float usz = gHexSize * 1.75f;
-        for (auto& u : gMission.units) {
+        for (int ui = 0; ui < (int)gMission.units.size(); ++ui) {
+            Unit& u = gMission.units[ui];
             float hx, hy;
             hexCenter(u.x, u.y, hx, hy);
             float tx = hx - usz / 2, ty = hy - usz / 2;
-            if (u.px < 0) { u.px = tx; u.py = ty; }
-            u.px += (tx - u.px) * 0.25f;
-            u.py += (ty - u.py) * 0.25f;
+            if (ui == unloadAnimSlot && unloadAnimT < unloadAnimDur) {
+                unloadAnimT += dt;
+                float k = std::clamp(unloadAnimT / unloadAnimDur, 0.0f, 1.0f);
+                float e = k * k * (3.0f - 2.0f * k);   // smoothstep
+                u.px = unloadSX + (unloadTX - unloadSX) * e;
+                u.py = unloadSY + (unloadTY - unloadSY) * e;
+                if (k >= 1.0f) unloadAnimSlot = -1;
+            } else {
+                if (u.px < 0) { u.px = tx; u.py = ty; }
+                u.px += (tx - u.px) * 0.25f;
+                u.py += (ty - u.py) * 0.25f;
+            }
         }
         for (auto& f : fx) f.t -= dt;
         fx.erase(std::remove_if(fx.begin(), fx.end(),
@@ -2078,7 +2158,7 @@ int main(int argc, char** argv) {
                 const Unit& c = gMission.units[u.cargo];
                 uiText(TextFormat("Cargo: %s  HP %d", gTypes[c.type].name.c_str(), c.hp),
                        px, 370, 16, SKYBLUE);
-                uiText("U unload next to transport", px, 400, 12, GRAY);
+                uiText("U: choose unload hex", px, 400, 12, GRAY);
             } else if (isTransport(t)) {
                 uiText("Empty transport", px, 370, 16, SKYBLUE);
                 uiText("Select a unit, then click transport", px, 400, 12, GRAY);
