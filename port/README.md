@@ -53,7 +53,8 @@ Headless AI demo (prints 3 rounds of enemy actions, including ranged fire):
 port/build/nectaris.exe assets assets/maps/all_units_test.json --demo
 ```
 
-Combat screenshot (last argument: `0` = direct layout, `1` = ranged layout):
+Combat report screenshot (last argument: `0` = direct layout, `1` = ranged
+layout; the seconds argument is kept for compatibility and no longer animates):
 
 ```powershell
 port/build/nectaris.exe assets assets/maps/all_units_test.json --combatshot direct.png 1.4 0
@@ -70,6 +71,15 @@ line-for-line port of the original:
 * `FUN_00420cd0` / `FUN_00421170` — variance rolls and HP loss
 * `FUN_0040cb50` / `FUN_0040c770` — the original 16-bit LFSR
 * `FUN_00415850` / `FUN_0040a460` — XP gain and rank tiers (`rank = xp / 4`)
+
+Combat constants (variance bands, support/surround divisors, HP bonus, XP
+awards) live in `assets/data/combat.json`; the unit/terrain tables are in
+`assets/data/units.json` and `assets/data/terrain.json`. Regenerate the combat
+config from the executable with:
+
+```powershell
+python tools/export_combat_config.py
+```
 
 The full pseudocode and register-level validation are in `RE_FINDINGS.md` §5.
 Reproduce a specific battle state:
@@ -210,25 +220,26 @@ Every resolved attack switches to a battle screen modeled on the original:
   screen** (black pillars each side). Top bar = 20% height, terrain field from
   30% to 83.3%, bottom bar = 16.7%. The combat field is exactly two
   **128×128 logical (256×256 pixel) panels** side by side.
-* **top bar**: both unit names and the yellow **HP boxes** (value = HP + 1)
+* **top bar**: both unit names and the yellow **HP boxes** (initial HP + 1).
 * **middle**: the two original combat terrain close-ups, drawn at native
   aspect (terrain texture fills every pixel - no black bands).
-  Each side has **8 vehicles** using the per-unit horizontal sprite
-  (`assets/units/unit_XX/horizontal.png`), blue for the player and the same
-  sprite flipped + tinted green for the enemy; losses remove vehicles as HP drops.
-* **ride-in**: vehicles drive in from the screen edges to their staggered 2×4
-  formation slots, arriving one by one at the old materialise beats.
+  Each side shows its **initial formation** using the per-unit horizontal
+  sprite (`assets/units/unit_XX/horizontal.png`), blue for the player and the
+  same sprite flipped + tinted green for the enemy.
 * **ranged layout**: indirect/ranged battles open a wider black gap between the
   two terrain panels (the panels shrink slightly so the pair still fits the
   playfield); direct battles stay edge-to-edge.
-* **simultaneous combat**: both sides fire at the same moment, both take
-  explosions and HP damage together (no attacker-then-counter sequence); the
-  two sprites are drawn facing each other (player and enemy are both flipped).
-* **bottom bar**: `ATK` / `DEF` boxes for both sides and the terrain-effect
-  percentages.
-* **animation**: muzzle flash (`193`) + projectile (`195`), the original
-  **orange/white explosion (`194`) + flames (`196`)** on both sides at once,
-  then both HP boxes drop; `SPACE` / click skips.
+* **static report (no animation)**: the original fades its numbers out; the port
+  keeps a permanent report in the bottom bar instead. It shows the simulation
+  inputs and the final resolve:
+  * **attacker**: attack / own defence, support bonus, experience bonus,
+    HP before → after, XP gained;
+  * **simulation**: `SURROUND 0%` or `50%` with the defender's defence before
+    and after the cut, terrain defence for both sides, damage to defender /
+    attacker, and both variance multipliers;
+  * **defender**: counter attack / defence, support, experience, HP before →
+    after, XP gained.
+* `SPACE` / click closes the report and returns to the map.
 
 Panel selection is the original algorithm (`FUN_00415790`): the first panel is
 `table[remap[atk]*16 + remap[def] + 8]`, the second

@@ -42,7 +42,7 @@ using json = nlohmann::json;
 
 static std::vector<UnitType> gTypes;
 static std::vector<TerrainDef> gTerrain;
-static std::vector<int> gHpMult;
+static CombatRules gCombatRules;
 static Mission gMission;
 
 static std::vector<std::string> gTerrainNames;
@@ -58,6 +58,11 @@ static Texture2D gVfx[16];
 
 static const char* kGameDir = nullptr;
 static std::string gAssetDir;
+
+// Non-macro aliases (raylib's RED/GREEN are macros, so they cannot be used as
+// local constant names in some expressions).
+static const Color kRed = RED;
+static const Color kGreen = GREEN;
 
 // ------------------------------------------------------------------ hex
 static inline int moveCost(const Mission& m, int x, int y, int moveClass) {
@@ -103,9 +108,32 @@ static void loadData() {
             gTerrain[i].cost[c] = tr["move_cost"][i][c];
 
     json cb = loadJson(gAssetDir + "data/combat.json");
-    gHpMult.clear();
-    for (const auto& v : cb["hp_damage_multiplier"]) gHpMult.push_back(v.get<int>());
-    if (gHpMult.empty()) gHpMult = {100, 105, 110, 120, 130, 140, 160, 200};
+    if (cb.contains("hp_damage_multiplier"))
+        gCombatRules.hpMult = cb["hp_damage_multiplier"].get<std::vector<int>>();
+    if (gCombatRules.hpMult.empty())
+        gCombatRules.hpMult = {100, 105, 110, 120, 130, 140, 160, 200};
+    if (cb.contains("variance") && cb["variance"].is_array()) {
+        gCombatRules.variance.clear();
+        for (const auto& b : cb["variance"]) {
+            gCombatRules.variance.push_back(
+                {b.value("min", 0), b.value("max", 0), b.value("mult", 10)});
+        }
+    }
+    gCombatRules.varianceBase = cb.value("variance_base", gCombatRules.varianceBase);
+    gCombatRules.varianceDiv = cb.value("variance_divisor", gCombatRules.varianceDiv);
+    gCombatRules.supportDivisor = cb.value("support_divisor", gCombatRules.supportDivisor);
+    gCombatRules.surroundDivisor = cb.value("surround_divisor", gCombatRules.surroundDivisor);
+    gCombatRules.hpBonus = cb.value("hp_bonus", gCombatRules.hpBonus);
+    gCombatRules.destroyThreshold =
+        cb.value("destroy_threshold", gCombatRules.destroyThreshold);
+    if (cb.contains("xp")) {
+        const auto& x = cb["xp"];
+        gCombatRules.xpHit = x.value("hit", gCombatRules.xpHit);
+        gCombatRules.xpKill = x.value("kill", gCombatRules.xpKill);
+        gCombatRules.xpNoDamage = x.value("no_damage", gCombatRules.xpNoDamage);
+        gCombatRules.maxXp = x.value("max", gCombatRules.maxXp);
+        gCombatRules.rankDivisor = x.value("rank_divisor", gCombatRules.rankDivisor);
+    }
 
     gTerrainNames.assign(16, "?");
     if (tr.contains("names")) {
@@ -164,7 +192,7 @@ static bool loadMission(const std::string& path) {    json j = loadJson(path);
         // Mission files may specify either "xp" or the older "rank" tier.
         u.rank = ju.value("rank", 0);
         u.xp = ju.value("xp", std::clamp(u.rank, 0, 7) * 4);
-        u.rank = rankFromXp(u.xp);
+        u.rank = rankFromXp(u.xp, gCombatRules.rankDivisor);
         gMission.units.push_back(u);
     }
     return true;
@@ -177,8 +205,7 @@ static bool loadMission(const std::string& path) {    json j = loadJson(path);
 static CombatRng gCombatRng;
 
 static CombatResult resolveBattle(int atk, int def, int mode) {
-    return resolveCombat(gMission, gTypes, gTerrain, gHpMult, atk, def, mode,
-                         gCombatRng);
+    return resolveCombat(gMission, gTypes, gTerrain, gCombatRules, atk, def, mode, gCombatRng);
 }
 
 static std::vector<int> attackable(const Mission& m, int slot) {
@@ -268,7 +295,7 @@ static void aiTurn() {
             int mode = hexDistance(u.x, u.y, D.x, D.y) - 1;
             int hpA0 = u.hp, hpD0 = D.hp;
             CombatResult r = resolveBattle(i, tgt, mode);
-            applyCombatResult(gMission, r);
+            applyCombatResult(gMission, r, gCombatRules);
             queueCombat(i, tgt, hpA0, hpD0, u.hp, D.hp, r, mode);
             std::cout << "[AI] " << gTypes[u.type].name << " -> " << gTypes[D.type].name
                       << "  dmg " << r.dmgToDef << "/" << r.dmgToAtk
@@ -387,12 +414,9 @@ struct CombatView {
     bool active = false;
     int atk = -1, def = -1;
     int hpA0 = 0, hpD0 = 0, hpA1 = 0, hpD1 = 0;
-    int dmgDef = 0, dmgAtk = 0;
     int mode = 0;
     int panelA = 0, panelB = 0;
-    int atkStrength = 0, defStrength = 0, ctrStrength = 0, ctrDefStrength = 0;
-    int terrainA = 0, terrainB = 0;
-    float t = 0;
+    CombatResult r;
 };
 static std::deque<CombatView> gCombatQueue;
 static CombatView gCv;
@@ -431,10 +455,7 @@ static void queueCombat(int atk, int def, int hpA0, int hpD0, int hpA1, int hpD1
     v.atk = atk;
     v.def = def;
     v.hpA0 = hpA0; v.hpD0 = hpD0; v.hpA1 = hpA1; v.hpD1 = hpD1;
-    v.dmgDef = r.dmgToDef; v.dmgAtk = r.dmgToAtk;
-    v.atkStrength = r.atkStrength; v.defStrength = r.defStrength;
-    v.ctrStrength = r.ctrStrength; v.ctrDefStrength = r.ctrDefense;
-    v.terrainA = r.terrainDefA; v.terrainB = r.terrainDefD;
+    v.r = r;
     v.mode = mode;
     int ta = terrainAt(gMission, gMission.units[atk].x, gMission.units[atk].y);
     int td = terrainAt(gMission, gMission.units[def].x, gMission.units[def].y);
@@ -448,7 +469,6 @@ static void startNextCombat() {
         gCv = gCombatQueue.front();
         gCombatQueue.pop_front();
         gCv.active = true;
-        gCv.t = 0;
     }
 }
 
@@ -495,6 +515,8 @@ static void drawEffect(Texture2D& tex, float x, float y, float s, float rot, Col
 }
 
 static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D enemyTex) {
+    (void)playerTex;
+    (void)enemyTex;
     int W = GetScreenWidth(), H = GetScreenHeight();
     const Color NAVY = {0, 0, 80, 255};
     const Color PANEL = {0, 0, 64, 255};
@@ -527,16 +549,17 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
     const Unit& D = gMission.units[v.def];
     const UnitType& TA = gTypes[A.type];
     const UnitType& TD = gTypes[D.type];
+    const CombatResult& r = v.r;
 
-    // ----- top: names + EXP
+    // ----- top: names + initial HP (the report below shows the outcome)
     DrawRectangle((int)playX, 0, (int)playW, (int)topH, NAVY);
     int nameSize = (int)(topH * 0.30f);
     DrawText(TA.name.c_str(), (int)(playX + playW * 0.03f), (int)(topH * 0.34f), nameSize, TXT);
     DrawText(TD.name.c_str(), (int)(playX + playW * 0.82f), (int)(topH * 0.34f), nameSize, TXT);
     int expSize = (int)(topH * 0.22f);
-    DrawText("EXP", (int)(playX + playW * 0.255f), (int)(topH * 0.38f), expSize, TXT);
-    DrawText("EXP", (int)(playX + playW * 0.715f), (int)(topH * 0.38f), expSize, TXT);
-    auto expBox = [&](float fx, int val) {
+    DrawText("HP", (int)(playX + playW * 0.255f), (int)(topH * 0.38f), expSize, TXT);
+    DrawText("HP", (int)(playX + playW * 0.715f), (int)(topH * 0.38f), expSize, TXT);
+    auto hpBox = [&](float fx, int val) {
         float s = topH * 0.46f;
         float x = playX + playW * fx;
         float y = topH * 0.22f;
@@ -545,18 +568,10 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
         DrawText(TextFormat("%d", val), (int)(x + s * 0.33f), (int)(y + s * 0.12f),
                  (int)(s * 0.70f), BORDER);
     };
-    expBox(0.335f, (v.dmgAtk > 0 && v.t > 2.45f) ? v.hpA1 + 1 : v.hpA0 + 1);
-    expBox(0.613f, (v.t > 2.45f) ? v.hpD1 + 1 : v.hpD0 + 1);
+    hpBox(0.335f, std::clamp(v.hpA0 + 1, 0, 8));
+    hpBox(0.613f, std::clamp(v.hpD0 + 1, 0, 8));
 
-    // ----- middle: black field, two colour-keyed terrain panels
-    float t = v.t;
-    int nA = (v.dmgAtk > 0 && t > 2.45f) ? (v.hpA1 + 1) : (v.hpA0 + 1);
-    int nD = (t > 2.45f) ? (v.hpD1 + 1) : (v.hpD0 + 1);
-    nA = std::clamp(nA, 0, 8);
-    nD = std::clamp(nD, 0, 8);
-
-    // 8 formation slots, staggered 2 x 4, mirrored for the defender.  These
-    // coordinates come from the real battle capture (frame_00219).
+    // ----- middle: static terrain close-ups + initial army
     static const float FORM[8][2] = {
         {0.40f, 0.37f}, {0.23f, 0.34f}, {0.40f, 0.53f}, {0.19f, 0.47f},
         {0.36f, 0.72f}, {0.16f, 0.67f}, {0.31f, 0.89f}, {0.08f, 0.83f}
@@ -565,55 +580,10 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
     float axPanel = playX;
     float dxPanel = playX + pan + gap;
 
-    // The original materialises the vehicles one by one over ~2 s.
     auto panelPoint = [&](float px, float slotX, float slotY) {
         return Vector2{px + slotX * pan, panY + slotY * pan};
     };
 
-    // units ride in from the screen edges and arrive at their slot at the time
-    // they used to pop in (0.05 + i*0.235 s)
-    auto drawArmy = [&](float px, int count, int type, Texture2D& tex, Color flash,
-                        float nudge, bool mirror) {
-        Texture2D& bt = (type >= 0 && type < 24)
-                            ? (mirror ? gUnitSprite[type] : gUnitSpriteFlip[type])
-                            : tex;
-        if (!bt.id) return;
-        Color team = mirror ? Color{150, 255, 150, 255} : WHITE;
-        Color c = {
-            (unsigned char)(team.r * flash.r / 255),
-            (unsigned char)(team.g * flash.g / 255),
-            (unsigned char)(team.b * flash.b / 255),
-            (unsigned char)flash.a
-        };
-        Rectangle src = {0, 0, (float)bt.width, (float)bt.height};
-        const float dur = 0.70f;
-        for (int i = 0; i < count; ++i) {
-            float arrive = 0.05f + i * 0.235f;
-            float start = arrive - dur;
-            if (t < start) continue;
-            float k = std::clamp((t - start) / dur, 0.0f, 1.0f);
-            float ease = 1.0f - (1.0f - k) * (1.0f - k);
-            float sx = mirror ? (1.0f - FORM[i][0]) : FORM[i][0];
-            Vector2 dest = panelPoint(px, sx, FORM[i][1]);
-            float startX = mirror ? (float)W + us : -(float)us;
-            float x = startX + (dest.x - startX) * ease;
-            float y = dest.y + std::sin(k * 3.14159f * 2.0f) * us * 0.05f;
-            x += nudge;
-            float s = us * 1.3f;
-            DrawTexturePro(bt, src, {x - s / 2, y - s / 2, s, s}, {0, 0}, 0, c);
-        }
-    };
-
-    float fireT = 2.15f, fireDur = 0.35f;
-    float rk = (t > fireT && t < fireT + fireDur)
-                   ? std::sin((t - fireT) / fireDur * 3.14159f)
-                   : 0.0f;
-    float recoilA = -us * 0.22f * rk;
-    float recoilD = us * 0.22f * rk;
-    Color tintA = (t > 2.45f && t < 2.95f) ? Color{255, 140, 140, 255} : WHITE;
-    Color tintD = tintA;
-
-    // draw terrain first, then armies on top
     auto drawPanel = [&](int idx, float x) {
         if (gCombatPanels.empty() || !gCombatPanels[idx].id) return;
         Texture2D& tex = gCombatPanels[idx];
@@ -625,73 +595,66 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
     if (!ranged && v.panelA != v.panelB)
         DrawRectangle((int)(dxPanel) - 1, (int)panY, 2, (int)pan, BLACK);
 
-    drawArmy(axPanel, nA, A.type, playerTex, tintA, recoilA, false);
-    drawArmy(dxPanel, nD, D.type, enemyTex, tintD, recoilD, true);
-
-    // ----- both sides fire at the same time
-    if (t > fireT && t < fireT + fireDur) {
-        float k = (t - fireT) / fireDur;
-        Vector2 pa = panelPoint(axPanel, FORM[0][0], FORM[0][1]);
-        pa.x += recoilA;
-        drawEffect(gVfx[1], pa.x + us * 0.5f, pa.y, us * 1.15f, 0.0f, WHITE);
-        float ax0 = pa.x + us * 0.4f, ax1 = dxPanel + pan * 0.60f;
-        drawEffect(gVfx[2], ax0 + (ax1 - ax0) * k, pa.y, us, 0.0f, WHITE);
-
-        Vector2 pd = panelPoint(dxPanel, 1.0f - FORM[0][0], FORM[0][1]);
-        pd.x += recoilD;
-        drawEffect(gVfx[1], pd.x - us * 0.5f, pd.y, us * 1.15f, 0.0f, WHITE);
-        float dx0 = pd.x - us * 0.4f, dx1 = axPanel + pan * 0.40f;
-        drawEffect(gVfx[2], dx0 + (dx1 - dx0) * k, pd.y, us, 0.0f, WHITE);
-    }
-
-    // ----- explosions on both sides at the same time
-    if (t > 2.45f && t < 3.20f) {
-        for (int side = 0; side < 2; ++side) {
-            float pxp = side == 0 ? axPanel : dxPanel;
-            for (int i = 0; i < 4; ++i) {
-                int j = i * 2;
-                float sx = side == 0 ? FORM[j][0] : (1.0f - FORM[j][0]);
-                Vector2 q = panelPoint(pxp, sx, FORM[j][1]);
-                float ph = (t - 2.45f) * 7.0f + i * 1.6f;
-                drawExplosion(q.x + std::sin(ph) * us * 0.5f,
-                              q.y + std::cos(ph * 1.3f) * us * 0.4f,
-                              us * (0.55f + 0.15f * std::sin(ph * 2.0f)), ph);
-            }
+    // The simulation is static: show the initial formations, no ride-in,
+    // no muzzle flashes, no disappearing floating numbers.
+    auto drawArmy = [&](float px, int count, int type, bool mirror) {
+        if (type < 0 || type >= 24) return;
+        Texture2D& bt = mirror ? gUnitSprite[type] : gUnitSpriteFlip[type];
+        if (!bt.id) return;
+        Color tint = mirror ? Color{150, 255, 150, 255} : WHITE;
+        Rectangle src = {0, 0, (float)bt.width, (float)bt.height};
+        for (int i = 0; i < count; ++i) {
+            float sx = mirror ? (1.0f - FORM[i][0]) : FORM[i][0];
+            Vector2 dest = panelPoint(px, sx, FORM[i][1]);
+            float s = us * 1.3f;
+            DrawTexturePro(bt, src, {dest.x - s / 2, dest.y - s / 2, s, s},
+                           {0, 0}, 0, tint);
         }
-    }
-
-    if (v.dmgDef > 0 && t > 2.45f)
-        DrawText(TextFormat("-%d", v.dmgDef), (int)(dxPanel + pan * 0.30f), (int)(panY + 6),
-                 (int)(H * 0.042f), Color{255, 90, 90, 255});
-    if (v.dmgAtk > 0 && t > 2.45f)
-        DrawText(TextFormat("-%d", v.dmgAtk), (int)(axPanel + pan * 0.06f), (int)(panY + 6),
-                 (int)(H * 0.042f), ORANGE);
-
-    // ----- bottom: attack / defense / terrain
-    DrawRectangle((int)playX, (int)botY, (int)playW, (int)botH, NAVY);
-    auto statBox = [&](float x, float w, const char* l1, const char* l2) {
-        float h = botH * 0.72f;
-        float y = botY + botH * 0.14f;
-        DrawRectangleRec({x, y, w, h}, PANEL);
-        DrawRectangleLinesEx({x, y, w, h}, std::max(2.0f, botH * 0.06f), BORDER);
-        int fs = (int)(botH * 0.24f);
-        DrawText(l1, (int)(x + w * 0.06f), (int)(y + h * 0.16f), fs, TXT);
-        DrawText(l2, (int)(x + w * 0.06f), (int)(y + h * 0.52f), fs, TXT);
     };
-    statBox(playX + playW * 0.02f, playW * 0.30f,
-            TextFormat("ATK %d", v.atkStrength), TextFormat("DEF %d", v.defStrength));
-    statBox(playX + playW * 0.68f, playW * 0.30f,
-            TextFormat("ATK %d", v.ctrStrength), TextFormat("DEF %d", v.ctrDefStrength));
+    drawArmy(axPanel, std::clamp(v.hpA0 + 1, 0, 8), A.type, false);
+    drawArmy(dxPanel, std::clamp(v.hpD0 + 1, 0, 8), D.type, true);
 
-    DrawText("TERRAIN", (int)(playX + playW * 0.42f), (int)(botY + botH * 0.10f),
-             (int)(botH * 0.20f), TXT);
-    DrawText(TextFormat("%d%%", v.terrainA),
-             (int)(playX + playW * 0.40f), (int)(botY + botH * 0.52f), (int)(botH * 0.22f), DIM);
-    DrawText(TextFormat("%d%%", v.terrainB),
-             (int)(playX + playW * 0.55f), (int)(botY + botH * 0.52f), (int)(botH * 0.22f), DIM);
+    // ----- bottom: persistent simulation report
+    DrawRectangle((int)playX, (int)botY, (int)playW, (int)botH, NAVY);
+    float fs = std::max(10.0f, botH * 0.095f);
+    float lh = fs * 1.30f;
+    auto line = [&](float x, float y, const char* s, Color c) {
+        DrawText(s, (int)x, (int)y, (int)fs, c);
+    };
 
-    DrawText("SPACE / click", (int)(playX + playW * 0.40f), (int)(H - botH * 0.20f),
-             (int)(botH * 0.14f), DIM);
+    float colL = playX + playW * 0.02f;
+    float colC = playX + playW * 0.37f;
+    float colR = playX + playW * 0.69f;
+    float y0 = botY + botH * 0.07f;
+
+    line(colL, y0, "ATTACKER", BORDER);
+    line(colC, y0, "SIMULATION", BORDER);
+    line(colR, y0, "DEFENDER", BORDER);
+    y0 += lh * 1.15f;
+
+    // attacker: attack / own defence, support + experience, HP/XP outcome
+    line(colL, y0, TextFormat("ATK %d   DEF %d", r.atkStrength, r.ctrDefense), TXT);
+    line(colL, y0 + lh, TextFormat("SUP +%d   EXP +%d%%", r.supportAtk, r.expPctA), DIM);
+    line(colL, y0 + lh * 2, TextFormat("HP %d -> %d", v.hpA0, r.newHpAtk), TXT);
+    line(colL, y0 + lh * 3, TextFormat("XP +%d", r.xpToAtk), kGreen);
+
+    // centre: the initial surround/terrain state and the final damage
+    line(colC, y0, TextFormat("SURROUND %d%%", r.surroundPct),
+         r.surroundPct ? kRed : DIM);
+    line(colC, y0 + lh, TextFormat("DEF %d -> %d", r.defBeforeSurround, r.defAfterSurround), DIM);
+    line(colC, y0 + lh * 2, TextFormat("TERRAIN %d%% / %d%%", r.terrainDefA, r.terrainDefD), DIM);
+    line(colC, y0 + lh * 3, TextFormat("DMG %d / %d", r.dmgToDef, r.dmgToAtk), TXT);
+    line(colC, y0 + lh * 4, TextFormat("VAR %d.%dx / %d.%dx",
+         r.varToDef / 10, r.varToDef % 10, r.varToAtk / 10, r.varToAtk % 10), DIM);
+
+    // defender: counter attack / own defence, support + experience, HP/XP outcome
+    line(colR, y0, TextFormat("ATK %d   DEF %d", r.ctrStrength, r.defStrength), TXT);
+    line(colR, y0 + lh, TextFormat("SUP +%d   EXP +%d%%", r.supportDef, r.expPctD), DIM);
+    line(colR, y0 + lh * 2, TextFormat("HP %d -> %d", v.hpD0, r.newHpDef), TXT);
+    line(colR, y0 + lh * 3, TextFormat("XP +%d", r.xpToDef), kGreen);
+
+    DrawText("SPACE / click to continue", (int)(playX + playW * 0.33f),
+             (int)(H - botH * 0.10f), (int)(botH * 0.08f), DIM);
 }
 
 static std::string resolveAssets(int argc, char** argv) {
@@ -765,7 +728,7 @@ int main(int argc, char** argv) {
         uint32_t seed = (uint32_t)std::strtoul(argv[7], nullptr, 0);
         CombatRng rng;
         rng.seed(seed);
-        CombatResult r = resolveCombat(gMission, gTypes, gTerrain, gHpMult,
+        CombatResult r = resolveCombat(gMission, gTypes, gTerrain, gCombatRules,
                                        a, d, mode, rng);
         std::cout << "raw_def=" << r.rawDmgToDef << " raw_atk=" << r.rawDmgToAtk
                   << " var_def=" << r.varToDef << " var_atk=" << r.varToAtk
@@ -795,8 +758,7 @@ int main(int argc, char** argv) {
             for (int d = 0; d < (int)gTypes.size(); ++d) {
                 gMission.units[0] = Unit{a, 0, 1, 1, 7, 0, false};
                 gMission.units[1] = Unit{d, 1, 2, 1, 7, 0, false};
-                CombatResult r = resolveCombat(gMission, gTypes, gTerrain, gHpMult,
-                                               0, 1, 0, testRng);
+                CombatResult r = resolveCombat(gMission, gTypes, gTerrain, gCombatRules, 0, 1, 0, testRng);
                 std::cout << gTypes[a].name << "," << gTypes[d].name << ","
                           << r.dmgToDef << "," << r.dmgToAtk << ","
                           << r.newHpDef << "," << r.newHpAtk << "\n";
@@ -919,10 +881,12 @@ int main(int argc, char** argv) {
     }
 
     if (combatshot) {
+        int shotMode = (argc > 6) ? std::atoi(argv[6]) : 0;
+        int wantA = (shotMode > 0) ? 14 : 4;  // Lynx for the ranged layout demo
         int a = -1, d = -1;
         for (int i = 0; i < (int)gMission.units.size(); ++i) {
             if (gMission.units[i].hp <= 0) continue;
-            if (gMission.units[i].owner == 0 && gMission.units[i].type == 4) a = i;
+            if (gMission.units[i].owner == 0 && gMission.units[i].type == wantA) a = i;
             if (gMission.units[i].owner == 1 && gMission.units[i].type == 6) d = i;
         }
         if (a < 0 || d < 0) {
@@ -937,21 +901,19 @@ int main(int argc, char** argv) {
         if (a >= 0 && d >= 0) {
             gCv.active = true;
             gCv.atk = a; gCv.def = d;
-            gCv.hpA0 = 7; gCv.hpD0 = 7; gCv.hpA1 = 7; gCv.hpD1 = 4;
-            gCv.dmgDef = 312; gCv.dmgAtk = 148; gCv.mode = 0;
-            gCv.atkStrength = 720; gCv.defStrength = 240;
-            gCv.ctrStrength = 560; gCv.ctrDefStrength = 400;
-            gCv.terrainA = gTerrain[terrainAt(gMission, gMission.units[a].x,
-                                               gMission.units[a].y)].def;
-            gCv.terrainB = gTerrain[terrainAt(gMission, gMission.units[d].x,
-                                               gMission.units[d].y)].def;
+            gCv.hpA0 = gMission.units[a].hp;
+            gCv.hpD0 = gMission.units[d].hp;
+            gCv.mode = shotMode;
+            CombatRng shotRng;
+            shotRng.seed(0xC0FFEE);
+            gCv.r = resolveCombat(gMission, gTypes, gTerrain, gCombatRules,
+                                  a, d, gCv.mode, shotRng);
+            gCv.hpA1 = gCv.r.newHpAtk;
+            gCv.hpD1 = gCv.r.newHpDef;
             int ta = terrainAt(gMission, gMission.units[a].x, gMission.units[a].y);
             int td = terrainAt(gMission, gMission.units[d].x, gMission.units[d].y);
-            gCv.panelA = combatPanelFor(ta, td, false, true);
-            gCv.panelB = combatPanelFor(td, ta, false, false);
-            gCv.t = 2.7f;
-            if (argc > 5) gCv.t = (float)atof(argv[5]);
-            if (argc > 6) gCv.mode = atoi(argv[6]);  // screenshot hook: 1 = ranged layout
+            gCv.panelA = combatPanelFor(ta, td, gCv.mode > 0, true);
+            gCv.panelB = combatPanelFor(td, ta, gCv.mode > 0, false);
             for (int k = 0; k < 6; ++k) {
                 BeginDrawing();
                 drawCombatScreen(gCv, playerTex, enemyTex);
@@ -996,13 +958,10 @@ int main(int argc, char** argv) {
     int frame = 0;
     while (!WindowShouldClose()) {
         if (gCv.active) {
-            gCv.t += GetFrameTime();
-            if (IsKeyPressed(KEY_SPACE) || IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
-                gCv.t = 10.0f;
             BeginDrawing();
             drawCombatScreen(gCv, playerTex, enemyTex);
             EndDrawing();
-            if (gCv.t > 4.6f) {
+            if (IsKeyPressed(KEY_SPACE) || IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
                 gCv.active = false;
                 startNextCombat();
             }
@@ -1063,7 +1022,7 @@ int main(int argc, char** argv) {
                     float ax = (float)sel.x, ay = (float)sel.y;
                     int hpA0 = sel.hp, hpD0 = gMission.units[hit].hp;
                     CombatResult r = resolveBattle(selected, hit, mode);
-                    applyCombatResult(gMission, r);
+                    applyCombatResult(gMission, r, gCombatRules);
                     std::cout << "[combat] " << gTypes[sel.type].name << " vs "
                               << gTypes[gMission.units[hit].type].name
                               << "  dmg " << r.dmgToDef << "/" << r.dmgToAtk
@@ -1128,7 +1087,7 @@ int main(int argc, char** argv) {
             const Unit& u = gMission.units[t];
             float cx, cy;
             hexCenter(u.x, u.y, cx, cy);
-            DrawPolyLinesEx({cx, cy}, 6, gHexSize - 2, 0, 2.5f, RED);
+            DrawPolyLinesEx({cx, cy}, 6, gHexSize - 2, 0, 2.5f, kRed);
         }
 
         for (const auto& u : gMission.units) {
@@ -1141,18 +1100,18 @@ int main(int argc, char** argv) {
                 DrawPoly({cx, cy}, 6, gHexSize - 2, 0, Fade(BLACK, 0.35f));
             for (int i = 0; i < u.hp; ++i)
                 DrawRectangle((int)(cx - u.hp * 4 + i * 8), (int)(cy + gHexSize * 0.55f),
-                              6, 5, u.owner == 0 ? GREEN : RED);
+                              6, 5, u.owner == 0 ? kGreen : kRed);
         }
         for (const auto& f : fx) {
             float a = std::clamp(f.t, 0.0f, 1.0f);
             float cx, cy;
             hexCenter((int)f.x, (int)f.y, cx, cy);
             if (f.onDefender)
-                DrawPoly({cx, cy}, 6, gHexSize - 2, 0, Fade(RED, 0.35f * a));
+                DrawPoly({cx, cy}, 6, gHexSize - 2, 0, Fade(kRed, 0.35f * a));
             if (f.dmg > 0)
                 DrawText(TextFormat("-%d", f.dmg), (int)(cx - 16),
                          (int)(cy - 20 - (1.0f - a) * 20), 20,
-                         f.onDefender ? RED : ORANGE);
+                         f.onDefender ? kRed : ORANGE);
         }
         if (selected >= 0) {
             const Unit& u = gMission.units[selected];
@@ -1165,7 +1124,7 @@ int main(int argc, char** argv) {
         int px = mapW + 16;
         DrawText("NECTARIS", px, 20, 24, RAYWHITE);
         DrawText(TextFormat("Turn: %s", currentPlayer == 0 ? "PLAYER" : "ENEMY"), px, 60, 20,
-                 currentPlayer == 0 ? GREEN : RED);
+                 currentPlayer == 0 ? kGreen : kRed);
         DrawText(TextFormat("Mission: %s", gMission.name.c_str()), px, 90, 16, LIGHTGRAY);
         int alive0 = 0, alive1 = 0;
         for (auto& u : gMission.units) {
@@ -1189,8 +1148,8 @@ int main(int argc, char** argv) {
         DrawText("SPACE end turn   R restart", px, 300, 16, GRAY);
         DrawText("ESC / RMB cancel", px, 320, 16, GRAY);
 
-        if (alive1 == 0) DrawText("VICTORY", px, 380, 28, GREEN);
-        if (alive0 == 0) DrawText("DEFEAT", px, 380, 28, RED);
+        if (alive1 == 0) DrawText("VICTORY", px, 380, 28, kGreen);
+        if (alive0 == 0) DrawText("DEFEAT", px, 380, 28, kRed);
 
         if (debug) {
             DrawText(TextFormat("cell %d,%d  terrain %d", mx, my,

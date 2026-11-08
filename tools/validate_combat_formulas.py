@@ -150,7 +150,8 @@ for vk in (SPACE, SPACE, RIGHT, RIGHT, SPACE, SPACE, RIGHT, DOWN):
     print('  key %02x cursor %d,%d atk %d def %d mode %d' %
           (vk, u8(0x481a72), u8(0x481a71), u8(0x48327b), u8(0x483274), u8(0x481a68)),
           flush=True)
-print('pre-battle atk', u8(0x48327b), 'def', u8(0x483274), flush=True)
+print('pre-battle atk', u8(0x48327b), 'def', u8(0x483274),
+      'c42', u8(0x495c42), flush=True)
 
 # Force every FUN_0040c770 roll to 37 -> variance 11 (1.1x).
 if os.environ.get('TRACE') == '1':
@@ -195,6 +196,7 @@ state = {
     'map_w': byte(0x495c02),
     'map_h': byte(0x495c03),
     'current_player': byte(0x495c63),
+    'c42': byte(0x495c42),
     'atk_slot': byte(0x48327b),
     'def_slot': byte(0x483274) & 0x3F,
     'atk_type': byte(0x48327c),

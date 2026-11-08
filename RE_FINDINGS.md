@@ -190,10 +190,18 @@ else:
   `2..range`; the defender does **not** counter.
 
 `counter_ground/air` is the range: SG-4 = 5, MR-22 = 4, SS-80 = 6, MM107 = 5
-vs air.  The original's target highlighter gates the rings on
-`DAT_00495c42 != 0 || (ability & 0x14) == 0x14`; `DAT_00495c42` is a mission
-flag we do not export, so the port grants the range to every unit with
-`counter >= 2`.
+vs air.  The original target highlighter has an extra gate
+`DAT_00495c42 != 0 || (ability & 0x14) == 0x14`; runtime probes show
+`DAT_00495c42 == 0` on the map and before a normal attack, so it is an
+attack-mode/UI flag (the separate indirect-fire command), not a per-mission
+switch.  The port therefore offers rings `2..range` to every unit with
+`counter >= 2`, which matches the weapon guide.
+
+All numeric constants used above are exported to `assets/data/combat.json`
+(`hp_damage_multiplier`, variance bands, support/surround divisors, HP bonus,
+XP awards) by `tools/export_combat_config.py`; unit stats and ability flags
+are in `assets/data/units.json`, terrain defence/move cost in
+`assets/data/terrain.json`.
 
 ### Variance, HP and XP (`FUN_00420cd0` / `FUN_00415850`)
 

@@ -93,8 +93,20 @@ json.dump(terrain, open(os.path.join(OUT, 'data', 'terrain.json'), 'w'), indent=
 
 combat = {
     'hp_damage_multiplier': tables['hp_damage_multiplier'],
-    'variance': {'20-24': 15, '60-64': 20, '80-82': 2, '98-99': 40, 'default': '(150-roll)/10'},
-    'formula': 'see RE_FINDINGS.md section 5',
+    'variance': [
+        {'min': 20, 'max': 24, 'mult': 15},
+        {'min': 60, 'max': 64, 'mult': 20},
+        {'min': 80, 'max': 82, 'mult': 2},
+        {'min': 98, 'max': 99, 'mult': 40},
+    ],
+    'variance_base': 150,
+    'variance_divisor': 10,
+    'support_divisor': 2,
+    'surround_divisor': 2,
+    'hp_bonus': 50,
+    'destroy_threshold': 8,
+    'xp': {'hit': 4, 'kill': 8, 'no_damage': 8, 'max': 31, 'rank_divisor': 4},
+    'formula': 'see RE_FINDINGS.md section 5; tables from 0x42b158/0x42b160',
 }
 json.dump(combat, open(os.path.join(OUT, 'data', 'combat.json'), 'w'), indent=2)
 

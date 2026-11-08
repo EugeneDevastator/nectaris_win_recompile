@@ -22,13 +22,12 @@ int CombatRng::roll100() {
 }
 
 // FUN_00421170: roll -> damage multiplier / 10.
-int CombatRng::variance() {
+int CombatRng::variance(const CombatRules& rules) {
     int r = roll100();
-    if (r > 0x13 && r < 0x19) return 0x0F;   // 20..24  -> 1.5x
-    if (r > 0x3B && r < 0x41) return 0x14;   // 60..64  -> 2.0x
-    if (r > 0x4F && r < 0x53) return 0x02;   // 80..82  -> 0.2x
-    if (r < 0x62) return (0x96 - r) / 10;    // 0..97   -> 1.5x .. 0.5x
-    return 0x28;                             // 98..99  -> 4.0x
+    for (const auto& band : rules.variance)
+        if (r >= band.lo && r <= band.hi) return band.mult;
+    int div = (rules.varianceDiv > 0) ? rules.varianceDiv : 10;
+    return (rules.varianceBase - r) / div;
 }
 
 // ------------------------------------------------------------------ helpers
@@ -38,12 +37,9 @@ int rankOf(const Unit& u) {
     return std::clamp(u.rank, 0, 7);
 }
 
-int hpMultAt(const std::vector<int>& hpMult, int rank) {
-    if (hpMult.empty()) {
-        static const int kDefault[8] = {100, 105, 110, 120, 130, 140, 160, 200};
-        return kDefault[std::clamp(rank, 0, 7)];
-    }
-    return hpMult[std::clamp(rank, 0, (int)hpMult.size() - 1)];
+int hpMultAt(const CombatRules& rules, int rank) {
+    if (rules.hpMult.empty()) return 100;
+    return rules.hpMult[std::clamp(rank, 0, (int)rules.hpMult.size() - 1)];
 }
 
 // Original FUN_0041bc10: pick the ground/air attack column from the
@@ -76,7 +72,7 @@ bool inAttackerZoc(const Mission& m, int owner, int cx, int cy, int atkSlot) {
 CombatResult resolveCombat(const Mission& m,
                            const std::vector<UnitType>& types,
                            const std::vector<TerrainDef>& terrain,
-                           const std::vector<int>& hpMult,
+                           const CombatRules& rules,
                            int atkSlot, int defSlot, int mode,
                            CombatRng& rng) {
     CombatResult out;
@@ -124,6 +120,7 @@ CombatResult resolveCombat(const Mission& m,
 
     // ----- support fire (only during a direct exchange)
     int supA = 0, supD = 0;
+    const int supportDiv = (rules.supportDivisor > 0) ? rules.supportDivisor : 1;
     if (mode == 0) {
         // friendly units adjacent to the defender add attack power
         for (int d = 0; d < 6; ++d) {
@@ -136,7 +133,7 @@ CombatResult resolveCombat(const Mission& m,
             if (N.owner != A.owner || N.acted) continue;
             supA += attackValue(m, types, s, defSlot) * (N.hp + 1);
         }
-        supA /= (out.hA * 2);
+        supA /= (out.hA * supportDiv);
 
         // enemy units adjacent to the attacker add defensive support
         for (int d = 0; d < 6; ++d) {
@@ -149,8 +146,8 @@ CombatResult resolveCombat(const Mission& m,
             if (N.owner != D.owner || N.acted) continue;
             supD += types[N.type].def * (N.hp + 1);
         }
-        // Note: the original divides *both* support sums by (attacker HP+1)*2.
-        supD /= (out.hA * 2);
+        // Note: the original divides *both* support sums by (attacker HP+1).
+        supD /= (out.hA * supportDiv);
     }
     out.supportAtk = supA;
     out.supportDef = supD;
@@ -171,32 +168,41 @@ CombatResult resolveCombat(const Mission& m,
     // ----- attack / defence strengths
     int atkStrength = out.baseAtk + supA;
     int defStrength = defD + terD + supD;
-    if (surrounded) defStrength /= 2;
+    out.unitDefA = defA;
+    out.unitDefD = defD;
+    out.defBeforeSurround = defStrength;
+    const int surroundDiv = (rules.surroundDivisor > 0) ? rules.surroundDivisor : 1;
+    if (surrounded) defStrength /= surroundDiv;
+    out.defAfterSurround = defStrength;
     if (atkStrength > 100) atkStrength = 100;
     if (defStrength > 100) defStrength = 100;
     out.atkStrength = atkStrength;
     out.defStrength = defStrength;
+    out.surroundPct = surrounded ? 50 : 0;
 
     // ----- damage
     out.rankA = rankOf(A);
-    const int multA = hpMultAt(hpMult, out.rankA);
+    const int multA = hpMultAt(rules, out.rankA);
+    out.expPctA = multA - 100;
     out.rawDmgToDef =
         out.hA * (multA * (((100 - defStrength) * atkStrength) / 100) / 100);
 
     if (mode == 0) {
         out.rankD = rankOf(D);
         int ctrBase = out.baseCtr;
-        if (surrounded) ctrBase /= 2;      // the surround penalty also halves counter fire
+        if (surrounded) ctrBase /= surroundDiv;  // surround also halves counter fire
         int ctrDef = defA + terA;
         if (ctrBase > 100) ctrBase = 100;
         if (ctrDef > 100) ctrDef = 100;
         out.ctrStrength = ctrBase;
         out.ctrDefense = ctrDef;
-        const int multD = hpMultAt(hpMult, out.rankD);
+        const int multD = hpMultAt(rules, out.rankD);
+        out.expPctD = multD - 100;
         const int ctrVal = multD * (((100 - ctrDef) * ctrBase) / 100) / 100;
         out.rawDmgToAtk = out.hD * ctrVal;
     } else {
         out.rankD = rankOf(D);
+        out.expPctD = hpMultAt(rules, out.rankD) - 100;
         out.ctrStrength = 0;
         int ctrDef = defA + terA;
         if (ctrDef > 100) ctrDef = 100;
@@ -205,17 +211,17 @@ CombatResult resolveCombat(const Mission& m,
     }
 
     // ----- FUN_00420cd0 variance: defender damage first, then counter damage
-    out.varToDef = rng.variance();
+    out.varToDef = rng.variance(rules);
     out.dmgToDef = out.varToDef * out.rawDmgToDef / 10;
-    out.varToAtk = rng.variance();
+    out.varToAtk = rng.variance(rules);
     out.dmgToAtk = out.varToAtk * out.rawDmgToAtk / 10;
 
     // ----- new HP: original keeps (hp + 1) and treats > 8 as destroyed
-    auto newValue = [](int hp, int dmg) {
-        int bonus = (hp >= 1) ? 50 : 0;    // DAT_00481e5f < 2 -> 0
+    auto newValue = [&](int hp, int dmg) {
+        int bonus = (hp >= 1) ? rules.hpBonus : 0;  // DAT_00481e5f < 2 -> 0
         int v = (bonus + (hp + 1) * 100 - dmg) / 100;
-        if (v > 8) v = 0;
-        return v;                          // 0 = dead, else new HP + 1
+        if (v > rules.destroyThreshold) v = 0;
+        return v;                                   // 0 = dead, else new HP + 1
     };
     const int vD = newValue(D.hp, out.dmgToDef);
     const int vA = newValue(A.hp, out.dmgToAtk);
@@ -226,31 +232,31 @@ CombatResult resolveCombat(const Mission& m,
 
     // ----- XP (FUN_00415850 / FUN_0040a460)
     if (out.newHpAtk != 0 && out.newHpDef != D.hp)
-        out.xpToAtk = (out.newHpDef == 0) ? 8 : 4;
+        out.xpToAtk = (out.newHpDef == 0) ? rules.xpKill : rules.xpHit;
     if (out.newHpDef != 0)
-        out.xpToDef = (out.newHpDef == D.hp) ? 8 : 4;
+        out.xpToDef = (out.newHpDef == D.hp) ? rules.xpNoDamage : rules.xpHit;
 
     return out;
 }
 
 // ------------------------------------------------------------------ apply
 namespace {
-void addXp(Unit& u, int amount) {
+void addXp(Unit& u, int amount, const CombatRules& rules) {
     if (amount <= 0) return;
-    u.xp = std::min(31, u.xp + amount);   // FUN_0040a460 caps at 0x1F
-    u.rank = rankFromXp(u.xp);            // bits 5..7 = xp / 4
+    u.xp = std::min(rules.maxXp, u.xp + amount);   // FUN_0040a460 caps at 0x1F
+    u.rank = rankFromXp(u.xp, rules.rankDivisor);  // bits 5..7 = xp / 4
 }
 }  // namespace
 
-void applyCombatResult(Mission& m, const CombatResult& r) {
+void applyCombatResult(Mission& m, const CombatResult& r, const CombatRules& rules) {
     if (r.atkSlot < 0 || r.defSlot < 0) return;
     if (r.atkSlot >= (int)m.units.size() || r.defSlot >= (int)m.units.size()) return;
     Unit& A = m.units[r.atkSlot];
     Unit& D = m.units[r.defSlot];
     A.hp = r.newHpAtk;
     D.hp = r.newHpDef;
-    addXp(A, r.xpToAtk);
-    addXp(D, r.xpToDef);
+    addXp(A, r.xpToAtk, rules);
+    addXp(D, r.xpToDef, rules);
 }
 
 // ------------------------------------------------------------------ targeting
