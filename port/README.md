@@ -53,12 +53,12 @@ Headless AI demo (prints 3 rounds of enemy actions, including ranged fire):
 port/build/nectaris.exe assets assets/maps/all_units_test.json --demo
 ```
 
-Combat screenshot (seconds = animation phase: `1.2` ride-in, `2.3` projectiles,
-`2.7` explosions, `3.6` final report; last argument `0` = direct, `1` = ranged):
+Combat screenshot (seconds = animation phase: `1.2` ride-in, `2.5` projectiles,
+`3.0` explosions, `4.0` final report; last argument `0` = direct, `1` = ranged):
 
 ```powershell
-port/build/nectaris.exe assets assets/maps/all_units_test.json --combatshot direct.png 2.7 0
-port/build/nectaris.exe assets assets/maps/all_units_test.json --combatshot ranged.png 2.7 1
+port/build/nectaris.exe assets assets/maps/all_units_test.json --combatshot direct.png 3.0 0
+port/build/nectaris.exe assets assets/maps/all_units_test.json --combatshot ranged.png 3.0 1
 ```
 
 ## Combat simulation
@@ -233,11 +233,13 @@ Every resolved attack switches to a battle screen modeled on the original:
   playfield); direct battles stay edge-to-edge.
 * **ride-in**: vehicles roll in from the screen edges to their staggered 2×4
   formation slots at the original `0.05 + i×0.235 s` beats.
-* **simultaneous fire**: both sides fire at once, using one projectile texture
-  and one explosion texture for every unit. The killed vehicle slots
-  (`finalCount .. initialCount-1`) are targeted exactly, so their explosions
-  land on the right coordinates; all remaining shots scatter deterministically
-  across the opposing panel. HP boxes drop to the surviving vehicle count.
+* **simultaneous fire**: both sides fire at once, using `vfx_00` cell (0,0)
+  (the right-pointing missile) for every projectile and `vfx_07` at half scale
+  for every explosion. The killed vehicle slots (`finalCount ..
+  initialCount-1`) are targeted exactly, so their explosions land on the right
+  coordinates; all remaining shots scatter deterministically across the
+  opposing panel. Shooting is 0.70 s long (twice the old 0.35 s); HP boxes drop
+  to the surviving vehicle count at impact.
 * **persistent report (no disappearing numbers)**: the bottom bar stays visible
   during and after the animation and shows the simulation inputs and resolve:
   * **attacker**: attack / own defence, support bonus, experience bonus,

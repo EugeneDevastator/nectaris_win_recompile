@@ -483,10 +483,11 @@ static void drawHpBar(float x, float y, float w, float h, int hp0, int hp1, floa
 }
 
 static void drawExplosion(float x, float y, float r, float phase) {
-    int fi = std::clamp((int)(phase * 3.0f), 0, 15);
-    if (gVfx[fi].id) {
-        float s = r * 2.6f;
-        DrawTexturePro(gVfx[fi], {0, 0, (float)gVfx[fi].width, (float)gVfx[fi].height},
+    // Tuned VFX: a single explosion frame, drawn at 0.5 of the old size.
+    (void)phase;
+    if (gVfx[7].id) {
+        float s = r * 1.3f;
+        DrawTexturePro(gVfx[7], {0, 0, (float)gVfx[7].width, (float)gVfx[7].height},
                        {x - s / 2, y - s / 2, s, s}, {0, 0}, 0, WHITE);
         return;
     }
@@ -507,6 +508,16 @@ static void drawExplosion(float x, float y, float r, float phase) {
                    {x + std::cos(a) * r1, y + std::sin(a) * r1},
                    3, Color{255, 120, 20, 255});
     }
+}
+
+// vfx_00 is a 2x2 sheet; cell (0,0) is a missile pointing right.
+static void drawProjectile(float x, float y, float s, float angle) {
+    if (!gVfx[0].id) {
+        DrawCircleV({x, y}, s * 0.18f, ORANGE);
+        return;
+    }
+    Rectangle src{0, 0, gVfx[0].width * 0.5f, gVfx[0].height * 0.5f};
+    DrawTexturePro(gVfx[0], src, {x, y, s, s}, {s / 2, s / 2}, angle, WHITE);
 }
 
 static void drawEffect(Texture2D& tex, float x, float y, float s, float rot, Color tint) {
@@ -571,11 +582,14 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
     };
 
     float t = v.t;
+    // Shooting is deliberately twice as slow as before (0.35 -> 0.70 s).
+    float fireT = 2.15f, fireDur = 0.70f;
+    float impactT = fireT + fireDur + 0.10f;
     int nA0 = std::clamp(v.hpA0 + 1, 0, 8);   // initial vehicles
     int nD0 = std::clamp(v.hpD0 + 1, 0, 8);
     int nA1 = (v.hpA1 > 0) ? std::clamp(v.hpA1 + 1, 0, 8) : 0;  // survivors
     int nD1 = (v.hpD1 > 0) ? std::clamp(v.hpD1 + 1, 0, 8) : 0;
-    bool impact = t > 2.45f;
+    bool impact = t > impactT;
     hpBox(0.335f, impact ? nA1 : nA0);
     hpBox(0.613f, impact ? nD1 : nD0);
 
@@ -607,14 +621,13 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
         drawPanel(v.panelB, dxPanel, pan);
     }
 
-    float fireT = 2.15f, fireDur = 0.35f;
+    Color flashA = (t > impactT && t < impactT + 0.50f) ? Color{255, 150, 150, 255} : WHITE;
+    Color flashD = flashA;
     float rk = (t > fireT && t < fireT + fireDur)
                    ? std::sin((t - fireT) / fireDur * 3.14159f)
                    : 0.0f;
     float recoilA = -us * 0.20f * rk;
     float recoilD = us * 0.20f * rk;
-    Color flashA = (t > 2.45f && t < 2.95f) ? Color{255, 150, 150, 255} : WHITE;
-    Color flashD = flashA;
 
     // original materialise rhythm: arrival at 0.05 + i*0.235 s
     auto drawArmy = [&](float px, int count, int type, bool mirror,
@@ -691,8 +704,9 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
                 float k = std::clamp((t - st) / fireDur, 0.0f, 1.0f);
                 Vector2 p = {from[i].x + nudge + (to[i].x - from[i].x - nudge) * k,
                              from[i].y + (to[i].y - from[i].y) * k};
-                if (gVfx[2].id) drawEffect(gVfx[2], p.x, p.y, us * 0.85f, 0.0f, WHITE);
-                else DrawCircleV(p, us * 0.16f, ORANGE);
+                float ang = std::atan2(to[i].y - from[i].y,
+                                       to[i].x - from[i].x) * 57.29578f;
+                drawProjectile(p.x, p.y, us * 0.85f, ang);
                 if (k < 0.22f) {
                     Vector2 m = {from[i].x + nudge, from[i].y};
                     if (gVfx[1].id) drawEffect(gVfx[1], m.x, m.y, us * 1.0f, 0.0f, WHITE);
@@ -704,8 +718,8 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
         fire(fromD, toD, nD0, recoilD);
     }
 
-    if (t > 2.45f && t < 3.30f) {
-        float e = (t - 2.45f) * 7.0f;
+    if (t > impactT && t < impactT + 0.85f) {
+        float e = (t - impactT) * 7.0f;
         for (int i = 0; i < nA0; ++i)
             drawExplosion(toA[i].x, toA[i].y, us * 0.70f, e + i * 0.35f);
         for (int i = 0; i < nD0; ++i)
@@ -1062,8 +1076,8 @@ int main(int argc, char** argv) {
             drawCombatScreen(gCv, playerTex, enemyTex);
             EndDrawing();
             if (IsKeyPressed(KEY_SPACE) || IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-                if (gCv.t < 3.60f) {
-                    gCv.t = 3.60f;      // first input skips to the result
+                if (gCv.t < 3.90f) {
+                    gCv.t = 3.90f;      // first input skips to the result
                 } else {
                     gCv.active = false;
                     startNextCombat();
