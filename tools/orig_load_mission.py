@@ -72,6 +72,7 @@ hwnd = find_window(pid)
 h = dm.k32.OpenProcess(0x1F0FFF, False, pid)
 base = dm.module_base(h)
 def u32(va): return struct.unpack('<I', dm.read(h, base, va, 4))[0]
+def u8(va): return dm.read(h, base, va, 1)[0]
 def wr(va, data):
     got = ctypes.c_size_t()
     dm.k32.WriteProcessMemory(h, ctypes.c_void_p(base + (va - 0x400000)), data, len(data), ctypes.byref(got))
@@ -184,12 +185,21 @@ if len(sys.argv) > 1:
     call_mission(m, clean)
     capture('mission_%02d%s' % (m + 1, '_clean' if clean else ''))
     if mode == 'pan':
-        for _ in range(18):
+        print('start camera', u8(0x4834ba), u8(0x4834c0), 'cursor', u8(0x481a72), u8(0x481a71))
+        for _ in range(30):
+            tap(0x25)   # left
+        for _ in range(30):
+            tap(0x26)   # up
+        time.sleep(0.4)
+        capture('mission_%02d_tl' % (m + 1))
+        print('tl camera', u8(0x4834ba), u8(0x4834c0), 'cursor', u8(0x481a72), u8(0x481a71))
+        for _ in range(60):
             tap(0x27)   # right
-        for _ in range(12):
+        for _ in range(60):
             tap(0x28)   # down
         time.sleep(0.4)
-        capture('mission_%02d_clean_b' % (m + 1))
+        capture('mission_%02d_br' % (m + 1))
+        print('br camera', u8(0x4834ba), u8(0x4834c0), 'cursor', u8(0x481a72), u8(0x481a71))
     if len(sys.argv) > 3 and sys.argv[3] == 'probe':
         probe_objects()
     if mode == 'tilemap':

@@ -348,21 +348,33 @@ If the field is empty or the file is missing, the map falls back to opaque
 terrain hexes.
 
 The backdrops are **captured from the original game**, not rendered by the
-port.  The original map screen composes the whole map from terrain tiles and
-scales it to the viewport (no scrolling); `tools/orig_load_mission.py` loads a
-mission via a remote call to `FUN_00405ad0`, points the mission's unit list at
-an empty terminator so no units are placed, and captures the framebuffer.
-The 480x320 map area is cropped to `assets/maps/backdrops/campaign_XX_*.png`;
-factories/HQ/bases remain visible.  The port aligns the captured cell grid to
-the first hex centre and nudges it half a step right/up, extending the
-destination half a cell so the odd-q bottom/right edge is covered.
+port.  The original map screen shows a 15x10 viewport at 32px/cell and scrolls
+when the cursor reaches the edge, so `tools/extract_full_maps.py`:
 
-Larger maps are captured as a single native 480x320 frame because the original
-fits the whole map on screen (16px cells for 30x20 maps); the port upscales it
-with point filtering.  The map structures are baked into the per-mission
-static backdrop tilemap (`0x4372a8` -> descriptors `0x43aae8` -> 8x8 tiles),
-not a separate object table; clean sprite separation needs the autotile
-descriptor renderer, so the captures keep the structures.
+1. starts directly at the target mission by patching the new-game immediate
+   `MOV byte ptr [0x495c52], 0` (VA `0x403d57`) and keeping `DAT_00495c52`
+   patched through the intro,
+2. points the mission's unit list at an empty terminator so no units load,
+3. presses SPACE for action selection and walks the cursor to the viewport
+   corners, capturing each 15x10 page,
+4. stitches the pages at `origin * 32` into the full map.
+
+Sizes: 15x10 -> 480x320, 15x20 -> 480x640, 30x10 -> 960x320, 30x20 -> 960x640.
+The port aligns the captured cell grid to the first hex centre and nudges it
+half a step right/up, extending the destination half a cell so the odd-q
+bottom/right edge is covered; the image is point-filtered.
+
+The map structures are baked into the per-mission static backdrop tilemap
+(`0x4372a8` -> descriptors `0x43aae8` -> 8x8 tiles), not a separate object
+table, so the captures keep them.  From the strategy guide and the terrain
+table:
+
+* terrain 8/10: **base/HQ** — 35% defence; capturing the enemy base wins.
+* terrain 11: **factory** — 0% defence; captured factories add units to your
+  team and heal damaged units, and this is where the reinforcement/garrison
+  waves spawn.
+* the structures are drawn with owner palettes (white/blue player, yellow
+  enemy, green/grey neutral), which is why there appear to be several types.
 
 `--backdropshot` can still render a port-style backdrop for maps without a
 capture:
