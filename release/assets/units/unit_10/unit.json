@@ -21,7 +21,13 @@
   "world_map_base": 160,
   "sprites": [
     "horizontal.png",
-    "vertical.png"
+    "vertical.png",
+    "combat_alive.png",
+    "combat_wreck.png"
   ],
-  "palette": "blue default; tint for enemy"
+  "palette": "blue default; tint for enemy",
+  "guide_frames": {
+    "alive": "combat_alive.png",
+    "wreck": "combat_wreck.png"
+  }
 }

@@ -22,8 +22,9 @@ cmake --build port/build -j 8
 All interface text uses **Not Jam Mono Clean 16** from
 `assets/fonts/not_jam_mono_clean_16.bdf`. The CMake build enables raylib's
 BDF loader (`SUPPORT_FILEFORMAT_BDF=1`); `uiText` falls back to raylib's
-default font if the BDF is missing. Pixel filtering is forced on the font
-texture.
+default font if the BDF is missing. Text is rendered at **2× the 16 px base
+with integer scaling** and point filtering; the map side panel is widened to
+fit the larger labels.
 
 ## Run
 
@@ -157,8 +158,8 @@ line. No rebuild needed.
 * `movement_class` selects the terrain cost row (0..3); `4` = air.
 * `counter_ground` / `counter_air`: `1` = direct fire only, `2+` = indirect
   fire with that many range rings, `0` = cannot attack.
-* `ability_flags` are the original bit flags (0x20 attack-capable, 0x40
-  indirect, 0x80/0x10/0x01 special).
+* `ability_flags` are the original bit flags: `0x40` airborne, `0x20`
+  transport, `0x08` indirect weapon, `0x04` move-after-attack.
 
 ## Terrain (per-type folders)
 
@@ -180,18 +181,25 @@ interior holes, so no black bands appear in battle.
 
 ## Art (per-unit folders)
 
-Each unit lives in its own folder under `assets/units/unit_XX/` and has exactly
-three blue sprites:
+Each unit lives in its own folder under `assets/units/unit_XX/`:
 
 ```
 assets/units/unit_06/
-  horizontal.png   32x32  (row 4, tile 160+type) — battle sprite
-  vertical.png     32x32  (rotated 90°) — world-map icon (rotated by facing)
-  unit.json        stats + sprite metadata
+  horizontal.png    32x32  legacy row-4 combat sprite
+  vertical.png      32x32  world-map icon (rotated by facing)
+  combat_alive.png  64x64  WEAPON DATA guide frame (alive)
+  combat_wreck.png  64x64  WEAPON DATA guide frame (destroyed)
+  unit.json         stats + sprite metadata
 ```
 
-Only two sprites per unit. Only the blue palette is stored; the enemy is the
-same sprite flipped and tinted green at draw time, so no colour variants are
+The two 64×64 guide frames are extracted from the original WEAPON DATA screen
+with `tools/extract_guide_all.py` + `tools/extract_guide_frames.py` and replace
+the row-4 sprite in the battle animation; killed vehicles show the wreck frame.
+The live sprite/tile banks captured on that screen are in
+`dump/guide/spritebank_guide.bin`, `tilebank_guide.bin` and `palette_guide.bin`.
+
+Only blue sprites are stored; the enemy is the same sprite flipped and tinted
+green at draw time, so no colour variants are
 needed. The map icon is the vertical sprite rotated by the unit's facing angle;
 all other directions are flips/tints of these two.
 

@@ -53,6 +53,8 @@ static Texture2D gEnemyFlipTex = {0};
 static Texture2D gFxShell = {0}, gFxFlash = {0}, gFxStreak = {0};
 static Texture2D gUnitSprite[24];
 static Texture2D gUnitSpriteFlip[24];
+static Texture2D gUnitWreck[24];
+static Texture2D gUnitWreckFlip[24];
 static Texture2D gUnitMapTex[24], gUnitMapFlipTex[24];
 static Texture2D gVfx[16];
 static Font gUiFont = {0};
@@ -542,11 +544,18 @@ static void loadUiFont() {
     }
 }
 
+static float uiFontPixels(int size) {
+    if (!gUiFontReady || !gUiFont.texture.id) return (float)(size * 2);
+    int scale = (int)std::lround((size * 2.0) / (double)gUiFont.baseSize);
+    if (scale < 1) scale = 1;
+    return (float)gUiFont.baseSize * scale;
+}
+
 static void uiText(const char* text, int x, int y, int size, Color color) {
     if (gUiFontReady && gUiFont.texture.id) {
-        DrawTextEx(gUiFont, text, {(float)x, (float)y}, (float)size, 0.0f, color);
+        DrawTextEx(gUiFont, text, {(float)x, (float)y}, uiFontPixels(size), 0.0f, color);
     } else {
-        DrawText(text, x, y, size, color);
+        DrawText(text, x, y, size * 2, color);
     }
 }
 
@@ -566,20 +575,18 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
     float playW = std::min(W * 0.80f, H * 1.066667f);  // 512/480 of the screen height
     float playX = (W - playW) * 0.5f;
     float topH  = H * 0.20f;      // 96 / 480
-    float pan   = playW * 0.50f;  // 256 physical, also 128 logical
     float panY  = H * 0.30f;      // 144 / 480
-    float botY  = H * 0.8333f;    // 400 / 480
+    float botY  = H * 0.75f;      // larger report bar for the 2x pixel font
     float botH  = H - botY;
 
-    // Ranged (indirect) battles open a wider black gap between the two
-    // close-up panels.  The panels shrink slightly so the pair still fits in
-    // the playfield and stays aligned with the top/bottom bars.
+    // Ranged battles open a wider gap, but the panels still have to fit above
+    // the taller report bar.
     bool ranged = v.mode > 0;
     float gap = ranged ? playW * 0.05f : 0.0f;
-    if (ranged) {
-        pan = (playW - gap) * 0.5f;
-        panY = topH + ((botY - topH) - pan) * 0.5f;
-    }
+    float pan = std::min(playW * 0.50f, botY - panY);
+    if (ranged) pan = std::min((playW - gap) * 0.5f, botY - panY);
+    float axPanel = playX + (playW - (2.0f * pan + gap)) * 0.5f;
+    float dxPanel = axPanel + pan + gap;
 
     const Unit& A = gMission.units[v.atk];
     const Unit& D = gMission.units[v.def];
@@ -590,11 +597,12 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
     // ----- top: names + HP (initial, then the post-combat count)
     DrawRectangle((int)playX, 0, (int)playW, (int)topH, NAVY);
     int nameSize = (int)(topH * 0.30f);
-    uiText(TA.name.c_str(), (int)(playX + playW * 0.03f), (int)(topH * 0.34f), nameSize, TXT);
-    uiText(TD.name.c_str(), (int)(playX + playW * 0.82f), (int)(topH * 0.34f), nameSize, TXT);
-    int expSize = (int)(topH * 0.22f);
-    uiText("HP", (int)(playX + playW * 0.255f), (int)(topH * 0.38f), expSize, TXT);
-    uiText("HP", (int)(playX + playW * 0.715f), (int)(topH * 0.38f), expSize, TXT);
+    uiText(TA.name.c_str(), (int)(playX + playW * 0.03f), (int)(topH * 0.30f), nameSize, TXT);
+    float nfs = uiFontPixels(nameSize);
+    float rw = gUiFontReady ? MeasureTextEx(gUiFont, TD.name.c_str(), nfs, 0.0f).x
+                            : (float)MeasureText(TD.name.c_str(), nameSize * 2);
+    uiText(TD.name.c_str(), (int)(playX + playW * 0.97f - rw), (int)(topH * 0.30f),
+           nameSize, TXT);
     auto hpBox = [&](float fx, int val) {
         float s = topH * 0.46f;
         float x = playX + playW * fx;
@@ -604,6 +612,9 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
         const char* txt = TextFormat("%d", val);
         float fs = s * 0.70f;
         if (gUiFontReady) {
+            int scale = (int)std::lround(fs / (double)gUiFont.baseSize);
+            if (scale < 1) scale = 1;
+            fs = (float)gUiFont.baseSize * scale;
             Vector2 m = MeasureTextEx(gUiFont, txt, fs, 0.0f);
             DrawTextEx(gUiFont, txt, {x + (s - m.x) * 0.5f, y + s * 0.27f},
                        fs, 0.0f, BORDER);
@@ -622,8 +633,8 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
     int nA1 = (v.hpA1 > 0) ? std::clamp(v.hpA1 + 1, 0, 8) : 0;  // survivors
     int nD1 = (v.hpD1 > 0) ? std::clamp(v.hpD1 + 1, 0, 8) : 0;
     bool impact = t > impactT;
-    hpBox(0.335f, impact ? nA1 : nA0);
-    hpBox(0.613f, impact ? nD1 : nD0);
+    hpBox(0.28f, impact ? nA1 : nA0);
+    hpBox(0.62f, impact ? nD1 : nD0);
 
     // ----- middle: terrain close-ups + ride-in + simultaneous fire
     static const float FORM[8][2] = {
@@ -631,8 +642,6 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
         {0.36f, 0.72f}, {0.16f, 0.67f}, {0.31f, 0.89f}, {0.08f, 0.83f}
     };
     float us = pan * 0.125f;
-    float axPanel = playX;
-    float dxPanel = playX + pan + gap;
 
     auto panelPoint = [&](float px, float slotX, float slotY) {
         return Vector2{px + slotX * pan, panY + slotY * pan};
@@ -688,13 +697,33 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
             float x = startX + (dest.x - startX) * ease;
             float y = dest.y + std::sin(k * 3.14159f * 2.0f) * us * 0.05f;
             x += nudge;
-            float s = us * 1.3f;
+            float s = us * 1.3f * (bt.width / 32.0f);
             DrawTexturePro(bt, src, {x - s / 2, y - s / 2, s, s}, {0, 0}, 0, c);
         }
     };
 
     drawArmy(axPanel, impact ? nA1 : nA0, A.type, false, recoilA, flashA);
     drawArmy(dxPanel, impact ? nD1 : nD0, D.type, true, recoilD, flashD);
+
+    // destroyed vehicles use the second guide frame (the wreck)
+    auto drawWrecks = [&](float px, int first, int last, int type, bool mirror) {
+        if (type < 0 || type >= 24) return;
+        Texture2D& bt = mirror ? gUnitWreck[type] : gUnitWreckFlip[type];
+        if (!bt.id) return;
+        Color tint = mirror ? Color{150, 255, 150, 255} : WHITE;
+        Rectangle src = {0, 0, (float)bt.width, (float)bt.height};
+        for (int i = first; i < last && i < 8; ++i) {
+            float sx = mirror ? (1.0f - FORM[i][0]) : FORM[i][0];
+            Vector2 dest = panelPoint(px, sx, FORM[i][1]);
+            float s = us * 1.3f * (bt.width / 32.0f);
+            DrawTexturePro(bt, src, {dest.x - s / 2, dest.y - s / 2, s, s},
+                           {0, 0}, 0, tint);
+        }
+    };
+    if (impact) {
+        drawWrecks(axPanel, nA1, nA0, A.type, false);
+        drawWrecks(dxPanel, nD1, nD0, D.type, true);
+    }
 
     // ----- simultaneous fire: every surviving shot aims at a killed vehicle
     // slot when possible, otherwise at a deterministic scatter point.
@@ -762,12 +791,14 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
         }
     }
 
-    // ----- bottom: persistent simulation report
+    // ----- bottom: persistent simulation report (4 lines, integer-scaled)
     DrawRectangle((int)playX, (int)botY, (int)playW, (int)botH, NAVY);
-    float fs = std::max(11.0f, botH * 0.115f);
-    float lh = fs * 1.25f;
+    int rscale = (botH >= 150.0f) ? 2 : 1;
+    float rfs = (float)gUiFont.baseSize * rscale;   // 32 px or 16 px
+    float lh = rfs * 1.18f;
     auto line = [&](float x, float y, const char* s, Color c) {
-        uiText(s, (int)x, (int)y, (int)fs, c);
+        if (gUiFontReady) DrawTextEx(gUiFont, s, {x, y}, rfs, 0.0f, c);
+        else DrawText(s, (int)x, (int)y, (int)rfs, c);
     };
 
     float colL = playX + playW * 0.02f;
@@ -778,31 +809,21 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
     line(colL, y0, "ATTACKER", BORDER);
     line(colC, y0, "SIMULATION", BORDER);
     line(colR, y0, "DEFENDER", BORDER);
-    y0 += lh * 1.15f;
+    y0 += lh;
 
-    // attacker: attack / own defence, support + experience, HP/XP outcome
-    line(colL, y0, TextFormat("ATK %d   DEF %d", r.atkStrength, r.ctrDefense), TXT);
-    line(colL, y0 + lh, TextFormat("SUP +%d   EXP +%d%%", r.supportAtk, r.expPctA), DIM);
-    line(colL, y0 + lh * 2, TextFormat("HP %d -> %d", v.hpA0, r.newHpAtk), TXT);
-    line(colL, y0 + lh * 3, TextFormat("XP +%d", r.xpToAtk), kGreen);
-
-    // centre: the initial surround/terrain state and the final damage
+    line(colL, y0, TextFormat("ATK %d DEF %d", r.atkStrength, r.ctrDefense), TXT);
     line(colC, y0, TextFormat("SURROUND %d%%", r.surroundPct),
          r.surroundPct ? kRed : DIM);
-    line(colC, y0 + lh, TextFormat("DEF %d -> %d", r.defBeforeSurround, r.defAfterSurround), DIM);
-    line(colC, y0 + lh * 2, TextFormat("TERRAIN %d%% / %d%%", r.terrainDefA, r.terrainDefD), DIM);
-    line(colC, y0 + lh * 3, TextFormat("DMG %d / %d", r.dmgToDef, r.dmgToAtk), TXT);
-    line(colC, y0 + lh * 4, TextFormat("VAR %d.%dx / %d.%dx",
-         r.varToDef / 10, r.varToDef % 10, r.varToAtk / 10, r.varToAtk % 10), DIM);
+    line(colR, y0, TextFormat("ATK %d DEF %d", r.ctrStrength, r.defStrength), TXT);
 
-    // defender: counter attack / own defence, support + experience, HP/XP outcome
-    line(colR, y0, TextFormat("ATK %d   DEF %d", r.ctrStrength, r.defStrength), TXT);
-    line(colR, y0 + lh, TextFormat("SUP +%d   EXP +%d%%", r.supportDef, r.expPctD), DIM);
-    line(colR, y0 + lh * 2, TextFormat("HP %d -> %d", v.hpD0, r.newHpDef), TXT);
-    line(colR, y0 + lh * 3, TextFormat("XP +%d", r.xpToDef), kGreen);
+    line(colL, y0 + lh, TextFormat("SUP+%d EXP+%d%%", r.supportAtk, r.expPctA), DIM);
+    line(colC, y0 + lh, TextFormat("T%d/%d DEF%d>%d",
+         r.terrainDefA, r.terrainDefD, r.defBeforeSurround, r.defAfterSurround), DIM);
+    line(colR, y0 + lh, TextFormat("SUP+%d EXP+%d%%", r.supportDef, r.expPctD), DIM);
 
-    uiText("SPACE / click to continue", (int)(playX + playW * 0.33f),
-             (int)(H - botH * 0.10f), (int)(botH * 0.08f), DIM);
+    line(colL, y0 + lh * 2, TextFormat("HP %d>%d XP+%d", v.hpA0, r.newHpAtk, r.xpToAtk), TXT);
+    line(colC, y0 + lh * 2, TextFormat("DMG %d/%d", r.dmgToDef, r.dmgToAtk), TXT);
+    line(colR, y0 + lh * 2, TextFormat("HP %d>%d XP+%d", v.hpD0, r.newHpDef, r.xpToDef), TXT);
 }
 
 static std::string resolveAssets(int argc, char** argv) {
@@ -933,7 +954,7 @@ int main(int argc, char** argv) {
     gOriginY = 24.0f;
     int mapW = (int)(gOriginX * 2 + gStepX * (gMission.w - 1) + 2 * gHexSize);
     int mapH = (int)(gOriginY * 2 + gStepY * (gMission.h - 1) + gHexH + gStepY * 0.5f);
-    int panelW = 360;
+    int panelW = 620;
 
     if (argc > 3 && std::string(argv[3]) == "--hextest") {
         int fails = 0;
@@ -975,13 +996,23 @@ int main(int argc, char** argv) {
     gFxDebris = LoadTexture((gAssetDir + "art/combat_effects/effect_196.png").c_str());
     gEnemyFlipTex = LoadTexture((gAssetDir + "art/units_bank10_flip.png").c_str());
     for (int t = 0; t < 24; ++t) {
-        std::string p = gAssetDir + TextFormat("units/unit_%02d/horizontal.png", t);
+        std::string p = gAssetDir + TextFormat("units/unit_%02d/combat_alive.png", t);
+        if (!FileExists(p.c_str()))
+            p = gAssetDir + TextFormat("units/unit_%02d/horizontal.png", t);
         gUnitSprite[t] = LoadTexture(p.c_str());
         Image im = LoadImage(p.c_str());
         if (im.data) {
             ImageFlipHorizontal(&im);
             gUnitSpriteFlip[t] = LoadTextureFromImage(im);
             UnloadImage(im);
+        }
+        std::string w = gAssetDir + TextFormat("units/unit_%02d/combat_wreck.png", t);
+        gUnitWreck[t] = LoadTexture(w.c_str());
+        Image wm = LoadImage(w.c_str());
+        if (wm.data) {
+            ImageFlipHorizontal(&wm);
+            gUnitWreckFlip[t] = LoadTextureFromImage(wm);
+            UnloadImage(wm);
         }
         std::string v = gAssetDir + TextFormat("units/unit_%02d/vertical.png", t);
         gUnitMapTex[t] = LoadTexture(v.c_str());
@@ -1277,39 +1308,39 @@ int main(int argc, char** argv) {
 
         // side panel
         int px = mapW + 16;
-        uiText("NECTARIS", px, 20, 24, RAYWHITE);
-        uiText(TextFormat("Turn: %s", currentPlayer == 0 ? "PLAYER" : "ENEMY"), px, 60, 20,
+        uiText("NECTARIS", px, 16, 24, RAYWHITE);
+        uiText(TextFormat("Turn: %s", currentPlayer == 0 ? "PLAYER" : "ENEMY"), px, 80, 20,
                  currentPlayer == 0 ? kGreen : kRed);
-        uiText(TextFormat("Mission: %s", gMission.name.c_str()), px, 90, 16, LIGHTGRAY);
+        uiText(TextFormat("Mission: %s", gMission.name.c_str()), px, 120, 16, LIGHTGRAY);
         int alive0 = 0, alive1 = 0;
         for (auto& u : gMission.units) {
             if (u.hp > 0) (u.owner == 0 ? alive0 : alive1)++;
         }
-        uiText(TextFormat("Player units: %d", alive0), px, 120, 18, RAYWHITE);
-        uiText(TextFormat("Enemy units:  %d", alive1), px, 144, 18, RAYWHITE);
+        uiText(TextFormat("Player units: %d", alive0), px, 160, 18, RAYWHITE);
+        uiText(TextFormat("Enemy units:  %d", alive1), px, 200, 18, RAYWHITE);
         if (!campaign.empty())
             uiText(TextFormat("Campaign %d/%d  [N] next", campaignIdx + 1,
-                                (int)campaign.size()), px, 172, 16, GRAY);
+                                (int)campaign.size()), px, 240, 16, GRAY);
 
         if (selected >= 0) {
             const Unit& u = gMission.units[selected];
             const UnitType& t = gTypes[u.type];
-            uiText(TextFormat("%s  HP %d  MOV %d", t.name.c_str(), u.hp, t.movePts), px, 190,
+            uiText(TextFormat("%s  HP %d  MOV %d", t.name.c_str(), u.hp, t.movePts), px, 290,
                      18, YELLOW);
-            uiText(TextFormat("ATK G/A %d/%d  DEF %d", t.atkGround, t.atkAir, t.def), px, 214,
+            uiText(TextFormat("ATK G/A %d/%d  DEF %d", t.atkGround, t.atkAir, t.def), px, 330,
                      16, LIGHTGRAY);
-            uiText("LMB move / attack", px, 250, 16, GRAY);
+            uiText("LMB move / attack", px, 370, 16, GRAY);
         }
-        uiText("SPACE end turn   R restart", px, 300, 16, GRAY);
-        uiText("ESC / RMB cancel", px, 320, 16, GRAY);
+        uiText("SPACE end turn   R restart", px, 430, 16, GRAY);
+        uiText("ESC / RMB cancel", px, 470, 16, GRAY);
 
-        if (alive1 == 0) uiText("VICTORY", px, 380, 28, kGreen);
-        if (alive0 == 0) uiText("DEFEAT", px, 380, 28, kRed);
+        if (alive1 == 0) uiText("VICTORY", px, 520, 28, kGreen);
+        if (alive0 == 0) uiText("DEFEAT", px, 520, 28, kRed);
 
         if (debug) {
             uiText(TextFormat("cell %d,%d  terrain %d", mx, my,
                                 inMap ? terrainAt(gMission, mx, my) : -1),
-                     px, 420, 16, LIGHTGRAY);
+                     px, 570, 16, LIGHTGRAY);
         }
 
         EndDrawing();
@@ -1336,6 +1367,8 @@ int main(int argc, char** argv) {
     for (int t = 0; t < 24; ++t) {
         if (gUnitSprite[t].id) UnloadTexture(gUnitSprite[t]);
         if (gUnitSpriteFlip[t].id) UnloadTexture(gUnitSpriteFlip[t]);
+        if (gUnitWreck[t].id) UnloadTexture(gUnitWreck[t]);
+        if (gUnitWreckFlip[t].id) UnloadTexture(gUnitWreckFlip[t]);
         if (gUnitMapTex[t].id) UnloadTexture(gUnitMapTex[t]);
         if (gUnitMapFlipTex[t].id) UnloadTexture(gUnitMapFlipTex[t]);
     }
