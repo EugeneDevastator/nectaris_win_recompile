@@ -98,7 +98,8 @@ supD //= hA * 2
 # surround: all six defender neighbours adjacent to an idle attacker unit
 surrounded = True
 for nx, ny in neighbor_slots(D):
-    cells = neighbor_slots({'x': nx, 'y': ny})
+    # ZOC covers the occupied cell itself plus its six neighbours.
+    cells = [(nx, ny)] + neighbor_slots({'x': nx, 'y': ny})
     covered = any(s['hp'] > 0 and s['owner'] == A['owner'] and not s['acted'] and
                   (s['x'], s['y']) in cells
                   for s in slots)

@@ -56,13 +56,15 @@ int attackValue(const Mission& m, const std::vector<UnitType>& types,
 }
 
 // Original ZOC test (FUN_00423a80 + FUN_0041bd40): a cell is flagged 0x40
-// when it is adjacent to an idle unit owned by the current player.  The
-// defender counts as surrounded only when all six neighbours carry 0x40.
+// when it is occupied by an idle friendly unit or adjacent to one.  (The
+// original calls FUN_00423bf0 for the unit's own cell *and* its six
+// neighbours.)  The defender counts as surrounded only when all six
+// neighbours carry 0x40.
 bool inAttackerZoc(const Mission& m, int owner, int cx, int cy, int atkSlot) {
     for (int i = 0; i < (int)m.units.size(); ++i) {
         const Unit& u = m.units[i];
         if (u.hp <= 0 || u.owner != owner || u.acted) continue;
-        if (hexDistance(u.x, u.y, cx, cy) == 1) return true;
+        if (hexDistance(u.x, u.y, cx, cy) <= 1) return true;
     }
     (void)atkSlot;
     return false;

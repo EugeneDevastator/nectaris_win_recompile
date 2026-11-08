@@ -166,8 +166,8 @@ supportD = sum(defense[type[N]] * (hp[N] + 1)) for idle enemy N adjacent to A
 supportD /= hA * 2                        # note: attacker HP, not defender
 
 # surround (FUN_00423a80 + FUN_0041bd40): the current player's ZOC bit 0x40 is
-# set on every cell adjacent to an idle friendly unit.  If all six neighbours
-# of D carry 0x40, D is surrounded.
+# set on the occupied cell and on every adjacent cell of an idle friendly unit.
+# If all six neighbours of D carry 0x40, D is surrounded.
 surrounded = all 6 neighbours of D are in the attacker's ZOC
 
 atkStrength = min(100, baseA + supportA)
