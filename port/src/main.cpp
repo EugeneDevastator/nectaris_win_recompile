@@ -155,23 +155,27 @@ static void loadData() {
 }
 
 static std::vector<std::string> listCampaign(const std::string& dir) {
-    std::vector<std::string> out;
+    std::vector<std::string> camps, maps;
     std::error_code ec;
     for (const auto& e : std::filesystem::directory_iterator(dir, ec)) {
         std::string n = e.path().filename().string();
-        if (n.size() == 9 && (n[0] == 'M') && n[1] >= 'a' && n[1] <= 'd' &&
-            std::isdigit((unsigned char)n[2]) && std::isdigit((unsigned char)n[3]) &&
-            n.substr(4) == ".json") {
-            out.push_back(e.path().string());
-        }
+        if (n == "all_units_test.json" || n.rfind("deploy_", 0) == 0) continue;
+        bool campaign = n.rfind("campaign_", 0) == 0;
+        bool editor = n.size() == 9 && (n[0] == 'M') && n[1] >= 'a' && n[1] <= 'd' &&
+                      std::isdigit((unsigned char)n[2]) && std::isdigit((unsigned char)n[3]);
+        if ((campaign || editor) && n.size() > 5 && n.substr(n.size() - 5) == ".json")
+            (campaign ? camps : maps).push_back(e.path().string());
     }
-    std::sort(out.begin(), out.end());
-    return out;
+    std::sort(camps.begin(), camps.end());
+    std::sort(maps.begin(), maps.end());
+    camps.insert(camps.end(), maps.begin(), maps.end());
+    return camps;
 }
 
 static bool loadMission(const std::string& path) {    json j = loadJson(path);
     gMission = Mission{};
     gMission.name = j.value("name", std::string("mission"));
+    gMission.number = j.value("mission", 0);
     gMission.w = j.value("width", 0);
     gMission.h = j.value("height", 0);
     gMission.background = j.value("background", std::string(""));
@@ -196,6 +200,19 @@ static bool loadMission(const std::string& path) {    json j = loadJson(path);
         u.xp = ju.value("xp", std::clamp(u.rank, 0, 7) * 4);
         u.rank = rankFromXp(u.xp, gCombatRules.rankDivisor);
         gMission.units.push_back(u);
+    }
+    if (j.contains("garrison") && j["garrison"].is_array()) {
+        for (const auto& ju : j["garrison"]) {
+            Unit u;
+            u.type = ju.value("type", 0);
+            u.owner = ju.value("owner", 0);
+            u.x = ju.value("x", 0);
+            u.y = ju.value("y", 0);
+            u.hp = ju.value("hp", 7);
+            u.xp = ju.value("xp", 0);
+            u.rank = rankFromXp(u.xp, gCombatRules.rankDivisor);
+            gMission.garrison.push_back(u);
+        }
     }
     return true;
 }
@@ -1281,14 +1298,25 @@ int main(int argc, char** argv) {
         uiText("NECTARIS", px, 16, 24, RAYWHITE);
         uiText(TextFormat("Turn: %s", currentPlayer == 0 ? "PLAYER" : "ENEMY"), px, 80, 20,
                  currentPlayer == 0 ? kGreen : kRed);
-        uiText(TextFormat("Mission: %s", gMission.name.c_str()), px, 120, 16, LIGHTGRAY);
+        uiText(gMission.number > 0
+                   ? TextFormat("Mission %d: %s", gMission.number, gMission.name.c_str())
+                   : TextFormat("Mission: %s", gMission.name.c_str()),
+               px, 120, 16, LIGHTGRAY);
         int alive0 = 0, alive1 = 0;
         for (auto& u : gMission.units) {
             if (u.hp > 0) (u.owner == 0 ? alive0 : alive1)++;
         }
         uiText(TextFormat("Player units: %d", alive0), px, 160, 18, RAYWHITE);
         uiText(TextFormat("Enemy units:  %d", alive1), px, 200, 18, RAYWHITE);
-        if (!campaign.empty())
+        if (!gMission.garrison.empty()) {
+            int g0 = 0, g1 = 0;
+            for (auto& u : gMission.garrison) (u.owner == 0 ? g0 : g1)++;
+            uiText(TextFormat("Garrison: %d (P%d/E%d)", (int)gMission.garrison.size(), g0, g1),
+                   px, 240, 16, SKYBLUE);
+            if (!campaign.empty())
+                uiText(TextFormat("Campaign %d/%d  [N] next", campaignIdx + 1,
+                                    (int)campaign.size()), px, 268, 16, GRAY);
+        } else if (!campaign.empty())
             uiText(TextFormat("Campaign %d/%d  [N] next", campaignIdx + 1,
                                 (int)campaign.size()), px, 240, 16, GRAY);
 

@@ -310,6 +310,45 @@ Panel selection is the original algorithm (`FUN_00415790`): the first panel is
 Panels come from `assets/art/combat_terrain/panel_00..23.png` (RGBA, colour
 keyed); selection uses `assets/data/combat_terrain.json`.
 
+## Campaign maps and squads
+
+The original campaign is 16 missions per chapter (`DAT_00495c52` = mission
+0..15, `DAT_00495c6a` = chapter). Mission names are the 8-byte table at
+`0x42a9c8` (REVOLT, ICARUS, ... NECTOR); map sizes are at `0x42a9a0/0x42a9b0`
+(15x10 or 30x20). Mission 10 is **DARWIN** (index 9, 30x20).
+
+`tools/export_campaign_missions.py` decodes each mission:
+
+| data | source | format |
+|---|---|---|
+| terrain classes | `PTR_DAT_0047f750[mission]` (0x47f750) | LZSS, w*h bytes 0..13 |
+| units | `PTR_DAT_0046b988[mission]` (0x46b988) | 3 bytes each: type\|owner, x, y, 0xff end |
+| name / size | `0x42a9c8` / `0x42a9a0` | static |
+
+Unit records with `x & 0xe0 != 0` are **garrison / reinforcement waves**:
+the low 5 bits are the spawn cell, the high bits are the wave/group. They are
+exported into the map's `garrison` array (field units stay in `units`).
+Factories, HQ and bases are terrain classes 7, 8 and 11 and can hold these
+garrisons, which is why late missions have many more squads than the visible
+field units.
+
+Outputs:
+
+```
+assets/maps/campaign_01_revolt.json ... campaign_16_nector.json
+assets/data/campaign_missions.json      # names, sizes, field/garrison counts
+dump/campaign/campaign_XX_*.png         # port-rendered full map backdrops
+```
+
+Example, mission 10 (DARWIN): 11 player + 8 enemy field units, plus 37 player
+garrison/reinforcement units (7 wave groups).
+
+The original per-mission backdrop tilemaps are also in `.data`:
+`0x43aaa8[mission]` gives `(w<<4, h*11, offset)` into `0x4372a8`; each cell byte
+indexes an 8x8 4bpp descriptor table at `0x43aae8` / `0x43f2a8`. The port
+renders terrain colours from the decoded grid; exact original backdrop
+rendering (palette/interlace) is still being matched.
+
 ## Implemented
 
 * map loading, terrain move costs, hex adjacency (odd-column offset)
@@ -319,12 +358,14 @@ keyed); selection uses `assets/data/combat_terrain.json`.
 * smooth movement interpolation, hit flash, floating damage numbers
 * SFX playback (`assets/audio/se01..se36.wav`)
 * enemy AI (advance + attack, ranged-aware), turn cycle, win/lose
-* campaign sequencing (`N`) over the exported maps
+* campaign sequencing (`N`) over the exported maps, including the 16 decoded
+  campaign missions and their garrison squads
 * combat self-test matrix
 
 ## TODO
 
-* per-mission backgrounds / auto-tiled terrain
+* per-mission original backdrop rendering (tilemaps decoded; palette/interlace
+  mapping still being matched)
 * combat cutscene tile animations (the original uses a tile-cutscene VM, which
   this port deliberately does not replay)
 * MIDI music (WAVs are wired; MIDI needs a synth)

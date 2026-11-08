@@ -39,9 +39,11 @@ struct Unit {
 
 struct Mission {
     std::string name;
+    int number = 0;             // campaign mission number (1-based, 0 = custom)
     int w = 0, h = 0;
     std::vector<int> terrain;   // w*h, 0..15
     std::vector<Unit> units;
+    std::vector<Unit> garrison; // inside factories/bases (not on the field)
     std::string background;
 };
 
