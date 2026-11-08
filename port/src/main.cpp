@@ -55,6 +55,8 @@ static Texture2D gUnitSprite[24];
 static Texture2D gUnitSpriteFlip[24];
 static Texture2D gUnitMapTex[24], gUnitMapFlipTex[24];
 static Texture2D gVfx[16];
+static Font gUiFont = {0};
+static bool gUiFontReady = false;
 
 static const char* kGameDir = nullptr;
 static std::string gAssetDir;
@@ -482,31 +484,31 @@ static void drawHpBar(float x, float y, float w, float h, int hp0, int hp1, floa
     DrawRectangleLines((int)x, (int)y, (int)w, (int)h, Color{90, 90, 100, 255});
 }
 
-static void drawExplosion(float x, float y, float r, float phase) {
-    // Tuned VFX: a single explosion frame, drawn at 0.5 of the old size.
-    (void)phase;
+static void drawExplosion(float x, float y, float r, float phase, float alpha = 1.0f) {
+    // Tuned VFX: a single explosion frame with a simple fade-out.
+    alpha = std::clamp(alpha, 0.0f, 1.0f);
     if (gVfx[7].id) {
-        float s = r * 1.3f;
+        float s = r * 2.6f;
         DrawTexturePro(gVfx[7], {0, 0, (float)gVfx[7].width, (float)gVfx[7].height},
-                       {x - s / 2, y - s / 2, s, s}, {0, 0}, 0, WHITE);
+                       {x - s / 2, y - s / 2, s, s}, {0, 0}, 0, Fade(WHITE, alpha));
         return;
     }
     if (gFxBoom.id) {
         float s = r * 1.9f;
         DrawTexturePro(gFxBoom, {0, 0, (float)gFxBoom.width, (float)gFxBoom.height},
                        {x - s / 2, y - s / 2, s, s}, {s / 2, s / 2},
-                       phase * 57.29578f, Fade(WHITE, 0.95f));
+                       phase * 57.29578f, Fade(WHITE, 0.95f * alpha));
         return;
     }
-    DrawCircleV({x, y}, r, Color{255, 160, 30, 255});
-    DrawCircleV({x, y}, r * 0.62f, Color{255, 255, 170, 255});
+    DrawCircleV({x, y}, r, Fade(Color{255, 160, 30, 255}, alpha));
+    DrawCircleV({x, y}, r * 0.62f, Fade(Color{255, 255, 170, 255}, alpha));
     for (int i = 0; i < 10; ++i) {
         float a = phase + i * 0.6283185f;
         float r0 = r * 0.7f + (i % 3) * 2.0f;
         float r1 = r * (1.5f + (i % 4) * 0.15f);
         DrawLineEx({x + std::cos(a) * r0, y + std::sin(a) * r0},
                    {x + std::cos(a) * r1, y + std::sin(a) * r1},
-                   3, Color{255, 120, 20, 255});
+                   3, Fade(Color{255, 120, 20, 255}, alpha));
     }
 }
 
@@ -524,6 +526,28 @@ static void drawEffect(Texture2D& tex, float x, float y, float s, float rot, Col
     if (!tex.id) return;
     DrawTexturePro(tex, {0, 0, (float)tex.width, (float)tex.height},
                    {x, y, s, s}, {s / 2, s / 2}, rot, tint);
+}
+
+// ------------------------------------------------------------------ UI font
+// raylib loads the BDF directly (SUPPORT_FILEFORMAT_BDF is enabled in
+// CMakeLists).  All interface text goes through uiText so the fallback default
+// font still works if the asset is missing.
+static void loadUiFont() {
+    std::string path = gAssetDir + "fonts/not_jam_mono_clean_16.bdf";
+    if (!FileExists(path.c_str())) return;
+    gUiFont = LoadFontEx(path.c_str(), 16, nullptr, 0);
+    if (gUiFont.texture.id) {
+        SetTextureFilter(gUiFont.texture, TEXTURE_FILTER_POINT);
+        gUiFontReady = true;
+    }
+}
+
+static void uiText(const char* text, int x, int y, int size, Color color) {
+    if (gUiFontReady && gUiFont.texture.id) {
+        DrawTextEx(gUiFont, text, {(float)x, (float)y}, (float)size, 0.0f, color);
+    } else {
+        DrawText(text, x, y, size, color);
+    }
 }
 
 static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D enemyTex) {
@@ -566,24 +590,32 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
     // ----- top: names + HP (initial, then the post-combat count)
     DrawRectangle((int)playX, 0, (int)playW, (int)topH, NAVY);
     int nameSize = (int)(topH * 0.30f);
-    DrawText(TA.name.c_str(), (int)(playX + playW * 0.03f), (int)(topH * 0.34f), nameSize, TXT);
-    DrawText(TD.name.c_str(), (int)(playX + playW * 0.82f), (int)(topH * 0.34f), nameSize, TXT);
+    uiText(TA.name.c_str(), (int)(playX + playW * 0.03f), (int)(topH * 0.34f), nameSize, TXT);
+    uiText(TD.name.c_str(), (int)(playX + playW * 0.82f), (int)(topH * 0.34f), nameSize, TXT);
     int expSize = (int)(topH * 0.22f);
-    DrawText("HP", (int)(playX + playW * 0.255f), (int)(topH * 0.38f), expSize, TXT);
-    DrawText("HP", (int)(playX + playW * 0.715f), (int)(topH * 0.38f), expSize, TXT);
+    uiText("HP", (int)(playX + playW * 0.255f), (int)(topH * 0.38f), expSize, TXT);
+    uiText("HP", (int)(playX + playW * 0.715f), (int)(topH * 0.38f), expSize, TXT);
     auto hpBox = [&](float fx, int val) {
         float s = topH * 0.46f;
         float x = playX + playW * fx;
         float y = topH * 0.22f;
         DrawRectangleRec({x, y, s, s}, PANEL);
         DrawRectangleLinesEx({x, y, s, s}, std::max(2.0f, topH * 0.035f), BORDER);
-        DrawText(TextFormat("%d", val), (int)(x + s * 0.33f), (int)(y + s * 0.12f),
-                 (int)(s * 0.70f), BORDER);
+        const char* txt = TextFormat("%d", val);
+        float fs = s * 0.70f;
+        if (gUiFontReady) {
+            Vector2 m = MeasureTextEx(gUiFont, txt, fs, 0.0f);
+            DrawTextEx(gUiFont, txt, {x + (s - m.x) * 0.5f, y + s * 0.27f},
+                       fs, 0.0f, BORDER);
+        } else {
+            DrawText(txt, (int)(x + s * 0.33f), (int)(y + s * 0.12f),
+                     (int)fs, BORDER);
+        }
     };
 
     float t = v.t;
-    // Shooting is deliberately twice as slow as before (0.35 -> 0.70 s).
-    float fireT = 2.15f, fireDur = 0.70f;
+    // Shooting is 1.2x slower than the original 0.35 s window.
+    float fireT = 2.15f, fireDur = 0.42f;
     float impactT = fireT + fireDur + 0.10f;
     int nA0 = std::clamp(v.hpA0 + 1, 0, 8);   // initial vehicles
     int nD0 = std::clamp(v.hpD0 + 1, 0, 8);
@@ -720,18 +752,22 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
 
     if (t > impactT && t < impactT + 0.85f) {
         float e = (t - impactT) * 7.0f;
-        for (int i = 0; i < nA0; ++i)
-            drawExplosion(toA[i].x, toA[i].y, us * 0.70f, e + i * 0.35f);
-        for (int i = 0; i < nD0; ++i)
-            drawExplosion(toD[i].x, toD[i].y, us * 0.70f, e + i * 0.35f);
+        for (int i = 0; i < nA0; ++i) {
+            float alpha = 1.0f - std::clamp((t - impactT - i * 0.02f) / 0.85f, 0.0f, 1.0f);
+            drawExplosion(toA[i].x, toA[i].y, us * 0.70f, e + i * 0.35f, alpha);
+        }
+        for (int i = 0; i < nD0; ++i) {
+            float alpha = 1.0f - std::clamp((t - impactT - i * 0.02f) / 0.85f, 0.0f, 1.0f);
+            drawExplosion(toD[i].x, toD[i].y, us * 0.70f, e + i * 0.35f, alpha);
+        }
     }
 
     // ----- bottom: persistent simulation report
     DrawRectangle((int)playX, (int)botY, (int)playW, (int)botH, NAVY);
-    float fs = std::max(10.0f, botH * 0.095f);
-    float lh = fs * 1.30f;
+    float fs = std::max(11.0f, botH * 0.115f);
+    float lh = fs * 1.25f;
     auto line = [&](float x, float y, const char* s, Color c) {
-        DrawText(s, (int)x, (int)y, (int)fs, c);
+        uiText(s, (int)x, (int)y, (int)fs, c);
     };
 
     float colL = playX + playW * 0.02f;
@@ -765,7 +801,7 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
     line(colR, y0 + lh * 2, TextFormat("HP %d -> %d", v.hpD0, r.newHpDef), TXT);
     line(colR, y0 + lh * 3, TextFormat("XP +%d", r.xpToDef), kGreen);
 
-    DrawText("SPACE / click to continue", (int)(playX + playW * 0.33f),
+    uiText("SPACE / click to continue", (int)(playX + playW * 0.33f),
              (int)(H - botH * 0.10f), (int)(botH * 0.08f), DIM);
 }
 
@@ -919,6 +955,7 @@ int main(int argc, char** argv) {
     SetConfigFlags(FLAG_WINDOW_HIGHDPI);
     InitWindow(mapW + panelW, std::max(mapH, 720), "Nectaris - portable");
     SetTargetFPS(60);
+    loadUiFont();
 
 
     Texture2D playerTex = LoadTexture((gAssetDir + "art/units_bank09.png").c_str());
@@ -981,7 +1018,7 @@ int main(int argc, char** argv) {
                                        {cx + cw * 0.5f - s / 2, cy + chh * 0.56f - s / 2, s, s},
                                        {0, 0}, 0, tint);
                     }
-                    DrawText(TextFormat("%d %s", t, gTypes[t].name.c_str()),
+                    uiText(TextFormat("%d %s", t, gTypes[t].name.c_str()),
                              (int)(cx + 3), (int)(cy + 2), (int)(chh * 0.10f),
                              side == 0 ? Color{140, 210, 255, 255} : Color{150, 255, 150, 255});
                 }
@@ -1076,8 +1113,8 @@ int main(int argc, char** argv) {
             drawCombatScreen(gCv, playerTex, enemyTex);
             EndDrawing();
             if (IsKeyPressed(KEY_SPACE) || IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-                if (gCv.t < 3.90f) {
-                    gCv.t = 3.90f;      // first input skips to the result
+                if (gCv.t < 3.60f) {
+                    gCv.t = 3.60f;      // first input skips to the result
                 } else {
                     gCv.active = false;
                     startNextCombat();
@@ -1227,7 +1264,7 @@ int main(int argc, char** argv) {
             if (f.onDefender)
                 DrawPoly({cx, cy}, 6, gHexSize - 2, 0, Fade(kRed, 0.35f * a));
             if (f.dmg > 0)
-                DrawText(TextFormat("-%d", f.dmg), (int)(cx - 16),
+                uiText(TextFormat("-%d", f.dmg), (int)(cx - 16),
                          (int)(cy - 20 - (1.0f - a) * 20), 20,
                          f.onDefender ? kRed : ORANGE);
         }
@@ -1240,37 +1277,37 @@ int main(int argc, char** argv) {
 
         // side panel
         int px = mapW + 16;
-        DrawText("NECTARIS", px, 20, 24, RAYWHITE);
-        DrawText(TextFormat("Turn: %s", currentPlayer == 0 ? "PLAYER" : "ENEMY"), px, 60, 20,
+        uiText("NECTARIS", px, 20, 24, RAYWHITE);
+        uiText(TextFormat("Turn: %s", currentPlayer == 0 ? "PLAYER" : "ENEMY"), px, 60, 20,
                  currentPlayer == 0 ? kGreen : kRed);
-        DrawText(TextFormat("Mission: %s", gMission.name.c_str()), px, 90, 16, LIGHTGRAY);
+        uiText(TextFormat("Mission: %s", gMission.name.c_str()), px, 90, 16, LIGHTGRAY);
         int alive0 = 0, alive1 = 0;
         for (auto& u : gMission.units) {
             if (u.hp > 0) (u.owner == 0 ? alive0 : alive1)++;
         }
-        DrawText(TextFormat("Player units: %d", alive0), px, 120, 18, RAYWHITE);
-        DrawText(TextFormat("Enemy units:  %d", alive1), px, 144, 18, RAYWHITE);
+        uiText(TextFormat("Player units: %d", alive0), px, 120, 18, RAYWHITE);
+        uiText(TextFormat("Enemy units:  %d", alive1), px, 144, 18, RAYWHITE);
         if (!campaign.empty())
-            DrawText(TextFormat("Campaign %d/%d  [N] next", campaignIdx + 1,
+            uiText(TextFormat("Campaign %d/%d  [N] next", campaignIdx + 1,
                                 (int)campaign.size()), px, 172, 16, GRAY);
 
         if (selected >= 0) {
             const Unit& u = gMission.units[selected];
             const UnitType& t = gTypes[u.type];
-            DrawText(TextFormat("%s  HP %d  MOV %d", t.name.c_str(), u.hp, t.movePts), px, 190,
+            uiText(TextFormat("%s  HP %d  MOV %d", t.name.c_str(), u.hp, t.movePts), px, 190,
                      18, YELLOW);
-            DrawText(TextFormat("ATK G/A %d/%d  DEF %d", t.atkGround, t.atkAir, t.def), px, 214,
+            uiText(TextFormat("ATK G/A %d/%d  DEF %d", t.atkGround, t.atkAir, t.def), px, 214,
                      16, LIGHTGRAY);
-            DrawText("LMB move / attack", px, 250, 16, GRAY);
+            uiText("LMB move / attack", px, 250, 16, GRAY);
         }
-        DrawText("SPACE end turn   R restart", px, 300, 16, GRAY);
-        DrawText("ESC / RMB cancel", px, 320, 16, GRAY);
+        uiText("SPACE end turn   R restart", px, 300, 16, GRAY);
+        uiText("ESC / RMB cancel", px, 320, 16, GRAY);
 
-        if (alive1 == 0) DrawText("VICTORY", px, 380, 28, kGreen);
-        if (alive0 == 0) DrawText("DEFEAT", px, 380, 28, kRed);
+        if (alive1 == 0) uiText("VICTORY", px, 380, 28, kGreen);
+        if (alive0 == 0) uiText("DEFEAT", px, 380, 28, kRed);
 
         if (debug) {
-            DrawText(TextFormat("cell %d,%d  terrain %d", mx, my,
+            uiText(TextFormat("cell %d,%d  terrain %d", mx, my,
                                 inMap ? terrainAt(gMission, mx, my) : -1),
                      px, 420, 16, LIGHTGRAY);
         }
@@ -1303,6 +1340,7 @@ int main(int argc, char** argv) {
         if (gUnitMapFlipTex[t].id) UnloadTexture(gUnitMapFlipTex[t]);
     }
     for (int i = 0; i < 16; ++i) if (gVfx[i].id) UnloadTexture(gVfx[i]);
+    if (gUiFontReady) UnloadFont(gUiFont);
     CloseAudioDevice();
     CloseWindow();
     return 0;

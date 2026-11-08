@@ -16,6 +16,7 @@ FetchContent_Declare(raylib
   GIT_TAG 5.5
   GIT_SHALLOW TRUE)
 FetchContent_MakeAvailable(raylib)
+target_compile_definitions(raylib PRIVATE SUPPORT_FILEFORMAT_BDF=1)
 
 FetchContent_Declare(jsonlib
   GIT_REPOSITORY https://github.com/nlohmann/json.git
