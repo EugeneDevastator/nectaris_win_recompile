@@ -398,12 +398,15 @@ static void drawHexMap(const Mission& m) {
     ensureBackdrop();
     bool haveBg = gBackdrop.id != 0;
     if (haveBg) {
-        float x0 = gOriginX;
-        float y0 = gOriginY;
-        float x1 = gOriginX + gHexSize * 2.0f + (m.w - 1) * gStepX;
-        float y1 = gOriginY + gHexH + (m.h - 1) * gStepY + gStepY * 0.5f;
+        // Align the original rectangular map cell grid to the hex cell centres.
+        // The hex grid is odd-q offset, so the backdrop sits half a step right
+        // and half a step up from the map origin.
+        float cw = ((float)m.w + 0.5f) * gStepX;
+        float ch = ((float)m.h + 0.5f) * gStepY;
+        float x0 = gOriginX + gHexSize - gStepX * 0.5f;
+        float y0 = gOriginY + gHexH * 0.5f - gStepY * 0.5f;
         DrawTexturePro(gBackdrop, {0, 0, (float)gBackdrop.width, (float)gBackdrop.height},
-                       {x0, y0, x1 - x0, y1 - y0}, {0, 0}, 0, WHITE);
+                       {x0, y0, cw, ch}, {0, 0}, 0, WHITE);
     }
     for (int y = 0; y < m.h; ++y)
         for (int x = 0; x < m.w; ++x) {
