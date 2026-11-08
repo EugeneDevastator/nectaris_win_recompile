@@ -53,8 +53,6 @@ static Texture2D gEnemyFlipTex = {0};
 static Texture2D gFxShell = {0}, gFxFlash = {0}, gFxStreak = {0};
 static Texture2D gUnitSprite[24];
 static Texture2D gUnitSpriteFlip[24];
-static Texture2D gUnitWreck[24];
-static Texture2D gUnitWreckFlip[24];
 static Texture2D gUnitMapTex[24], gUnitMapFlipTex[24];
 static Texture2D gVfx[16];
 static Font gUiFont = {0};
@@ -705,26 +703,6 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
     drawArmy(axPanel, impact ? nA1 : nA0, A.type, false, recoilA, flashA);
     drawArmy(dxPanel, impact ? nD1 : nD0, D.type, true, recoilD, flashD);
 
-    // destroyed vehicles use the second guide frame (the wreck)
-    auto drawWrecks = [&](float px, int first, int last, int type, bool mirror) {
-        if (type < 0 || type >= 24) return;
-        Texture2D& bt = mirror ? gUnitWreck[type] : gUnitWreckFlip[type];
-        if (!bt.id) return;
-        Color tint = mirror ? Color{150, 255, 150, 255} : WHITE;
-        Rectangle src = {0, 0, (float)bt.width, (float)bt.height};
-        for (int i = first; i < last && i < 8; ++i) {
-            float sx = mirror ? (1.0f - FORM[i][0]) : FORM[i][0];
-            Vector2 dest = panelPoint(px, sx, FORM[i][1]);
-            float s = us * 1.3f * (bt.width / 32.0f);
-            DrawTexturePro(bt, src, {dest.x - s / 2, dest.y - s / 2, s, s},
-                           {0, 0}, 0, tint);
-        }
-    };
-    if (impact) {
-        drawWrecks(axPanel, nA1, nA0, A.type, false);
-        drawWrecks(dxPanel, nD1, nD0, D.type, true);
-    }
-
     // ----- simultaneous fire: every surviving shot aims at a killed vehicle
     // slot when possible, otherwise at a deterministic scatter point.
     auto scatter = [&](int side, int i) {
@@ -1005,14 +983,6 @@ int main(int argc, char** argv) {
             ImageFlipHorizontal(&im);
             gUnitSpriteFlip[t] = LoadTextureFromImage(im);
             UnloadImage(im);
-        }
-        std::string w = gAssetDir + TextFormat("units/unit_%02d/combat_wreck.png", t);
-        gUnitWreck[t] = LoadTexture(w.c_str());
-        Image wm = LoadImage(w.c_str());
-        if (wm.data) {
-            ImageFlipHorizontal(&wm);
-            gUnitWreckFlip[t] = LoadTextureFromImage(wm);
-            UnloadImage(wm);
         }
         std::string v = gAssetDir + TextFormat("units/unit_%02d/vertical.png", t);
         gUnitMapTex[t] = LoadTexture(v.c_str());
@@ -1367,8 +1337,6 @@ int main(int argc, char** argv) {
     for (int t = 0; t < 24; ++t) {
         if (gUnitSprite[t].id) UnloadTexture(gUnitSprite[t]);
         if (gUnitSpriteFlip[t].id) UnloadTexture(gUnitSpriteFlip[t]);
-        if (gUnitWreck[t].id) UnloadTexture(gUnitWreck[t]);
-        if (gUnitWreckFlip[t].id) UnloadTexture(gUnitWreckFlip[t]);
         if (gUnitMapTex[t].id) UnloadTexture(gUnitMapTex[t]);
         if (gUnitMapFlipTex[t].id) UnloadTexture(gUnitMapFlipTex[t]);
     }

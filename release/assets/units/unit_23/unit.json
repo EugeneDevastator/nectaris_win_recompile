@@ -23,15 +23,15 @@
     "horizontal.png",
     "vertical.png",
     "combat_alive.png",
-    "combat_wreck.png"
+    "combat_diagonal.png"
   ],
   "palette": "blue default; tint for enemy",
   "guide_frames": {
-    "alive": "combat_alive.png",
-    "wreck": "combat_wreck.png"
+    "horizontal": "combat_alive.png",
+    "diagonal": "combat_diagonal.png"
   },
   "guide": {
-    "english_name": "ﾔﾏｱﾗｼ",
+    "english_name": "DUMMY",
     "movement": 0,
     "defense": 0,
     "attack_ground": 0,

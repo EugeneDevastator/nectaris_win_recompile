@@ -12,7 +12,7 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 GUIDE = os.path.join(ROOT, 'dump', 'guide')
 UNITS = os.path.join(ROOT, 'assets', 'units')
 W, H = 704, 544
-BOXES = {'combat_alive': (28, 112), 'combat_wreck': (108, 112)}
+BOXES = {'combat_alive': (28, 112), 'combat_diagonal': (108, 112)}
 BG = 16
 
 sheet = Image.new('RGBA', (24 * 72, 2 * 72), (20, 20, 28, 255))
@@ -53,8 +53,8 @@ for t in range(24):
         'attack_air': meta['attack_air'],
         'range_ground': rg,
         'range_air': ra,
-        'frame_alive': 'combat_alive.png',
-        'frame_wreck': 'combat_wreck.png',
+        'frame_horizontal': 'combat_alive.png',
+        'frame_diagonal': 'combat_diagonal.png',
     }
     meta['guide'] = guide
     json.dump(meta, io.open(meta_path, 'w', encoding='utf-8'), indent=2, ensure_ascii=False)
