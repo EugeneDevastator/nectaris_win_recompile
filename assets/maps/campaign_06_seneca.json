@@ -5,7 +5,7 @@
  "mission": 6,
  "width": 15,
  "height": 20,
- "background": "",
+ "background": "maps/backdrops/campaign_06_seneca.png",
  "terrain": [
   [
    3,

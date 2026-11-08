@@ -5,7 +5,7 @@
  "mission": 1,
  "width": 15,
  "height": 10,
- "background": "",
+ "background": "maps/backdrops/campaign_01_revolt.png",
  "terrain": [
   [
    5,

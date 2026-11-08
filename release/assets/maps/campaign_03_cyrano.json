@@ -5,7 +5,7 @@
  "mission": 3,
  "width": 15,
  "height": 10,
- "background": "",
+ "background": "maps/backdrops/campaign_03_cyrano.png",
  "terrain": [
   [
    4,

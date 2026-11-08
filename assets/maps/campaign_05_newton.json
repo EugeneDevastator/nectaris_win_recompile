@@ -5,7 +5,7 @@
  "mission": 5,
  "width": 15,
  "height": 20,
- "background": "",
+ "background": "maps/backdrops/campaign_05_newton.png",
  "terrain": [
   [
    0,

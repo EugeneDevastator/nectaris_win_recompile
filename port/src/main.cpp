@@ -55,6 +55,8 @@ static Texture2D gUnitSprite[24];
 static Texture2D gUnitSpriteFlip[24];
 static Texture2D gUnitMapTex[24], gUnitMapFlipTex[24];
 static Texture2D gVfx[16];
+static Texture2D gBackdrop = {0};
+static bool gBackdropDirty = true;
 static Font gUiFont = {0};
 static bool gUiFontReady = false;
 
@@ -214,6 +216,9 @@ static bool loadMission(const std::string& path) {    json j = loadJson(path);
             gMission.garrison.push_back(u);
         }
     }
+    // Optional full-map backdrop. Loading is deferred until the GL context
+    // exists (see ensureBackdrop); a missing file is not fatal.
+    gBackdropDirty = true;
     return true;
 }
 
@@ -375,16 +380,50 @@ static const Color kTerrainCols[16] = {
     {30, 30, 30, 255},    // 15
 };
 
+static void ensureBackdrop() {
+    if (!gBackdropDirty) return;
+    gBackdropDirty = false;
+    if (gBackdrop.id) { UnloadTexture(gBackdrop); gBackdrop = Texture2D{0}; }
+    if (!gMission.background.empty()) {
+        std::string bp = gMission.background;
+        if (bp[0] != '/' && bp.find(':') == std::string::npos) bp = gAssetDir + bp;
+        if (FileExists(bp.c_str())) gBackdrop = LoadTexture(bp.c_str());
+    }
+}
+
 static void drawHexMap(const Mission& m) {
+    ensureBackdrop();
+    bool haveBg = gBackdrop.id != 0;
+    if (haveBg) {
+        float x0 = gOriginX;
+        float y0 = gOriginY;
+        float x1 = gOriginX + gHexSize * 2.0f + (m.w - 1) * gStepX;
+        float y1 = gOriginY + gHexH + (m.h - 1) * gStepY + gStepY * 0.5f;
+        DrawTexturePro(gBackdrop, {0, 0, (float)gBackdrop.width, (float)gBackdrop.height},
+                       {x0, y0, x1 - x0, y1 - y0}, {0, 0}, 0, WHITE);
+    }
     for (int y = 0; y < m.h; ++y)
         for (int x = 0; x < m.w; ++x) {
             float cx, cy;
             hexCenter(x, y, cx, cy);
-            DrawPoly({cx, cy}, 6, gHexSize - 1.0f, 0, kTerrainCols[terrainAt(m, x, y)]);
-            DrawPolyLines({cx, cy}, 6, gHexSize - 1.0f, 0, Fade(BLACK, 0.35f));
+            Color c = kTerrainCols[terrainAt(m, x, y)];
+            if (haveBg) c.a = 96;   // keep the terrain type readable over the art
+            DrawPoly({cx, cy}, 6, gHexSize - 1.0f, 0, c);
+            DrawPolyLines({cx, cy}, 6, gHexSize - 1.0f, 0,
+                          Fade(BLACK, haveBg ? 0.55f : 0.35f));
         }
 }
 
+
+static void drawBackdropArt(const Mission& m) {
+    // Flat terrain fills with no seams; used to generate per-map backdrop PNGs.
+    for (int y = 0; y < m.h; ++y)
+        for (int x = 0; x < m.w; ++x) {
+            float cx, cy;
+            hexCenter(x, y, cx, cy);
+            DrawPoly({cx, cy}, 6, gHexSize + 1.0f, 0, kTerrainCols[terrainAt(m, x, y)]);
+        }
+}
 
 static void drawTerrainColors(const Mission& m) {
     static const Color cols[16] = {
@@ -559,16 +598,29 @@ static void loadUiFont() {
     }
 }
 
-static float uiFontPixels(int size) {
-    if (!gUiFontReady || !gUiFont.texture.id) return (float)(size * 2);
+static float uiFontScale(int size) {
+    if (!gUiFontReady || !gUiFont.texture.id) return 2.0f;
+    // Snap to an integer multiple of the font's native pixel height.
+    // A 13px font then renders at 13, 26, 39, ... only.
     int scale = (int)std::lround((size * 2.0) / (double)gUiFont.baseSize);
     if (scale < 1) scale = 1;
-    return (float)gUiFont.baseSize * scale;
+    return (float)scale;
+}
+
+static float uiFontPixels(int size) {
+    if (!gUiFontReady || !gUiFont.texture.id) return (float)(size * 2);
+    return (float)gUiFont.baseSize * uiFontScale(size);
+}
+
+static float uiSpacing(int size) {
+    if (!gUiFontReady || !gUiFont.texture.id) return 0.0f;
+    // At least one native pixel between glyphs, scaled with the font.
+    return std::max(1.0f, uiFontScale(size));
 }
 
 static void uiText(const char* text, int x, int y, int size, Color color) {
     if (gUiFontReady && gUiFont.texture.id) {
-        DrawTextEx(gUiFont, text, {(float)x, (float)y}, uiFontPixels(size), 0.0f, color);
+        DrawTextEx(gUiFont, text, {(float)x, (float)y}, uiFontPixels(size), uiSpacing(size), color);
     } else {
         DrawText(text, x, y, size * 2, color);
     }
@@ -586,22 +638,24 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
     ClearBackground(BLACK);
 
     // Original layout: a 512x480 playfield centred in the 640x480 screen.
-    // The combat field is exactly two 256x256 panels (logical 128x128 each).
+    // Two square panels fill the width; the report bar takes what is left.
     float playW = std::min(W * 0.80f, H * 1.066667f);  // 512/480 of the screen height
     float playX = (W - playW) * 0.5f;
     float topH  = H * 0.20f;      // 96 / 480
-    float panY  = H * 0.30f;      // 144 / 480
-    float botY  = H * 0.75f;      // larger report bar for the 2x pixel font
-    float botH  = H - botY;
-
-    // Ranged battles open a wider gap, but the panels still have to fit above
-    // the taller report bar.
     bool ranged = v.mode > 0;
     float gap = ranged ? playW * 0.05f : 0.0f;
-    float pan = std::min(playW * 0.50f, botY - panY);
-    if (ranged) pan = std::min((playW - gap) * 0.5f, botY - panY);
-    float axPanel = playX + (playW - (2.0f * pan + gap)) * 0.5f;
-    float dxPanel = axPanel + pan + gap;
+
+    // Adjacent attacks must fill the whole combat view: make the panels square
+    // and size them from the width, leaving a minimum report bar below.
+    float panH = playW * 0.50f;
+    float panY = topH;
+    float minReport = H * 0.14f;
+    if (panY + panH + minReport > H) panH = std::max(H * 0.28f, H - panY - minReport);
+    float botY = panY + panH;
+    float botH = H - botY;
+    float panW = ranged ? (playW - gap) * 0.5f : playW * 0.5f;
+    float axPanel = playX + (playW - (2.0f * panW + gap)) * 0.5f;
+    float dxPanel = axPanel + panW + gap;
 
     const Unit& A = gMission.units[v.atk];
     const Unit& D = gMission.units[v.def];
@@ -614,7 +668,7 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
     int nameSize = (int)(topH * 0.30f);
     uiText(TA.name.c_str(), (int)(playX + playW * 0.03f), (int)(topH * 0.30f), nameSize, TXT);
     float nfs = uiFontPixels(nameSize);
-    float rw = gUiFontReady ? MeasureTextEx(gUiFont, TD.name.c_str(), nfs, 0.0f).x
+    float rw = gUiFontReady ? MeasureTextEx(gUiFont, TD.name.c_str(), nfs, uiSpacing(nameSize)).x
                             : (float)MeasureText(TD.name.c_str(), nameSize * 2);
     uiText(TD.name.c_str(), (int)(playX + playW * 0.97f - rw), (int)(topH * 0.30f),
            nameSize, TXT);
@@ -630,9 +684,10 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
             int scale = (int)std::lround(fs / (double)gUiFont.baseSize);
             if (scale < 1) scale = 1;
             fs = (float)gUiFont.baseSize * scale;
-            Vector2 m = MeasureTextEx(gUiFont, txt, fs, 0.0f);
+            float sp = std::max(1.0f, (float)scale);
+            Vector2 m = MeasureTextEx(gUiFont, txt, fs, sp);
             DrawTextEx(gUiFont, txt, {x + (s - m.x) * 0.5f, y + s * 0.27f},
-                       fs, 0.0f, BORDER);
+                       fs, sp, BORDER);
         } else {
             DrawText(txt, (int)(x + s * 0.33f), (int)(y + s * 0.12f),
                      (int)fs, BORDER);
@@ -656,25 +711,25 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
         {0.40f, 0.37f}, {0.23f, 0.34f}, {0.40f, 0.53f}, {0.19f, 0.47f},
         {0.36f, 0.72f}, {0.16f, 0.67f}, {0.31f, 0.89f}, {0.08f, 0.83f}
     };
-    float us = pan * 0.125f;
+    float us = std::min(panW, panH) * 0.125f;
 
     auto panelPoint = [&](float px, float slotX, float slotY) {
-        return Vector2{px + slotX * pan, panY + slotY * pan};
+        return Vector2{px + slotX * panW, panY + slotY * panH};
     };
 
     auto drawPanel = [&](int idx, float x, float w) {
         if (gCombatPanels.empty() || !gCombatPanels[idx].id) return;
         Texture2D& tex = gCombatPanels[idx];
         DrawTexturePro(tex, {0, 0, (float)tex.width, (float)tex.height},
-                       {x, panY, w, pan}, {0, 0}, 0, WHITE);
+                       {x, panY, w, panH}, {0, 0}, 0, WHITE);
     };
     if (ranged) {
-        drawPanel(v.panelA, axPanel, pan);
-        drawPanel(v.panelB, dxPanel, pan);
+        drawPanel(v.panelA, axPanel, panW);
+        drawPanel(v.panelB, dxPanel, panW);
     } else {
         // 1px overlap hides the floating-point seam between the two panels
-        drawPanel(v.panelA, axPanel, pan + 1.0f);
-        drawPanel(v.panelB, dxPanel, pan);
+        drawPanel(v.panelA, axPanel, panW + 1.0f);
+        drawPanel(v.panelB, dxPanel, panW);
     }
 
     Color flashA = (t > impactT && t < impactT + 0.50f) ? Color{255, 150, 150, 255} : WHITE;
@@ -788,18 +843,21 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
 
     // ----- bottom: persistent simulation report (4 lines, integer-scaled)
     DrawRectangle((int)playX, (int)botY, (int)playW, (int)botH, NAVY);
-    int rscale = (botH >= 150.0f) ? 2 : 1;
+    // Use the 2x font only when the report columns actually fit; otherwise the
+    // 1x native font keeps the three columns from overlapping.
+    int rscale = (botH >= 150.0f && playW >= 1050.0f) ? 2 : 1;
     float rfs = (float)gUiFont.baseSize * rscale;   // 32 px or 16 px
     float lh = rfs * 1.18f;
+    float rsp = std::max(1.0f, (float)rscale);
     auto line = [&](float x, float y, const char* s, Color c) {
-        if (gUiFontReady) DrawTextEx(gUiFont, s, {x, y}, rfs, 0.0f, c);
+        if (gUiFontReady) DrawTextEx(gUiFont, s, {x, y}, rfs, rsp, c);
         else DrawText(s, (int)x, (int)y, (int)rfs, c);
     };
 
     float colL = playX + playW * 0.02f;
     float colC = playX + playW * 0.37f;
     float colR = playX + playW * 0.69f;
-    float y0 = botY + botH * 0.07f;
+    float y0 = botY + std::max(botH * 0.07f, (botH - (rfs + 3.0f * lh)) * 0.5f);
 
     line(colL, y0, "ATTACKER", BORDER);
     line(colC, y0, "SIMULATION", BORDER);
@@ -869,6 +927,7 @@ int main(int argc, char** argv) {
     bool shotMode = (argc > 3 && std::string(argv[3]) == "--shot");
     bool combatshot = (argc > 3 && std::string(argv[3]) == "--combatshot");
     bool unitshot = (argc > 3 && std::string(argv[3]) == "--unitshot");
+    bool backdropshot = (argc > 3 && std::string(argv[3]) == "--backdropshot");
     std::string shotPath = (argc > 4) ? argv[4] : "port_shot.png";
     bool selftest = (argc > 3 && std::string(argv[3]) == "--selftest");
 
@@ -968,10 +1027,31 @@ int main(int argc, char** argv) {
     if (shotMode) SetConfigFlags(FLAG_WINDOW_HIDDEN);
     if (combatshot) SetConfigFlags(FLAG_WINDOW_HIDDEN);
     if (unitshot) SetConfigFlags(FLAG_WINDOW_HIDDEN);
+    if (backdropshot) SetConfigFlags(FLAG_WINDOW_HIDDEN);
     SetConfigFlags(FLAG_WINDOW_HIGHDPI);
     InitWindow(mapW + panelW, std::max(mapH, 720), "Nectaris - portable");
     SetTargetFPS(60);
     loadUiFont();
+
+    if (backdropshot) {
+        float ox = gOriginX, oy = gOriginY;
+        gOriginX = gOriginY = 0.0f;
+        int bw = (int)(gStepX * (gMission.w - 1) + 2.0f * gHexSize + 2.0f);
+        int bh = (int)(gStepY * (gMission.h - 1) + gHexH + gStepY * 0.5f + 2.0f);
+        RenderTexture2D rt = LoadRenderTexture(bw, bh);
+        BeginTextureMode(rt);
+        ClearBackground(BLACK);
+        drawBackdropArt(gMission);
+        EndTextureMode();
+        Image img = LoadImageFromTexture(rt.texture);
+        ImageFlipVertical(&img);
+        ExportImage(img, shotPath.c_str());
+        UnloadImage(img);
+        UnloadRenderTexture(rt);
+        gOriginX = ox;
+        gOriginY = oy;
+        return 0;
+    }
 
 
     Texture2D playerTex = LoadTexture((gAssetDir + "art/units_bank09.png").c_str());
@@ -1352,6 +1432,7 @@ int main(int argc, char** argv) {
     UnloadTexture(playerTex);
     UnloadTexture(enemyTex);
     if (bgTex.id != 0) UnloadTexture(bgTex);
+    if (gBackdrop.id != 0) UnloadTexture(gBackdrop);
     UnloadSound(sndSelect);
     UnloadSound(sndMove);
     UnloadSound(sndHit);

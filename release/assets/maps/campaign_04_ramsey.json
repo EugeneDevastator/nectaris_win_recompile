@@ -5,7 +5,7 @@
  "mission": 4,
  "width": 15,
  "height": 20,
- "background": "",
+ "background": "maps/backdrops/campaign_04_ramsey.png",
  "terrain": [
   [
    5,

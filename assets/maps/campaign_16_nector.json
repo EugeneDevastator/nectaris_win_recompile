@@ -5,7 +5,7 @@
  "mission": 16,
  "width": 30,
  "height": 20,
- "background": "",
+ "background": "maps/backdrops/campaign_16_nector.png",
  "terrain": [
   [
    5,

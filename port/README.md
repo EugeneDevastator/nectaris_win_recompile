@@ -336,9 +336,25 @@ Outputs:
 
 ```
 assets/maps/campaign_01_revolt.json ... campaign_16_nector.json
+assets/maps/backdrops/campaign_XX_*.png # optional full-map backdrops
 assets/data/campaign_missions.json      # names, sizes, field/garrison counts
-dump/campaign/campaign_XX_*.png         # port-rendered full map backdrops
+dump/campaign/campaign_XX_*.png         # port-rendered full map screens
 ```
+
+Each campaign JSON has `"background": "maps/backdrops/<name>.png"`.  The port
+loads it if the file exists and draws the semi-transparent terrain hexes on
+top (`alpha = 96`), so the terrain class is still readable.  If the field is
+empty or the file is missing, the map falls back to opaque terrain hexes.
+Generate backdrops for any map with:
+
+```
+nectaris.exe assets assets/maps/campaign_10_darwin.json --backdropshot map10.png
+```
+
+The font is snapped to integer multiples of its native pixel height
+(`Not Jam Mono Clean 16`: 16, 32, 48, ...); glyph spacing is at least one
+native pixel (1px at 1x, 2px at 2x).  The combat report falls back to 1x when
+the 2x columns would not fit.
 
 Example, mission 10 (DARWIN): 11 player + 8 enemy field units, plus 37 player
 garrison/reinforcement units (7 wave groups).

@@ -5,7 +5,7 @@
  "mission": 10,
  "width": 30,
  "height": 20,
- "background": "",
+ "background": "maps/backdrops/campaign_10_darwin.png",
  "terrain": [
   [
    2,
