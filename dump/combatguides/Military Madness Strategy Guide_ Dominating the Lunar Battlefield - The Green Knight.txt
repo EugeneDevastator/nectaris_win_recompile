@@ -1,0 +1,175 @@
+
+Skip to content
+
+The Green Knight
+
+Building The Sustainable, Prosperous, Equitable Future
+
+    Home
+    Blog
+    Leadership Book
+
+Military Madness Strategy Guide: Dominating the Lunar Battlefield
+Posted byBryan Guido Hassin2025-03-17Posted inCulture & ContentTags:video games
+Military Madness Cover Art
+
+I still remember the day in 1990 when I brought home my shiny new TurboGrafx-16 game, Military Madness (known as Nectaris in Japan). Little did I know that this turn-based strategy game set on the moon would become a lifelong passion. In the decades since, I’ve beaten the game more times than I can count, perfecting strategies and discovering nuances that continue to make this classic engaging after all these years.
+
+For those unfamiliar, I’m not just an enthusiast—I currently hold the vast majority of speedrunning world records for Military Madness (view my records on Speedrun.com). While the records aren’t important, it is fair to say that I know a thing or two about battle tactics for lunar domination!
+
+This brief Military Madness strategy guide shares the general strategies and tactical approaches I’ve refined over thousands of hours of gameplay. Whether you’re a nostalgic veteran returning to the battlefield or a newcomer discovering this gem for the first time, these proven strategies will help you crush your opposition over 64 levels on the moon’s desolate terrain.
+Essential Military Madness Strategies for Victory
+Establish Air Superiority
+
+Perhaps the most powerful advantage in Military Madness is gaining and maintaining air superiority. Most ground units cannot attack air units at all, creating a fundamental asymmetry you can exploit. By prioritizing the elimination of all the enemy’s starting air forces (and anti-air guns) – and/or preventing the enemy from acquiring any new ones – while preserving your own, you can dominate the battlefield even when facing superior numbers.
+
+With just a single air unit, you can harass ground forces with impunity, gradually wearing them down while they helplessly attempt to maneuver away. This strategy becomes particularly devastating once you’ve acquired Eagles or Hunters, which can attack ground units that cannot retaliate. Even with Falcons and Pelicons, though, you can sneak around behind ground troops to surround them.
+Master the Surround Effect
+
+The surround effect is the game’s most powerful combat mechanic. When your units surround an enemy (two units on opposite sides of the enemy unit), the enemy unit’s stats are cut in half—usually resulting in their swift destruction. This often turns what would be a balanced engagement into a guaranteed victory, and weaker units can even take on much stronger units this way. This principle works for the enemy, too, so avoid letting them surround your units at all cost.
+Bison surrounding an enemy Bison to annihilate it
+Leverage the Support Effect
+
+Never attack alone if you can help it. When your units attack with support (other friendly units adjacent to the target), they receive substantial attack bonuses. When you have an enemy unit surrounded, the two effects stack, enemy stats in half (surround effect) + increased attack power for you (support effect), often resulting in total annihilation of the enemy.
+
+Defensively, arrange your units to support each other when the enemy attacks. Geometric patterns like diagonal lines and chevrons maximize mutual support. Units with high defense values—Giants, Triggers, and Polars especially—make excellent anchors for these formations.
+Trigger-anchored defensive chevron leaves the enemy no option but to attack defense-boosted units
+Advanced Tactical Considerations
+Optimize Order of Operations
+
+Because of surround and support effects, the sequence of your actions can dramatically impact outcomes. If you have multiple units to attack but can’t get a surround, attack with your strongest unit first. That way, when your weaker unit comes in to attack, it will get more support from from your stronger unit than your stronger unit would have gotten from the weaker unit if you had attacked in the opposite order.
+
+If you have multiple units to attack and can surround the enemy, send your weaker unit in first. You don’t even have to attack with it. Then send your stronger unit in to surround the enemy and attack with a massive advantage.
+
+When you have an enemy unit surrounded or multiple units adjacent to it, attack and destroy it before repositioning any of your units. For example, if an enemy Titan is surrounded by your Rabbit and Bison, and you want to move the Rabbit to engage another target, attack with the Bison first. This preserves both the surround effect and the support bonus during the attack, maximizing damage and minimizing return fire before the Rabbit moves away.
+Exploit Unit Mismatches in Military Madness
+
+Each unit type has specific strengths and weaknesses that can be leveraged for tactical advantage. Strive to match up your unit’s strengths against an enemy unit’s weaknesses. For example:
+
+    Seekers excel against air units but struggle against ground forces and have weak defenses. Use them specifically for hunting Falcons and Pelicans, which cannot counter-attack.
+    Rabbits are the opposite: very strong against ground units but weak against air and with low defense. Use them for surrounding and destroying infantry, artillery, and other low-offense ground units.
+    Eagles and Hunters represent the pinnacle of mismatch potential, as they can attack many ground units with complete immunity from retaliation.
+    Artillery should be targeted at units with low defense, which they can destroy and rapidly gain experience. Don’t waste artillery on Giants or Triggers; they will only get one or maybe two; Giants really need to be surrounded to be vulnerable to attack.
+
+Understanding these Military Madness unit mismatches allows you to consistently position your forces advantageously, applying strength against weakness rather than engaging in fair fights.
+Rabbits do their best work when attacking units that can't fight back.
+Master Terrain
+
+The lunar landscape offers defensive bonuses ranging from 0% (roads, bridges) to 40% (mountains). This seemingly simple mechanic enables sophisticated positional play:
+
+    Lure enemies into attacking you across low-defense terrain while your units enjoy high-defense positions.
+    Base defenses seem to provide advantages beyond their stated 35% bonus—exploit this when defending critical positions.
+
+In Military Madness, the high ground actually is a strategic advantage, not just a meme.
+
+I’ve seen through countless battles that a seemingly inferior force positioned with terrain advantage can consistently defeat larger armies caught in disadvantageous terrain.
+Bait and Trap
+
+One of my favorite Military Madness tactics involves sacrificial plays—offering an infantry unit or even a Rabbit as bait. When enemies move to capitalize on this apparently vulnerable unit, spring the trap by surrounding and eliminating them with nearby forces.
+
+A variation on this tactic is to use such troops to draw enemy aircraft into range of your Hawkeyes. The enemy AI cannot resist going after such troops; make them pay for their greed!
+The enemy hunter cannot resist attacking the Panther, even though it puts it within range of a Hawkeye, two Seekers, and a Falcon, which can easily surround it. The defense bonuses from the adjacent Bison and Seeker mean that the Panther will easily survive the Hunter's attack.
+Create and Control Bottlenecks
+
+The geography of many maps features natural bottlenecks between mountains or other impassable terrain. Establishing strong defensive positions at these points allows you to neutralize the enemy’s numerical advantage:
+
+    Position high-defense units at the front of the bottleneck.
+    Set up favorable engagement ratios (three units against their two, or two against one).
+    Place artillery within range to provide supporting fire.
+
+In these scenarios, enemies are forced to attack into your strength one unit at a time, creating a “death box” where you can systematically eliminate their forces.
+These six units effectively fend off 15 enemy units by creating a bottleneck between the mountains and the chasm.
+Train Artillery On Artillery
+
+When both sides have artillery within range of each other, target their artillery first. While this temporarily diverts your ranged support from the front line, it ensures long-term fire superiority. Artillery duels should almost always take precedence over other targets when the opportunity presents itself.
+
+In Military Madness, properly positioned artillery can turn the tide of battle by:
+
+    Providing damage without risk of counterattack
+    Softening targets before direct engagement
+    Controlling areas of the map without physically occupying them
+    Creating zones where enemy movement is severely punished
+
+Remember that artillery units are vulnerable to direct attack, so always keep them protected behind your front lines.
+Get their artillery before they can get yours!
+Use Units as Fullbacks
+
+Even units without attack power or much defense – Pelicans, for example, or Hawkeyes after you have decimated the enemy’s airforce – can be useful. Only one unit can occupy any given space, so, in addition to adding support or surround effects, these offense-less units can also be very effective “blocking backs”.
+
+The enemy will require one or more attacks to destroy such units, so they can slow down enemy advances, completely prevent them from reaching key units of yours, or even “reserve” a space for another unit of yours to take on the next turn – like the enemy’s base!
+This Pelican kindly occupied the enemy base on the last turn. Now it will move off so my Charlie can take the base and the win.
+Go For the Kill
+
+Because units with even a single troop left can heal to full health (and increased experience), try not to let a hobbled enemy get away. It can be tempting to target your next attack at another unit where it can do more total damage, but you are usually better served by finishing off the unit that is already near death. And the opposite is true as well; send your highly damaged units in full retreat to the nearest factory so that they might live to fight another turn.
+Parting Thoughts on Military Madness Strategy
+The Military Madness winning screen
+
+Military Madness rewards methodical, thoughtful play more than frantic action. The game’s seemingly simple mechanics conceal remarkable strategic depth that continues to engage even after decades of play. Whether you’re battling the computer or challenging human opponents, these principles should serve you well in your lunar campaigns.
+
+For those looking to master this classic strategy game, I recommend starting with the easier scenarios to practice these core tactics before moving to the more challenging maps. You can also check out my speedrun videos to see these strategies applied in real gameplay situations:
+
+I’d love to hear about your own Military Madness experiences and strategies in the comments. Are there approaches I’ve overlooked? Tactics you’ve found particularly effective? The conversation around this classic game continues to evolve even after all these years!
+
+Are you a fan of classic strategy games? Check out my other retrospectives on strategic gaming classics or follow me for more content about sustainable technology, leadership, and occasional gaming nostalgia.
+FAQs About Military Madness Strategy
+
+What is the strongest unit in Military Madness? The strongest offensive unit is generally considered to be the Hunter, which can attack ground units without fear of retaliation, is very strong against air, and is highly mobile. For defense, Giants and Polars offer exceptional durability, especially when positioned in favorable terrain.
+
+How important is factory control in Military Madness? Factory control is critical. Each captured factory adds units to your team and allows you to heal damaged units, creating advantage immediately and over time. Securing factories – and denying them to the enemy – early should be a top priority in most scenarios.
+
+What’s the best opening strategy in Military Madness? While it varies by map, focusing on securing nearby factories and establishing strong defensive positions near bottlenecks generally provides the best foundation for victory. On maps with central factories, racing to control these is often worth the risk.
+
+Can you play Military Madness today on modern systems? Yes! Military Madness is available on various virtual console platforms, on emulators, and through retro gaming collections. The strategy principles remain just as relevant today as they were in 1990.
+Share this:
+
+    X Facebook LinkedIn Mastodon Bluesky 
+
+Like this:
+Loading…
+Posted byBryan Guido Hassin2025-03-17Posted inCulture & ContentTags:video games
+Published by Bryan Guido Hassin
+
+These are the musings of a global entrepeneur and leader building the sustainabile, prosperous, equitable future. This blog began as a way to document my experience during the IMD MBA in Switzerland and now is the place where I publish eclectic thoughts on climatetech, business, politics, fitness, entertainment, travel, wine, sports, and . . . whatever else is top of mind. View more posts
+Post navigation
+Previous Post Previous post:
+Rice University’s Leadership in Carbon Nanomaterials for Climate Technology: My Beyond The Hedges Podcast
+Next Post Next post:
+First principles will lead us to a future beyond steel
+2 thoughts on “Military Madness Strategy Guide: Dominating the Lunar Battlefield”
+
+    Pingback: The TurboGrafx-16 Legacy: How a "Failed" Console Created a 35-Year Love Story (Plus a Secret Trick Never Before Published) - The Green Knight
+    Pingback: Moonshots, Nanotubes, And Climate Tech Pitch Tips For New York Climate Week - The Green Knight
+
+Leave a Reply
+Add your name
+
+Ready for launch? Subscribe for exclusive notifications about my forthcoming book, Moonshot Leadership!
+First name
+Email
+Search for:
+Archives
+Archives
+What I’m Reading on Goodreads
+Co-Existence: The Next Phase of AI
+Co-Existence: The Next Phase of AI
+by Ethan Mollick
+I'm a fan of Ethan Mollick and really appreciate his writing on AI. I found this book to be pretty pretty so-so, though; it was more a summary of the state of the art today - which will rapidly become outdated - and seemed targeted towar...
+The Last Folk Hero: The Life and Myth of Bo Jackson
+The Last Folk Hero: The Life and Myth of Bo Jackson
+by Jeff Pearlman
+I can't believe I didn't know about this in 2022 and was four years late to the party! It's a really thorough biography from childhood to present and presents a really balanced view of Bo Jackson: the good, the bad, and the ugly. An abso...
+System Collapse
+System Collapse
+by Martha Wells
+The last few murderbot books have fallen into the same pattern for me: I have haven't found the first 2/3 to be very interesting, but then I find the climax to be very compelling. Net net I'm not finding most of the characters or relatio...
+Fugitive Telemetry
+Fugitive Telemetry
+by Martha Wells
+A so-so addition to the series. This one's a murder mystery - less of the action that I really enjoy, but plenty of the awkwardness and snark!
+The Mindful Athlete: Secrets to Pure Performance
+The Mindful Athlete: Secrets to Pure Performance
+by George Mumford
+This is a very basic overview of mindfulness and spirituality, loosely applied to sports and with an even looser potential application to business or other aspects of life. I was eager to read this because I value mindfulness and I am an...
+
+goodreads.com
+The Green Knight

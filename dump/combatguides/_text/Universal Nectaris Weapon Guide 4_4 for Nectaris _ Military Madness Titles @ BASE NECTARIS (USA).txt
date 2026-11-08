@@ -1,0 +1,432 @@
+ 
+
+ Universal Nectaris Weapon Guide 4/4 for Nectaris / Military Madness Titles @ BASE NECTARIS (USA) 
+
+ BASE NECTARIS (USA) :
+ All things Nectaris, Military Madness & Earth Light  
+
+ return
+ to:   BASE
+ NECTARIS   
+ ( site
+ map ) 
+
+ home  
+
+ about    site map  
+ features    quick
+ list    legacy  
+ story  
+
+ hardware   how-to-play  
+
+ strategy   weapons  
+ manuals  
+ box scans  
+
+ cheats   
+ credits   
+ links 
+
+ Universal* Nectaris Weapon
+ Guide   1  
+ 2  
+ 3  
+ 4 
+
+ NEXT
+ PAGE   
+
+ PREVIOUS   
+
+ This weapon guide can be used for nearly all Nectaris titles,
+ since they share a core arsenal of 23 military units. That said, please
+ note that two games -- 1994's Neo Nectaris and 1995's PC-DOS
+ Nectaris (Germany) -- have new & modified weapons and thus
+ require specialized
+ guides .  BONUS :  If you are interested, you can view
+ the original weapon guides (as they appeared in the printed instruction
+ manuals) by going
+ here .
+
+ MOON BUGGIES 
+
+ PREVIOUS    
+ MAIN
+ MENU     NEXT WEAPON    
+
+ OVERVIEW :  These buggies are described as "anti-tank vehicles" in the
+ Japanese game manual, but they prove far more versatile than this... Buggies are the ONLY units that can shift, attack, and SHIFT AGAIN in
+ one turn--take this special ability into consideration when planning your offensive/defensive strategy. Your ability to run away, however,
+ is not without bounds: rough terrain (20%+) and natural obstacles (i.e. valley) severely restrict mobility and your ability to
+ "run away." 
+
+ HINT: After attacking, especially if you suffer high losses, try to retreat
+ to a FACTORY for repairs (thereby squeezing four moves into a single turn: 
+ shift, attack, shift again, repair ! )   This technique allows you to make bold
+ offensive strikes that would otherwise be too costly to make. Since moon buggies are so fast, it is easy to use factories for repairs.
+
+ HINT: Since Rabbit and Lynx have negligible armor, be sure to use TERRAIN and SUPPORT from other units to boost
+ their defense! 
+
+  MB-4 
+ Lynx 
+
+ "This buggy is equipped with indirect attack missiles. It has the ability
+ to move after attacking but it has a weak defense and is not as mobile as
+ the MB-5."
+
+ LYNX cannot attack adjacent ground units (ground targets must be two hexes away). For airborne enemies, however, LYNX
+ must be adjacent in order to attack. 
+
+ Land
+ Attack 
+ Air
+ Attack 
+
+ 40 
+ 10 
+
+ Land
+ Range 
+ Air
+ Range 
+
+ 2 
+ 1 
+
+ Shifting 
+ Defense 
+
+ 6 
+ 20 
+
+  MB-5 
+ Rabbit 
+
+ PREVIOUS    
+ MAIN
+ MENU     NEXT WEAPON    
+
+ "This buggy has great mobility and a capacity to move after attack.
+ Has powerful anti-surface missiles and a small anti-air gun. Its thin armor gives it minimal defense."
+
+ The Rabbit's powerful ground attack and phenomenal speed makes it quite versatile...but if you aren't savvy
+ you'll lose them (their armor is pitiful, after all) after a skirmish or two. 
+
+ Land
+ Attack 
+ Air
+ Attack 
+
+ 70 
+ 10 
+
+ Land
+ Range 
+ Air
+ Range 
+
+ 1 
+ 1 
+
+ Shifting 
+ Defense 
+
+ 8 
+ 20 
+
+ AIRCRAFT 
+
+ PREVIOUS    
+ MAIN
+ MENU     NEXT WEAPON    
+
+ OVERVIEW :  This class of weapons should actually be called "Space Battle
+ Craft" since there is no atmosphere on the Moon.  Anyway, aircraft (including the C-61
+ Pelican transport plane)
+ are incredibly versatile, due to their high mobility, and can be used in
+ many creative ways (i.e. for SUPPORTING your other troops and SURROUNDING
+ your opponents). As a result, your opponent will prioritize the
+ destruction of your airforce--be careful!
+
+ HINT: Eagles are great for attacking tanks and other ground units that
+ lack air offense. Be careful with both Falcons and Eagles: due to their
+ poor armor, they can be quite vulnerable. Hunters, on the other hand,
+ have great armor and can devastate both ground and air forces. 
+
+   FX-1 
+ Falcon    
+
+ "This fighter has the ultimate in anti-air attack power and mobility but
+ has no surface attack power and low defense abilities. Keep away from the
+ Hunter and the Hawkeye." 
+
+ You better keep Falcon away from AAG-4 Seeker as
+ well since it will easilly slice through Falcon's thin armor as well.
+ Falcon can easilly eradicate Eagles, but the only "safe" way to attack
+ Hunters is to SURROUND them and cut their defense in half (see "Surround
+ Effects").
+
+ HINT: If you eliminate your opponent's airforce, the Falcon can still be
+ used to SUPPORT your other troops and SURROUND your enemies.
+
+ Land
+ Attack 
+ Air
+ Attack 
+
+ / 
+ 90 
+
+ Land
+ Range 
+ Air
+ Range 
+
+ / 
+ 1 
+
+ Shifting 
+ Defense 
+
+ 12 
+ 30 
+
+  AX-87 
+ Eagle 
+
+ PREVIOUS    
+ MAIN
+ MENU     NEXT WEAPON    
+
+ "This attack plane is armed with light Stinger anti-air missiles and
+ heavy surface bombs. It has high mobility but a weak defense so watch
+ out for anti-air missiles."
+
+ Since Eagle has pitiful armor, you better
+ stay away from FX-1 Falcon and EF-88 Hunter in addition to anti-air MM-107
+ Hawkeye and AAG-4 Seeker. Use Eagle to eradicate vulnerable ground units
+ (i.e. SS-80 Atlus, tanks, infantry, etc.).
+
+ HINT: Sometimes you should keep Eagle safely tucked-away in a FACTORY
+ until you eliminate all major threats it faces (i.e. Falcons and Hunters)
+ ...otherwise, your Eagle may not last more than a few rounds.
+
+ Land
+ Attack 
+ Air
+ Attack 
+
+ 70 
+ 20 
+
+ Land
+ Range 
+ Air
+ Range 
+
+ 1 
+ 1 
+
+ Shifting 
+ Defense 
+
+ 10 
+ 30 
+
+  EF-88 
+ Hunter 
+
+ PREVIOUS    
+ MAIN
+ MENU     NEXT WEAPON    
+
+ "This fighter-bomber is armed with heavy air missiles and heavy surface
+ bombs. It is the supreme aircraft with paramount power, mobility and
+ defense."
+
+ Hunters are the ultimate death machine. Fear them. In fact,
+ destroying your opponent's Hunters should always be your #1 priority--even a
+ single Hunter can wreak havoc on your forces. That said, the Hunters under
+ your command are not immune to poor strategy--so don't get overly cocky and
+ needlessly sacrifice them.
+
+ Land
+ Attack 
+ Air
+ Attack 
+
+ 70 
+ 70 
+
+ Land
+ Range 
+ Air
+ Range 
+
+ 1 
+ 1 
+
+ Shifting 
+ Defense 
+
+ 11 
+ 50 
+
+ ANTI-AIRCRAFT 
+
+ PREVIOUS    
+ MAIN
+ MENU     NEXT WEAPON    
+
+ OVERVIEW 
+ :  Annihilating your opponent's airforce is often a top priority;
+ Seeker and Hawkeye are invaluable assets in this endeavor. AX-87 Eagles
+ and FX-1 Falcons, due to their low defense, make easy targets for Seeker
+ and Hawkeye. EF-88 Hunters, on the other hand, are stalwart fighters--even
+ against the mighty Hawkeye--and are one of the most difficult enemies to
+ eliminate. 
+
+  AAG-4 
+ Seeker 
+
+ PREVIOUS    
+ MAIN
+ MENU     NEXT WEAPON    
+
+ "The Seeker is a high power anti-air vehicle with fair surface missiles
+ as well. It has 4 connected 20mm machine guns and has good mobility but
+ is weak in defense."
+
+ Seekers can attack FX-1 Falcon without worry, but
+ be extremely careful when attacking AX-87 Eagle or EF-88 Hunter (these
+ aircraft can decimate ground units). 
+
+ In fact, the best strategy for attacking Eagles and Hunters is to SURROUND
+ them: use two of your units to flank your opponent on opposite sides. This
+ way, Seeker is less likely to suffer high losses. Seeker isn't so bad attacking ground forces--just don't
+ expect it to be like a tank. Initiate
+ ground assaults with tanks and save Seeker for "clean up" (follow-up assaults).
+
+ Land
+ Attack 
+ Air
+ Attack 
+
+ 30 
+ 65 
+
+ Land
+ Range 
+ Air
+ Range 
+
+ 1 
+ 1 
+
+ Shifting 
+ Defense 
+
+ 6 
+ 30 
+
+  MM-107 
+ Hawkeye 
+
+ PREVIOUS    
+ MAIN
+ MENU     NEXT
+ WEAPON    
+
+ "The Hawkeye has enormous indirect anti-air attack power but no surface
+ attack and little defense. Best if used behind the front line to shoot
+ down incoming air." 
+
+ Hawkeye CANNOT attack adjacent aircraft. Thus, your opponent can place their aircraft directly next to your Hawkeye
+ without fear of reprisal. Always strike enemy aircraft with Hawkeye first--indirect attacks allow
+ you to weaken your opponent without risk--then send in other units to finish the job.
+
+ Hawkeye acts as a DETERRENT AGAINST AIRCRAFT--your opponent will take great
+ pains to keep all aircraft out of range. Simply put, it's not worth
+ worth sufferring the high losses inflicted by a Hawkeye tucked behind
+ enemy lines. 
+
+ Land
+ Attack 
+ Air
+ Attack 
+
+ / 
+ 85 
+
+ Land
+ Range 
+ Air
+ Range 
+
+ / 
+ 5 
+
+ Shifting 
+ Defense 
+
+ 5 
+ 30 
+
+ TIP: Hawkeye CANNOT shift and attack in a single turn. As a result, you
+ should always be thinking "one turn ahead" when devising a strategy. For
+ example, you will often be faced with the following situation--should I
+ attack this turn (thus leaving my Hawkeye vulnerable for attack), or should
+ I shift Hawkeye to a safe place (thus forfeiting a chance to attack). 
+
+ TIP: Since Hawkeye deters aircraft, you might try to "lure" enemy aircraft
+ into MM-107's range with "bait" (i.e. infantry, transport vehicles w/ cargo,
+ AX-87 Eagle, etc.). If your opponent takes the bait, first attack with
+ Hawkeye (and any other long-range anti-air units), then surround opponent
+ (to prevent its escape). This is a risky maneuver, of course, and 
+ shouldn't be attempted unless you can afford to lose the "bait."
+
+ TIP: Regardless of what the specs indicate, Hawkeye seems to possess a
+ very decent
+ defense. So when Hawkeye outlives its intended use (destroying aircraft),
+ you SHOULD place Hawkeye on the frontlines to SUPPORT your troops
+ defensively. In this situation, MM-107 functions as an "obstacle" (akin to
+ M-77 Trigger) that hinders your opponents advance. When placed on rough
+ terrain, the ostensibly "helpless" Hawkeye can withstand many assaults. 
+ Another FAQ writer (Kevin Lee) has suggested that there is an element of
+ "luck" involved in the formulas used to determine the outcome of
+ battles, and that the "luck factor" might be related to the
+ amount of "experience" a unit has earned.  Hawkeye's
+ impressive defense might be the result of these two factors.  I don't
+ know.       PREVIOUS    
+ MAIN
+ MENU     NEXT
+ WEAPON    
+
+   PREVIOUS
+ PAGE 
+
+ NEXT PAGE    
+
+ ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+ Web page
+ Copyright 1999-2004  Esteban  
+ .  Visit the TurboPlay Magazine Archives for TurboGrafx-16 and PC-Engine page scans . All games, artwork, logos, trademarks &
+ copyrights contained in this document
+
+ are owned by their respective trademark  & copyright holders. 
+ These
+ pages may be reproduced and distributed provided that:  (1) 
+ the content is not altered in any
+
+ any way, shape, or form,   (2)  you credit &
+ reference the author, source, & URL, and most importantly  (3) 
+ it is FREELY AVAILABLE TO ALL &
+
+ COMMERCIAL FREE . Reject all profiteering from &
+ commercializing of information. " Information wants to be free --
+ commercial free. "  Peace. 
+
+ 

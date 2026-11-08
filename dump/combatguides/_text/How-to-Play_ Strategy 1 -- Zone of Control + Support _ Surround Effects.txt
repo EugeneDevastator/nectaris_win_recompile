@@ -1,0 +1,204 @@
+ 
+
+ How-to-Play: Strategy 1 -- Zone of Control + Support / Surround Effects 
+
+ BASE NECTARIS (USA) :
+ All things Nectaris, Military Madness & Earth Light  
+
+ return
+ to:   BASE
+ NECTARIS   
+ ( site
+ map ) 
+
+ home  
+
+ about    site map  
+ features    quick
+ list    legacy  
+ story  
+
+ hardware   how-to-play  
+
+ strategy   weapons  
+ manuals  
+ box scans  
+
+ cheats   
+ credits   
+ links 
+
+ STRATEGY
+ GUIDE 1 : Zone of Control
+ (ZOC); Supporting & Surrounding Effects 
+
+ NEXT
+ PAGE   
+
+ PREVIOUS   
+
+ It is crucial that you understand how the Zone Of Control
+ (ZOC) works in
+ order to maximize your offense and defense. However, if you are new to
+ the Nectaris series, the ZOC may seem confusing at first. The main lesson
+ is simply this: your troops will be slaughtered unless you coordinate
+ your units to fight as a team. An isolated unit on a solo mission cannot
+ attack at its full potential and risks being overwhelmed by a team of
+ enemies (i.e. even a heavily armored unit loses its defensive advantage
+ when it fights solo against a team of enemies). Of course, there are
+ times when it is prudent to send units on solo missions--but in general
+ your offensive and defensive strategy should focus on teamwork.  
+
+ A. ZONE OF CONTROL 
+ : 
+
+ The Zone of Control (ZOC) is an area of 6 hexagons surrounding each unit.
+ A unit has "force" in this area. An opposing unit can go no further than
+ the first hexagon in an enemy’s ZOC. You may not pass through an enemy's
+ ZOC in a single turn and must wait until the next turn to proceed. 
+
+ / \_
+
+ \_/ 5 \_    
+ In this diagram, hexes numbered 1-6 represent unit G's 
+ ZOC. 
+
+ /6\_/4\
+
+ \_/ G \_/   Suppose an enemy occupies hex
+ 5 . This enemy cannot simply 
+
+ /1\_/3\   ignore G and shift through hex 4, 3, and 2 in one turn. 
+ 5 can 
+
+ \_/2\_/   only advance to hex 4 (or 6) in one turn since
+ its' mobility is
+
+ / \_/     constrained by being in
+ G's ZOC. 
+
+ Constraining your opponent's ability to move has tremendous advantages--
+ you can prevent your opponent from moving into a better offensive and / or
+ defensive position during a battle. Also, by coordinating your units as a
+ team, you can create a defensive "wall" to prevent opponents from advancing
+ too quickly (i.e. when you need to stop an enemy from capturing a factory).
+
+ HINT: You can "expand" your ZOC by incorporating NATURAL, GEOGRAPHIC
+ OBSTACLES into your overall strategy. Natural obstacles (i.e. mountains,
+ valleys) also inhibit your opponent's mobility (except aircraft), so your
+ opponent will always try to advance down the "path of least resistance"
+ (i.e. roads 0%, flat ground 5%, etc.) Very often, you can block this 
+ "path of least resistance" with 1 or 2 well-placed units. Your unit's ZOC,
+ combined with the natural obstacles, creates a veritable "wall" to slow
+ down your opponent's advance.
+
+ B. SUPPORTING EFFECT 
+ : 
+
+ The offensive attack power and defensive capacities of your unit will
+ increase if your other units are in close proximity. This is called
+ the "support effect." You may gain a strategic advantage over your
+ enemy by using this tactic: 
+
+    (1.)  Defensive Supporting Effect : when your unit is under attack, you may obtain additional support by having your
+
+           other units within the front line of your
+ ZOC. The defensive capacity of the unit under attack will be increased
+
+           with this support. For example: 
+
+ / \_
+
+ \_/ G \_
+
+ / 1 \_/ 3 \ G attacks
+ 1 ;   1 supported by
+ 2 ;   defense of 1 is increased 
+
+ \_/ 2 \_/ G attacks
+ 2 ;   2 supported by
+ 1 & 3 ;  
+ 2's defense boosted EVEN MORE 
+
+ / \_/
+
+    (2.)  Offensive Support Effect : when attacking an enemy unit you may obtain greater attack power by having your
+
+           other units within the front line of your
+ ZOC. The offensive capacity of the attacking unit will be increased with
+
+           this support. For example: 
+
+ / \_
+
+ \_/ G \_
+
+ / 1 \_/ 3 \ 1 attacks
+ G ;   1 supported by
+ 2 ;   offense of 1 is increased 
+
+ \_/ 2 \_/ 2 attacks
+ G ;   2 supported by
+ 1 & 3 ;  
+ 2's offense boosted EVEN MORE 
+
+ / \_/
+
+ C. SURROUNDING
+ EFFECT : 
+
+ When attacking an enemy, you strengthen your offensive power and
+ weaken enemy's defensive capacity by SURROUNDING your opponent.
+
+ / \_
+
+ \_/ 5 \_
+
+ / 6 \_/ 4 \  
+ To cut G’s defense in HALF, simply flank
+ G on
+
+ \_/ G \_/   OPPOSITE sides:
+ 1 & 4   or  2 & 5  
+ or  3 & 6 
+
+ / 1 \_/ 3 \
+
+ \_/ 2 \_/   Tough enemies: try to completely encircle
+ G by occupying 1-6
+
+ / \_/
+
+ HINT: By combining the Supporting and Surrounding effect, you gain the
+ ultimate advantage! Use this combined effect to defeat the most
+ formidable enemies.
+
+ HINT: The terrain also effects a unit's defense! See TERRAIN EFFECTS for
+ further discussion. 
+
+     PREVIOUS 
+
+ NEXT
+ PAGE    
+
+ ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+ Web page
+ Copyright 1999-2004  Esteban  
+ .  Visit the TurboPlay Magazine Archives for TurboGrafx-16 and PC-Engine page scans . All games, artwork, logos, trademarks &
+ copyrights contained in this document
+
+ are owned by their respective trademark  & copyright holders. 
+ These
+ pages may be reproduced and distributed provided that:  (1) 
+ the content is not altered in any
+
+ any way, shape, or form,   (2)  you credit &
+ reference the author, source, & URL, and most importantly  (3) 
+ it is FREELY AVAILABLE TO ALL &
+
+ COMMERCIAL FREE . Reject all profiteering from &
+ commercializing of information. " Information wants to be free --
+ commercial free. "  Peace. 
+
+ 

@@ -1,0 +1,379 @@
+ 
+
+ Universal Nectaris Weapon Guide 3/4 for Nectaris / Military Madness Titles @ BASE NECTARIS (USA) 
+
+ BASE NECTARIS (USA) :
+ All things Nectaris, Military Madness & Earth Light  
+
+ return
+ to:   BASE
+ NECTARIS   
+ ( site
+ map ) 
+
+ home  
+
+ about    site map  
+ features    quick
+ list    legacy  
+ story  
+
+ hardware   how-to-play  
+
+ strategy   weapons  
+ manuals  
+ box scans  
+
+ cheats   
+ credits   
+ links 
+
+ Universal* Nectaris Weapon
+ Guide   1  
+ 2  
+ 3  
+ 4 
+
+ NEXT
+ PAGE   
+
+ PREVIOUS   
+
+ This weapon guide can be used for nearly all Nectaris titles,
+ since they share a core arsenal of 23 military units. That said, please
+ note that two games -- 1994's Neo Nectaris and 1995's PC-DOS
+ Nectaris (Germany) -- have new & modified weapons and thus
+ require specialized
+ guides .  BONUS :  If you are interested, you can view
+ the original weapon guides (as they appeared in the printed instruction
+ manuals) by going
+ here .
+
+ TANKS 
+
+ PREVIOUS    
+ MAIN
+ MENU     NEXT WEAPON    
+
+ OVERVIEW 
+ :  Tanks bear the brunt of front line combat and, unless you have
+ air support to spare, supply most of your infantry support as
+ well.  Yes, your forces will mainly be comprised of S-61 Bison
+ tanks (a mainstay in the Nectaris series), while your opponent
+ will have ample numbers of the more powerful tanks.  Accept this
+ situation.  When you do get your hands on the better tanks, use
+ them to strike first, then use your less powerful tanks (i.e. S-61
+ Bison) as "clean-up."
+
+ HMB-4 Giant is the only tank that can attack aircraft. The remaining tanks lack air offense, so they are
+ utterly helpless against EF-88 Hunters and AX-87 Eagles.  
+
+ HINT: Use C-61 Pelican to swiftly transport the slower moving tanks (T-79 Grizzly, PT-6 Polar, HMB-2 Giant).
+
+   TT-1 
+ Lenet    
+
+ "This twin turret tank has two guns of 95mm and 75mm. Only a small number
+ of these tanks were made for trial purposes so its performance has been
+ below satisfactory."
+
+ Yes, Lenet is horrible and a few of them are
+ scattered throughout the game. And yet, it would have been neat if Lenet
+ appeared more frequently--it is more challenging (and thus satisfying) to
+ conquer your opponent with inferior equipment. 
+
+ Land
+ Attack 
+ Air
+ Attack 
+
+ 45 
+ / 
+
+ Land
+ Range 
+ Air
+ Range 
+
+ 1 
+ / 
+
+ Shifting 
+ Defense 
+
+ 5 
+ 30 
+
+  S-61 
+ Bison 
+
+ PREVIOUS    
+ MAIN
+ MENU     NEXT WEAPON    
+
+ "The bison is a main battle tank with a 105mm turret gun and a durable
+ armor plating. This mass production tank is the primary force of front
+ line battles. Good mobility."
+
+ Bison are the most common unit in your
+ entire arsenal, so you will quickly appreciate it's versatility. You can
+ compensate for Bison's weak armor by teaming-up with other units and
+ making strategic use of terrain (remember, the rougher the terrain, the
+ greater the defensive benefit).
+
+ Land
+ Attack 
+ Air
+ Attack 
+
+ 50 
+ / 
+
+ Land
+ Range 
+ Air
+ Range 
+
+ 1 
+ / 
+
+ Shifting 
+ Defense 
+
+ 6 
+ 40 
+
+  GS-81 
+ Slagger 
+
+ PREVIOUS    
+ MAIN
+ MENU     NEXT WEAPON    
+
+ "The Slagger is a main battle tank with good mobility. It can quickly
+ enter a front line battle and has a good defense capacity. Equipped
+ with a 105mm class gun."
+
+ Slagger's exceptional speed comes in handy for
+ many situations: send GS-81 on a "sucicide solo mission" ahead of slower
+ troops when you want to be the first to occupy strategic territory (i.e. when you are attempting to capture a factory).
+ Sometimes it is
+ worth sacrificing a unit to prevent Guicy troops from entrenching in
+ a strategic position--and only the fastest units can get there first.
+ ASIDE: The TG-16 version called this tank "Slagger", which is actually
+ a much kooler name than its actual name... "Slugger".  
+
+ Land
+ Attack 
+ Air
+ Attack 
+
+ 50 
+ / 
+
+ Land
+ Range 
+ Air
+ Range 
+
+ 1 
+ / 
+
+ Shifting 
+ Defense 
+
+ 7 
+ 50 
+
+  GT-86 
+ Titan 
+
+ PREVIOUS    
+ MAIN
+ MENU     NEXT WEAPON    
+
+ "This heavy tank is equipped with a 120mm heavy cannon. It has fair
+ mobility and its heavy armor is good defense. Use to support the Slagger
+ and other front line units."
+
+ Titan is a powerful tank and can boost the
+ offense and defense of weaker units when it "supports" them (i.e. see "support
+ effects").  ASIDE: Again, as far as names go, "Titan" is superior
+ to the lackluster
+ nickname "Monster". 
+
+ Land
+ Attack 
+ Air
+ Attack 
+
+ 60 
+ / 
+
+ Land
+ Range 
+ Air
+ Range 
+
+ 1 
+ / 
+
+ Shifting 
+ Defense 
+
+ 5 
+ 5 
+
+  T-79 
+ Grizzly 
+
+ PREVIOUS    
+ MAIN
+ MENU     NEXT WEAPON    
+
+ "This heavy batttle tank is armed with a 120mm recoiless cannon. Its
+ heavy defense armor makes it durable but slow. Best used as support for
+ front line battles."
+
+ Since Grizzly is slow, consider using C-61 Pelican
+ for rapid transport.  Grizzly, as the name suggests, is a solid performer
+ and should be used to assist wimpier units (i.e. Bison) during battle. 
+
+ Land
+ Attack 
+ Air
+ Attack 
+
+ 70 
+ / 
+
+ Land
+ Range 
+ Air
+ Range 
+
+ 1 
+ / 
+
+ Shifting 
+ Defense 
+
+ 4 
+ 50 
+
+  PT-6 
+ Polar 
+
+ PREVIOUS    
+ MAIN
+ MENU     NEXT WEAPON    
+
+ "This medium-sized heavy tank is equipped with a 105mm turret gun.
+ Its limited mobility is compensated by its high armor plating and
+ defense capacity."
+
+ Be sure to support weaker units with Polar's impressive
+ offensive/defensive abilities. Again, slow tanks such as the Polar can be
+ swiftly transported by C-61 Pelican.
+ ASIDE: Since PT-6 has superb armor, the nickname "Armadillo" is appropriate.
+ So why was the name changed to "Polar" in North American versions? "Armadillo"is too long, I reckon. Only a shorter name
+ with fewer letters could fit in the space allotted for nicknames. 
+
+ Land
+ Attack 
+ Air
+ Attack 
+
+ 60 
+ / 
+
+ Land
+ Range 
+ Air
+ Range 
+
+ 1 
+ / 
+
+ Shifting 
+ Defense 
+
+ 4 
+ 60 
+
+  HMB-2 
+ Giant 
+
+ PREVIOUS    
+ MAIN
+ MENU     NEXT
+ WEAPON    
+
+ "The Giant fortress tank has supreme firepower with a 180mm surface
+ gun and a 35mm anti-air turrent. Has heavy armor but is slow. Can
+ only be transported by Pelican."
+
+ Although the Giant is the most powerful ground unit, don't get cocky and
+ use it thoughtlessly -- you still need to be careful. Safely build up
+ experience points by crushing much weaker opponents, because a Giant with
+ a "full star" of experience is a force to be reckoned with. Be careful
+ if you send out Giant on a solo mission: even the mighty Giant can be
+ quickly dispatched if it is surrounded by a team of enemies.
+ If you do not use C-61 Pelican to quickly transport Giant, then you should
+ carefully plan out the route HMB-2 will travel. Roads and flat ground are
+ your best bet, since Giant will limp over anything else.  Finally,
+ HMB-2 is the only tank that can attack aircraft (it does a decent job,
+ too).            PREVIOUS    
+ MAIN
+ MENU     NEXT
+ WEAPON    
+
+ Land
+ Attack 
+ Air
+ Attack 
+
+ 90 
+ 40 
+
+ Land
+ Range 
+ Air
+ Range 
+
+ 1 
+ 1 
+
+ Shifting 
+ Defense 
+
+ 2 
+ 80 
+
+   PREVIOUS
+ PAGE 
+
+ NEXT
+ PAGE    
+
+ ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+ Web page
+ Copyright 1999-2004  Esteban  
+ .  Visit the TurboPlay Magazine Archives for TurboGrafx-16 and PC-Engine page scans . All games, artwork, logos, trademarks &
+ copyrights contained in this document
+
+ are owned by their respective trademark  & copyright holders. 
+ These
+ pages may be reproduced and distributed provided that:  (1) 
+ the content is not altered in any
+
+ any way, shape, or form,   (2)  you credit &
+ reference the author, source, & URL, and most importantly  (3) 
+ it is FREELY AVAILABLE TO ALL &
+
+ COMMERCIAL FREE . Reject all profiteering from &
+ commercializing of information. " Information wants to be free --
+ commercial free. "  Peace. 
+
+ 
