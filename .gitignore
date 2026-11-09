@@ -4,3 +4,4 @@ port/build
 port/build/*
 _bak
 _bak/*
+*.zip
