@@ -1,0 +1,2050 @@
+[
+ {
+  "chassis": 0,
+  "rotation": 0,
+  "state": "clean",
+  "bank": 9,
+  "file": "chassis_00_rot0_clean_blue.png",
+  "slot": 128
+ },
+ {
+  "chassis": 0,
+  "rotation": 1,
+  "state": "clean",
+  "bank": 9,
+  "file": "chassis_00_rot1_clean_blue.png",
+  "slot": 144
+ },
+ {
+  "chassis": 0,
+  "rotation": 2,
+  "state": "clean",
+  "bank": 9,
+  "file": "chassis_00_rot2_clean_blue.png",
+  "slot": 160
+ },
+ {
+  "chassis": 0,
+  "rotation": 3,
+  "state": "clean",
+  "bank": 9,
+  "file": "chassis_00_rot3_clean_blue.png",
+  "slot": 176
+ },
+ {
+  "chassis": 1,
+  "rotation": 0,
+  "state": "clean",
+  "bank": 9,
+  "file": "chassis_01_rot0_clean_blue.png",
+  "slot": 130
+ },
+ {
+  "chassis": 1,
+  "rotation": 1,
+  "state": "clean",
+  "bank": 9,
+  "file": "chassis_01_rot1_clean_blue.png",
+  "slot": 146
+ },
+ {
+  "chassis": 1,
+  "rotation": 2,
+  "state": "clean",
+  "bank": 9,
+  "file": "chassis_01_rot2_clean_blue.png",
+  "slot": 162
+ },
+ {
+  "chassis": 1,
+  "rotation": 3,
+  "state": "clean",
+  "bank": 9,
+  "file": "chassis_01_rot3_clean_blue.png",
+  "slot": 178
+ },
+ {
+  "chassis": 2,
+  "rotation": 0,
+  "state": "clean",
+  "bank": 9,
+  "file": "chassis_02_rot0_clean_blue.png",
+  "slot": 132
+ },
+ {
+  "chassis": 2,
+  "rotation": 1,
+  "state": "clean",
+  "bank": 9,
+  "file": "chassis_02_rot1_clean_blue.png",
+  "slot": 148
+ },
+ {
+  "chassis": 2,
+  "rotation": 2,
+  "state": "clean",
+  "bank": 9,
+  "file": "chassis_02_rot2_clean_blue.png",
+  "slot": 164
+ },
+ {
+  "chassis": 2,
+  "rotation": 3,
+  "state": "clean",
+  "bank": 9,
+  "file": "chassis_02_rot3_clean_blue.png",
+  "slot": 180
+ },
+ {
+  "chassis": 3,
+  "rotation": 0,
+  "state": "clean",
+  "bank": 9,
+  "file": "chassis_03_rot0_clean_blue.png",
+  "slot": 134
+ },
+ {
+  "chassis": 3,
+  "rotation": 1,
+  "state": "clean",
+  "bank": 9,
+  "file": "chassis_03_rot1_clean_blue.png",
+  "slot": 150
+ },
+ {
+  "chassis": 3,
+  "rotation": 2,
+  "state": "clean",
+  "bank": 9,
+  "file": "chassis_03_rot2_clean_blue.png",
+  "slot": 166
+ },
+ {
+  "chassis": 3,
+  "rotation": 3,
+  "state": "clean",
+  "bank": 9,
+  "file": "chassis_03_rot3_clean_blue.png",
+  "slot": 182
+ },
+ {
+  "chassis": 4,
+  "rotation": 0,
+  "state": "clean",
+  "bank": 9,
+  "file": "chassis_04_rot0_clean_blue.png",
+  "slot": 136
+ },
+ {
+  "chassis": 4,
+  "rotation": 1,
+  "state": "clean",
+  "bank": 9,
+  "file": "chassis_04_rot1_clean_blue.png",
+  "slot": 152
+ },
+ {
+  "chassis": 4,
+  "rotation": 2,
+  "state": "clean",
+  "bank": 9,
+  "file": "chassis_04_rot2_clean_blue.png",
+  "slot": 168
+ },
+ {
+  "chassis": 4,
+  "rotation": 3,
+  "state": "clean",
+  "bank": 9,
+  "file": "chassis_04_rot3_clean_blue.png",
+  "slot": 184
+ },
+ {
+  "chassis": 5,
+  "rotation": 0,
+  "state": "clean",
+  "bank": 9,
+  "file": "chassis_05_rot0_clean_blue.png",
+  "slot": 138
+ },
+ {
+  "chassis": 5,
+  "rotation": 1,
+  "state": "clean",
+  "bank": 9,
+  "file": "chassis_05_rot1_clean_blue.png",
+  "slot": 154
+ },
+ {
+  "chassis": 5,
+  "rotation": 2,
+  "state": "clean",
+  "bank": 9,
+  "file": "chassis_05_rot2_clean_blue.png",
+  "slot": 170
+ },
+ {
+  "chassis": 5,
+  "rotation": 3,
+  "state": "clean",
+  "bank": 9,
+  "file": "chassis_05_rot3_clean_blue.png",
+  "slot": 186
+ },
+ {
+  "chassis": 6,
+  "rotation": 0,
+  "state": "clean",
+  "bank": 9,
+  "file": "chassis_06_rot0_clean_blue.png",
+  "slot": 140
+ },
+ {
+  "chassis": 6,
+  "rotation": 1,
+  "state": "clean",
+  "bank": 9,
+  "file": "chassis_06_rot1_clean_blue.png",
+  "slot": 156
+ },
+ {
+  "chassis": 6,
+  "rotation": 2,
+  "state": "clean",
+  "bank": 9,
+  "file": "chassis_06_rot2_clean_blue.png",
+  "slot": 172
+ },
+ {
+  "chassis": 6,
+  "rotation": 3,
+  "state": "clean",
+  "bank": 9,
+  "file": "chassis_06_rot3_clean_blue.png",
+  "slot": 188
+ },
+ {
+  "chassis": 7,
+  "rotation": 0,
+  "state": "clean",
+  "bank": 9,
+  "file": "chassis_07_rot0_clean_blue.png",
+  "slot": 142
+ },
+ {
+  "chassis": 7,
+  "rotation": 1,
+  "state": "clean",
+  "bank": 9,
+  "file": "chassis_07_rot1_clean_blue.png",
+  "slot": 158
+ },
+ {
+  "chassis": 7,
+  "rotation": 2,
+  "state": "clean",
+  "bank": 9,
+  "file": "chassis_07_rot2_clean_blue.png",
+  "slot": 174
+ },
+ {
+  "chassis": 7,
+  "rotation": 3,
+  "state": "clean",
+  "bank": 9,
+  "file": "chassis_07_rot3_clean_blue.png",
+  "slot": 190
+ },
+ {
+  "chassis": 0,
+  "rotation": 0,
+  "state": "damaged",
+  "bank": 9,
+  "file": "chassis_00_rot0_damaged_blue.png",
+  "slot": 192
+ },
+ {
+  "chassis": 0,
+  "rotation": 1,
+  "state": "damaged",
+  "bank": 9,
+  "file": "chassis_00_rot1_damaged_blue.png",
+  "slot": 208
+ },
+ {
+  "chassis": 0,
+  "rotation": 2,
+  "state": "damaged",
+  "bank": 9,
+  "file": "chassis_00_rot2_damaged_blue.png",
+  "slot": 224
+ },
+ {
+  "chassis": 0,
+  "rotation": 3,
+  "state": "damaged",
+  "bank": 9,
+  "file": "chassis_00_rot3_damaged_blue.png",
+  "slot": 240
+ },
+ {
+  "chassis": 1,
+  "rotation": 0,
+  "state": "damaged",
+  "bank": 9,
+  "file": "chassis_01_rot0_damaged_blue.png",
+  "slot": 194
+ },
+ {
+  "chassis": 1,
+  "rotation": 1,
+  "state": "damaged",
+  "bank": 9,
+  "file": "chassis_01_rot1_damaged_blue.png",
+  "slot": 210
+ },
+ {
+  "chassis": 1,
+  "rotation": 2,
+  "state": "damaged",
+  "bank": 9,
+  "file": "chassis_01_rot2_damaged_blue.png",
+  "slot": 226
+ },
+ {
+  "chassis": 1,
+  "rotation": 3,
+  "state": "damaged",
+  "bank": 9,
+  "file": "chassis_01_rot3_damaged_blue.png",
+  "slot": 242
+ },
+ {
+  "chassis": 2,
+  "rotation": 0,
+  "state": "damaged",
+  "bank": 9,
+  "file": "chassis_02_rot0_damaged_blue.png",
+  "slot": 196
+ },
+ {
+  "chassis": 2,
+  "rotation": 1,
+  "state": "damaged",
+  "bank": 9,
+  "file": "chassis_02_rot1_damaged_blue.png",
+  "slot": 212
+ },
+ {
+  "chassis": 2,
+  "rotation": 2,
+  "state": "damaged",
+  "bank": 9,
+  "file": "chassis_02_rot2_damaged_blue.png",
+  "slot": 228
+ },
+ {
+  "chassis": 2,
+  "rotation": 3,
+  "state": "damaged",
+  "bank": 9,
+  "file": "chassis_02_rot3_damaged_blue.png",
+  "slot": 244
+ },
+ {
+  "chassis": 3,
+  "rotation": 0,
+  "state": "damaged",
+  "bank": 9,
+  "file": "chassis_03_rot0_damaged_blue.png",
+  "slot": 198
+ },
+ {
+  "chassis": 3,
+  "rotation": 1,
+  "state": "damaged",
+  "bank": 9,
+  "file": "chassis_03_rot1_damaged_blue.png",
+  "slot": 214
+ },
+ {
+  "chassis": 3,
+  "rotation": 2,
+  "state": "damaged",
+  "bank": 9,
+  "file": "chassis_03_rot2_damaged_blue.png",
+  "slot": 230
+ },
+ {
+  "chassis": 3,
+  "rotation": 3,
+  "state": "damaged",
+  "bank": 9,
+  "file": "chassis_03_rot3_damaged_blue.png",
+  "slot": 246
+ },
+ {
+  "chassis": 4,
+  "rotation": 0,
+  "state": "damaged",
+  "bank": 9,
+  "file": "chassis_04_rot0_damaged_blue.png",
+  "slot": 200
+ },
+ {
+  "chassis": 4,
+  "rotation": 1,
+  "state": "damaged",
+  "bank": 9,
+  "file": "chassis_04_rot1_damaged_blue.png",
+  "slot": 216
+ },
+ {
+  "chassis": 4,
+  "rotation": 2,
+  "state": "damaged",
+  "bank": 9,
+  "file": "chassis_04_rot2_damaged_blue.png",
+  "slot": 232
+ },
+ {
+  "chassis": 4,
+  "rotation": 3,
+  "state": "damaged",
+  "bank": 9,
+  "file": "chassis_04_rot3_damaged_blue.png",
+  "slot": 248
+ },
+ {
+  "chassis": 5,
+  "rotation": 0,
+  "state": "damaged",
+  "bank": 9,
+  "file": "chassis_05_rot0_damaged_blue.png",
+  "slot": 202
+ },
+ {
+  "chassis": 5,
+  "rotation": 1,
+  "state": "damaged",
+  "bank": 9,
+  "file": "chassis_05_rot1_damaged_blue.png",
+  "slot": 218
+ },
+ {
+  "chassis": 5,
+  "rotation": 2,
+  "state": "damaged",
+  "bank": 9,
+  "file": "chassis_05_rot2_damaged_blue.png",
+  "slot": 234
+ },
+ {
+  "chassis": 5,
+  "rotation": 3,
+  "state": "damaged",
+  "bank": 9,
+  "file": "chassis_05_rot3_damaged_blue.png",
+  "slot": 250
+ },
+ {
+  "chassis": 6,
+  "rotation": 0,
+  "state": "damaged",
+  "bank": 9,
+  "file": "chassis_06_rot0_damaged_blue.png",
+  "slot": 204
+ },
+ {
+  "chassis": 6,
+  "rotation": 1,
+  "state": "damaged",
+  "bank": 9,
+  "file": "chassis_06_rot1_damaged_blue.png",
+  "slot": 220
+ },
+ {
+  "chassis": 6,
+  "rotation": 2,
+  "state": "damaged",
+  "bank": 9,
+  "file": "chassis_06_rot2_damaged_blue.png",
+  "slot": 236
+ },
+ {
+  "chassis": 6,
+  "rotation": 3,
+  "state": "damaged",
+  "bank": 9,
+  "file": "chassis_06_rot3_damaged_blue.png",
+  "slot": 252
+ },
+ {
+  "chassis": 7,
+  "rotation": 0,
+  "state": "damaged",
+  "bank": 9,
+  "file": "chassis_07_rot0_damaged_blue.png",
+  "slot": 206
+ },
+ {
+  "chassis": 7,
+  "rotation": 1,
+  "state": "damaged",
+  "bank": 9,
+  "file": "chassis_07_rot1_damaged_blue.png",
+  "slot": 222
+ },
+ {
+  "chassis": 7,
+  "rotation": 2,
+  "state": "damaged",
+  "bank": 9,
+  "file": "chassis_07_rot2_damaged_blue.png",
+  "slot": 238
+ },
+ {
+  "chassis": 7,
+  "rotation": 3,
+  "state": "damaged",
+  "bank": 9,
+  "file": "chassis_07_rot3_damaged_blue.png",
+  "slot": 254
+ },
+ {
+  "chassis": 0,
+  "rotation": 0,
+  "state": "clean",
+  "bank": 10,
+  "file": "chassis_00_rot0_clean_green.png",
+  "slot": 128
+ },
+ {
+  "chassis": 0,
+  "rotation": 1,
+  "state": "clean",
+  "bank": 10,
+  "file": "chassis_00_rot1_clean_green.png",
+  "slot": 144
+ },
+ {
+  "chassis": 0,
+  "rotation": 2,
+  "state": "clean",
+  "bank": 10,
+  "file": "chassis_00_rot2_clean_green.png",
+  "slot": 160
+ },
+ {
+  "chassis": 0,
+  "rotation": 3,
+  "state": "clean",
+  "bank": 10,
+  "file": "chassis_00_rot3_clean_green.png",
+  "slot": 176
+ },
+ {
+  "chassis": 1,
+  "rotation": 0,
+  "state": "clean",
+  "bank": 10,
+  "file": "chassis_01_rot0_clean_green.png",
+  "slot": 130
+ },
+ {
+  "chassis": 1,
+  "rotation": 1,
+  "state": "clean",
+  "bank": 10,
+  "file": "chassis_01_rot1_clean_green.png",
+  "slot": 146
+ },
+ {
+  "chassis": 1,
+  "rotation": 2,
+  "state": "clean",
+  "bank": 10,
+  "file": "chassis_01_rot2_clean_green.png",
+  "slot": 162
+ },
+ {
+  "chassis": 1,
+  "rotation": 3,
+  "state": "clean",
+  "bank": 10,
+  "file": "chassis_01_rot3_clean_green.png",
+  "slot": 178
+ },
+ {
+  "chassis": 2,
+  "rotation": 0,
+  "state": "clean",
+  "bank": 10,
+  "file": "chassis_02_rot0_clean_green.png",
+  "slot": 132
+ },
+ {
+  "chassis": 2,
+  "rotation": 1,
+  "state": "clean",
+  "bank": 10,
+  "file": "chassis_02_rot1_clean_green.png",
+  "slot": 148
+ },
+ {
+  "chassis": 2,
+  "rotation": 2,
+  "state": "clean",
+  "bank": 10,
+  "file": "chassis_02_rot2_clean_green.png",
+  "slot": 164
+ },
+ {
+  "chassis": 2,
+  "rotation": 3,
+  "state": "clean",
+  "bank": 10,
+  "file": "chassis_02_rot3_clean_green.png",
+  "slot": 180
+ },
+ {
+  "chassis": 3,
+  "rotation": 0,
+  "state": "clean",
+  "bank": 10,
+  "file": "chassis_03_rot0_clean_green.png",
+  "slot": 134
+ },
+ {
+  "chassis": 3,
+  "rotation": 1,
+  "state": "clean",
+  "bank": 10,
+  "file": "chassis_03_rot1_clean_green.png",
+  "slot": 150
+ },
+ {
+  "chassis": 3,
+  "rotation": 2,
+  "state": "clean",
+  "bank": 10,
+  "file": "chassis_03_rot2_clean_green.png",
+  "slot": 166
+ },
+ {
+  "chassis": 3,
+  "rotation": 3,
+  "state": "clean",
+  "bank": 10,
+  "file": "chassis_03_rot3_clean_green.png",
+  "slot": 182
+ },
+ {
+  "chassis": 4,
+  "rotation": 0,
+  "state": "clean",
+  "bank": 10,
+  "file": "chassis_04_rot0_clean_green.png",
+  "slot": 136
+ },
+ {
+  "chassis": 4,
+  "rotation": 1,
+  "state": "clean",
+  "bank": 10,
+  "file": "chassis_04_rot1_clean_green.png",
+  "slot": 152
+ },
+ {
+  "chassis": 4,
+  "rotation": 2,
+  "state": "clean",
+  "bank": 10,
+  "file": "chassis_04_rot2_clean_green.png",
+  "slot": 168
+ },
+ {
+  "chassis": 4,
+  "rotation": 3,
+  "state": "clean",
+  "bank": 10,
+  "file": "chassis_04_rot3_clean_green.png",
+  "slot": 184
+ },
+ {
+  "chassis": 5,
+  "rotation": 0,
+  "state": "clean",
+  "bank": 10,
+  "file": "chassis_05_rot0_clean_green.png",
+  "slot": 138
+ },
+ {
+  "chassis": 5,
+  "rotation": 1,
+  "state": "clean",
+  "bank": 10,
+  "file": "chassis_05_rot1_clean_green.png",
+  "slot": 154
+ },
+ {
+  "chassis": 5,
+  "rotation": 2,
+  "state": "clean",
+  "bank": 10,
+  "file": "chassis_05_rot2_clean_green.png",
+  "slot": 170
+ },
+ {
+  "chassis": 5,
+  "rotation": 3,
+  "state": "clean",
+  "bank": 10,
+  "file": "chassis_05_rot3_clean_green.png",
+  "slot": 186
+ },
+ {
+  "chassis": 6,
+  "rotation": 0,
+  "state": "clean",
+  "bank": 10,
+  "file": "chassis_06_rot0_clean_green.png",
+  "slot": 140
+ },
+ {
+  "chassis": 6,
+  "rotation": 1,
+  "state": "clean",
+  "bank": 10,
+  "file": "chassis_06_rot1_clean_green.png",
+  "slot": 156
+ },
+ {
+  "chassis": 6,
+  "rotation": 2,
+  "state": "clean",
+  "bank": 10,
+  "file": "chassis_06_rot2_clean_green.png",
+  "slot": 172
+ },
+ {
+  "chassis": 6,
+  "rotation": 3,
+  "state": "clean",
+  "bank": 10,
+  "file": "chassis_06_rot3_clean_green.png",
+  "slot": 188
+ },
+ {
+  "chassis": 7,
+  "rotation": 0,
+  "state": "clean",
+  "bank": 10,
+  "file": "chassis_07_rot0_clean_green.png",
+  "slot": 142
+ },
+ {
+  "chassis": 7,
+  "rotation": 1,
+  "state": "clean",
+  "bank": 10,
+  "file": "chassis_07_rot1_clean_green.png",
+  "slot": 158
+ },
+ {
+  "chassis": 7,
+  "rotation": 2,
+  "state": "clean",
+  "bank": 10,
+  "file": "chassis_07_rot2_clean_green.png",
+  "slot": 174
+ },
+ {
+  "chassis": 7,
+  "rotation": 3,
+  "state": "clean",
+  "bank": 10,
+  "file": "chassis_07_rot3_clean_green.png",
+  "slot": 190
+ },
+ {
+  "chassis": 0,
+  "rotation": 0,
+  "state": "damaged",
+  "bank": 10,
+  "file": "chassis_00_rot0_damaged_green.png",
+  "slot": 192
+ },
+ {
+  "chassis": 0,
+  "rotation": 1,
+  "state": "damaged",
+  "bank": 10,
+  "file": "chassis_00_rot1_damaged_green.png",
+  "slot": 208
+ },
+ {
+  "chassis": 0,
+  "rotation": 2,
+  "state": "damaged",
+  "bank": 10,
+  "file": "chassis_00_rot2_damaged_green.png",
+  "slot": 224
+ },
+ {
+  "chassis": 0,
+  "rotation": 3,
+  "state": "damaged",
+  "bank": 10,
+  "file": "chassis_00_rot3_damaged_green.png",
+  "slot": 240
+ },
+ {
+  "chassis": 1,
+  "rotation": 0,
+  "state": "damaged",
+  "bank": 10,
+  "file": "chassis_01_rot0_damaged_green.png",
+  "slot": 194
+ },
+ {
+  "chassis": 1,
+  "rotation": 1,
+  "state": "damaged",
+  "bank": 10,
+  "file": "chassis_01_rot1_damaged_green.png",
+  "slot": 210
+ },
+ {
+  "chassis": 1,
+  "rotation": 2,
+  "state": "damaged",
+  "bank": 10,
+  "file": "chassis_01_rot2_damaged_green.png",
+  "slot": 226
+ },
+ {
+  "chassis": 1,
+  "rotation": 3,
+  "state": "damaged",
+  "bank": 10,
+  "file": "chassis_01_rot3_damaged_green.png",
+  "slot": 242
+ },
+ {
+  "chassis": 2,
+  "rotation": 0,
+  "state": "damaged",
+  "bank": 10,
+  "file": "chassis_02_rot0_damaged_green.png",
+  "slot": 196
+ },
+ {
+  "chassis": 2,
+  "rotation": 1,
+  "state": "damaged",
+  "bank": 10,
+  "file": "chassis_02_rot1_damaged_green.png",
+  "slot": 212
+ },
+ {
+  "chassis": 2,
+  "rotation": 2,
+  "state": "damaged",
+  "bank": 10,
+  "file": "chassis_02_rot2_damaged_green.png",
+  "slot": 228
+ },
+ {
+  "chassis": 2,
+  "rotation": 3,
+  "state": "damaged",
+  "bank": 10,
+  "file": "chassis_02_rot3_damaged_green.png",
+  "slot": 244
+ },
+ {
+  "chassis": 3,
+  "rotation": 0,
+  "state": "damaged",
+  "bank": 10,
+  "file": "chassis_03_rot0_damaged_green.png",
+  "slot": 198
+ },
+ {
+  "chassis": 3,
+  "rotation": 1,
+  "state": "damaged",
+  "bank": 10,
+  "file": "chassis_03_rot1_damaged_green.png",
+  "slot": 214
+ },
+ {
+  "chassis": 3,
+  "rotation": 2,
+  "state": "damaged",
+  "bank": 10,
+  "file": "chassis_03_rot2_damaged_green.png",
+  "slot": 230
+ },
+ {
+  "chassis": 3,
+  "rotation": 3,
+  "state": "damaged",
+  "bank": 10,
+  "file": "chassis_03_rot3_damaged_green.png",
+  "slot": 246
+ },
+ {
+  "chassis": 4,
+  "rotation": 0,
+  "state": "damaged",
+  "bank": 10,
+  "file": "chassis_04_rot0_damaged_green.png",
+  "slot": 200
+ },
+ {
+  "chassis": 4,
+  "rotation": 1,
+  "state": "damaged",
+  "bank": 10,
+  "file": "chassis_04_rot1_damaged_green.png",
+  "slot": 216
+ },
+ {
+  "chassis": 4,
+  "rotation": 2,
+  "state": "damaged",
+  "bank": 10,
+  "file": "chassis_04_rot2_damaged_green.png",
+  "slot": 232
+ },
+ {
+  "chassis": 4,
+  "rotation": 3,
+  "state": "damaged",
+  "bank": 10,
+  "file": "chassis_04_rot3_damaged_green.png",
+  "slot": 248
+ },
+ {
+  "chassis": 5,
+  "rotation": 0,
+  "state": "damaged",
+  "bank": 10,
+  "file": "chassis_05_rot0_damaged_green.png",
+  "slot": 202
+ },
+ {
+  "chassis": 5,
+  "rotation": 1,
+  "state": "damaged",
+  "bank": 10,
+  "file": "chassis_05_rot1_damaged_green.png",
+  "slot": 218
+ },
+ {
+  "chassis": 5,
+  "rotation": 2,
+  "state": "damaged",
+  "bank": 10,
+  "file": "chassis_05_rot2_damaged_green.png",
+  "slot": 234
+ },
+ {
+  "chassis": 5,
+  "rotation": 3,
+  "state": "damaged",
+  "bank": 10,
+  "file": "chassis_05_rot3_damaged_green.png",
+  "slot": 250
+ },
+ {
+  "chassis": 6,
+  "rotation": 0,
+  "state": "damaged",
+  "bank": 10,
+  "file": "chassis_06_rot0_damaged_green.png",
+  "slot": 204
+ },
+ {
+  "chassis": 6,
+  "rotation": 1,
+  "state": "damaged",
+  "bank": 10,
+  "file": "chassis_06_rot1_damaged_green.png",
+  "slot": 220
+ },
+ {
+  "chassis": 6,
+  "rotation": 2,
+  "state": "damaged",
+  "bank": 10,
+  "file": "chassis_06_rot2_damaged_green.png",
+  "slot": 236
+ },
+ {
+  "chassis": 6,
+  "rotation": 3,
+  "state": "damaged",
+  "bank": 10,
+  "file": "chassis_06_rot3_damaged_green.png",
+  "slot": 252
+ },
+ {
+  "chassis": 7,
+  "rotation": 0,
+  "state": "damaged",
+  "bank": 10,
+  "file": "chassis_07_rot0_damaged_green.png",
+  "slot": 206
+ },
+ {
+  "chassis": 7,
+  "rotation": 1,
+  "state": "damaged",
+  "bank": 10,
+  "file": "chassis_07_rot1_damaged_green.png",
+  "slot": 222
+ },
+ {
+  "chassis": 7,
+  "rotation": 2,
+  "state": "damaged",
+  "bank": 10,
+  "file": "chassis_07_rot2_damaged_green.png",
+  "slot": 238
+ },
+ {
+  "chassis": 7,
+  "rotation": 3,
+  "state": "damaged",
+  "bank": 10,
+  "file": "chassis_07_rot3_damaged_green.png",
+  "slot": 254
+ },
+ {
+  "chassis": 0,
+  "rotation": 0,
+  "state": "clean",
+  "bank": 11,
+  "file": "chassis_00_rot0_clean_red.png",
+  "slot": 128
+ },
+ {
+  "chassis": 0,
+  "rotation": 1,
+  "state": "clean",
+  "bank": 11,
+  "file": "chassis_00_rot1_clean_red.png",
+  "slot": 144
+ },
+ {
+  "chassis": 0,
+  "rotation": 2,
+  "state": "clean",
+  "bank": 11,
+  "file": "chassis_00_rot2_clean_red.png",
+  "slot": 160
+ },
+ {
+  "chassis": 0,
+  "rotation": 3,
+  "state": "clean",
+  "bank": 11,
+  "file": "chassis_00_rot3_clean_red.png",
+  "slot": 176
+ },
+ {
+  "chassis": 1,
+  "rotation": 0,
+  "state": "clean",
+  "bank": 11,
+  "file": "chassis_01_rot0_clean_red.png",
+  "slot": 130
+ },
+ {
+  "chassis": 1,
+  "rotation": 1,
+  "state": "clean",
+  "bank": 11,
+  "file": "chassis_01_rot1_clean_red.png",
+  "slot": 146
+ },
+ {
+  "chassis": 1,
+  "rotation": 2,
+  "state": "clean",
+  "bank": 11,
+  "file": "chassis_01_rot2_clean_red.png",
+  "slot": 162
+ },
+ {
+  "chassis": 1,
+  "rotation": 3,
+  "state": "clean",
+  "bank": 11,
+  "file": "chassis_01_rot3_clean_red.png",
+  "slot": 178
+ },
+ {
+  "chassis": 2,
+  "rotation": 0,
+  "state": "clean",
+  "bank": 11,
+  "file": "chassis_02_rot0_clean_red.png",
+  "slot": 132
+ },
+ {
+  "chassis": 2,
+  "rotation": 1,
+  "state": "clean",
+  "bank": 11,
+  "file": "chassis_02_rot1_clean_red.png",
+  "slot": 148
+ },
+ {
+  "chassis": 2,
+  "rotation": 2,
+  "state": "clean",
+  "bank": 11,
+  "file": "chassis_02_rot2_clean_red.png",
+  "slot": 164
+ },
+ {
+  "chassis": 2,
+  "rotation": 3,
+  "state": "clean",
+  "bank": 11,
+  "file": "chassis_02_rot3_clean_red.png",
+  "slot": 180
+ },
+ {
+  "chassis": 3,
+  "rotation": 0,
+  "state": "clean",
+  "bank": 11,
+  "file": "chassis_03_rot0_clean_red.png",
+  "slot": 134
+ },
+ {
+  "chassis": 3,
+  "rotation": 1,
+  "state": "clean",
+  "bank": 11,
+  "file": "chassis_03_rot1_clean_red.png",
+  "slot": 150
+ },
+ {
+  "chassis": 3,
+  "rotation": 2,
+  "state": "clean",
+  "bank": 11,
+  "file": "chassis_03_rot2_clean_red.png",
+  "slot": 166
+ },
+ {
+  "chassis": 3,
+  "rotation": 3,
+  "state": "clean",
+  "bank": 11,
+  "file": "chassis_03_rot3_clean_red.png",
+  "slot": 182
+ },
+ {
+  "chassis": 4,
+  "rotation": 0,
+  "state": "clean",
+  "bank": 11,
+  "file": "chassis_04_rot0_clean_red.png",
+  "slot": 136
+ },
+ {
+  "chassis": 4,
+  "rotation": 1,
+  "state": "clean",
+  "bank": 11,
+  "file": "chassis_04_rot1_clean_red.png",
+  "slot": 152
+ },
+ {
+  "chassis": 4,
+  "rotation": 2,
+  "state": "clean",
+  "bank": 11,
+  "file": "chassis_04_rot2_clean_red.png",
+  "slot": 168
+ },
+ {
+  "chassis": 4,
+  "rotation": 3,
+  "state": "clean",
+  "bank": 11,
+  "file": "chassis_04_rot3_clean_red.png",
+  "slot": 184
+ },
+ {
+  "chassis": 5,
+  "rotation": 0,
+  "state": "clean",
+  "bank": 11,
+  "file": "chassis_05_rot0_clean_red.png",
+  "slot": 138
+ },
+ {
+  "chassis": 5,
+  "rotation": 1,
+  "state": "clean",
+  "bank": 11,
+  "file": "chassis_05_rot1_clean_red.png",
+  "slot": 154
+ },
+ {
+  "chassis": 5,
+  "rotation": 2,
+  "state": "clean",
+  "bank": 11,
+  "file": "chassis_05_rot2_clean_red.png",
+  "slot": 170
+ },
+ {
+  "chassis": 5,
+  "rotation": 3,
+  "state": "clean",
+  "bank": 11,
+  "file": "chassis_05_rot3_clean_red.png",
+  "slot": 186
+ },
+ {
+  "chassis": 6,
+  "rotation": 0,
+  "state": "clean",
+  "bank": 11,
+  "file": "chassis_06_rot0_clean_red.png",
+  "slot": 140
+ },
+ {
+  "chassis": 6,
+  "rotation": 1,
+  "state": "clean",
+  "bank": 11,
+  "file": "chassis_06_rot1_clean_red.png",
+  "slot": 156
+ },
+ {
+  "chassis": 6,
+  "rotation": 2,
+  "state": "clean",
+  "bank": 11,
+  "file": "chassis_06_rot2_clean_red.png",
+  "slot": 172
+ },
+ {
+  "chassis": 6,
+  "rotation": 3,
+  "state": "clean",
+  "bank": 11,
+  "file": "chassis_06_rot3_clean_red.png",
+  "slot": 188
+ },
+ {
+  "chassis": 7,
+  "rotation": 0,
+  "state": "clean",
+  "bank": 11,
+  "file": "chassis_07_rot0_clean_red.png",
+  "slot": 142
+ },
+ {
+  "chassis": 7,
+  "rotation": 1,
+  "state": "clean",
+  "bank": 11,
+  "file": "chassis_07_rot1_clean_red.png",
+  "slot": 158
+ },
+ {
+  "chassis": 7,
+  "rotation": 2,
+  "state": "clean",
+  "bank": 11,
+  "file": "chassis_07_rot2_clean_red.png",
+  "slot": 174
+ },
+ {
+  "chassis": 7,
+  "rotation": 3,
+  "state": "clean",
+  "bank": 11,
+  "file": "chassis_07_rot3_clean_red.png",
+  "slot": 190
+ },
+ {
+  "chassis": 0,
+  "rotation": 0,
+  "state": "damaged",
+  "bank": 11,
+  "file": "chassis_00_rot0_damaged_red.png",
+  "slot": 192
+ },
+ {
+  "chassis": 0,
+  "rotation": 1,
+  "state": "damaged",
+  "bank": 11,
+  "file": "chassis_00_rot1_damaged_red.png",
+  "slot": 208
+ },
+ {
+  "chassis": 0,
+  "rotation": 2,
+  "state": "damaged",
+  "bank": 11,
+  "file": "chassis_00_rot2_damaged_red.png",
+  "slot": 224
+ },
+ {
+  "chassis": 0,
+  "rotation": 3,
+  "state": "damaged",
+  "bank": 11,
+  "file": "chassis_00_rot3_damaged_red.png",
+  "slot": 240
+ },
+ {
+  "chassis": 1,
+  "rotation": 0,
+  "state": "damaged",
+  "bank": 11,
+  "file": "chassis_01_rot0_damaged_red.png",
+  "slot": 194
+ },
+ {
+  "chassis": 1,
+  "rotation": 1,
+  "state": "damaged",
+  "bank": 11,
+  "file": "chassis_01_rot1_damaged_red.png",
+  "slot": 210
+ },
+ {
+  "chassis": 1,
+  "rotation": 2,
+  "state": "damaged",
+  "bank": 11,
+  "file": "chassis_01_rot2_damaged_red.png",
+  "slot": 226
+ },
+ {
+  "chassis": 1,
+  "rotation": 3,
+  "state": "damaged",
+  "bank": 11,
+  "file": "chassis_01_rot3_damaged_red.png",
+  "slot": 242
+ },
+ {
+  "chassis": 2,
+  "rotation": 0,
+  "state": "damaged",
+  "bank": 11,
+  "file": "chassis_02_rot0_damaged_red.png",
+  "slot": 196
+ },
+ {
+  "chassis": 2,
+  "rotation": 1,
+  "state": "damaged",
+  "bank": 11,
+  "file": "chassis_02_rot1_damaged_red.png",
+  "slot": 212
+ },
+ {
+  "chassis": 2,
+  "rotation": 2,
+  "state": "damaged",
+  "bank": 11,
+  "file": "chassis_02_rot2_damaged_red.png",
+  "slot": 228
+ },
+ {
+  "chassis": 2,
+  "rotation": 3,
+  "state": "damaged",
+  "bank": 11,
+  "file": "chassis_02_rot3_damaged_red.png",
+  "slot": 244
+ },
+ {
+  "chassis": 3,
+  "rotation": 0,
+  "state": "damaged",
+  "bank": 11,
+  "file": "chassis_03_rot0_damaged_red.png",
+  "slot": 198
+ },
+ {
+  "chassis": 3,
+  "rotation": 1,
+  "state": "damaged",
+  "bank": 11,
+  "file": "chassis_03_rot1_damaged_red.png",
+  "slot": 214
+ },
+ {
+  "chassis": 3,
+  "rotation": 2,
+  "state": "damaged",
+  "bank": 11,
+  "file": "chassis_03_rot2_damaged_red.png",
+  "slot": 230
+ },
+ {
+  "chassis": 3,
+  "rotation": 3,
+  "state": "damaged",
+  "bank": 11,
+  "file": "chassis_03_rot3_damaged_red.png",
+  "slot": 246
+ },
+ {
+  "chassis": 4,
+  "rotation": 0,
+  "state": "damaged",
+  "bank": 11,
+  "file": "chassis_04_rot0_damaged_red.png",
+  "slot": 200
+ },
+ {
+  "chassis": 4,
+  "rotation": 1,
+  "state": "damaged",
+  "bank": 11,
+  "file": "chassis_04_rot1_damaged_red.png",
+  "slot": 216
+ },
+ {
+  "chassis": 4,
+  "rotation": 2,
+  "state": "damaged",
+  "bank": 11,
+  "file": "chassis_04_rot2_damaged_red.png",
+  "slot": 232
+ },
+ {
+  "chassis": 4,
+  "rotation": 3,
+  "state": "damaged",
+  "bank": 11,
+  "file": "chassis_04_rot3_damaged_red.png",
+  "slot": 248
+ },
+ {
+  "chassis": 5,
+  "rotation": 0,
+  "state": "damaged",
+  "bank": 11,
+  "file": "chassis_05_rot0_damaged_red.png",
+  "slot": 202
+ },
+ {
+  "chassis": 5,
+  "rotation": 1,
+  "state": "damaged",
+  "bank": 11,
+  "file": "chassis_05_rot1_damaged_red.png",
+  "slot": 218
+ },
+ {
+  "chassis": 5,
+  "rotation": 2,
+  "state": "damaged",
+  "bank": 11,
+  "file": "chassis_05_rot2_damaged_red.png",
+  "slot": 234
+ },
+ {
+  "chassis": 5,
+  "rotation": 3,
+  "state": "damaged",
+  "bank": 11,
+  "file": "chassis_05_rot3_damaged_red.png",
+  "slot": 250
+ },
+ {
+  "chassis": 6,
+  "rotation": 0,
+  "state": "damaged",
+  "bank": 11,
+  "file": "chassis_06_rot0_damaged_red.png",
+  "slot": 204
+ },
+ {
+  "chassis": 6,
+  "rotation": 1,
+  "state": "damaged",
+  "bank": 11,
+  "file": "chassis_06_rot1_damaged_red.png",
+  "slot": 220
+ },
+ {
+  "chassis": 6,
+  "rotation": 2,
+  "state": "damaged",
+  "bank": 11,
+  "file": "chassis_06_rot2_damaged_red.png",
+  "slot": 236
+ },
+ {
+  "chassis": 6,
+  "rotation": 3,
+  "state": "damaged",
+  "bank": 11,
+  "file": "chassis_06_rot3_damaged_red.png",
+  "slot": 252
+ },
+ {
+  "chassis": 7,
+  "rotation": 0,
+  "state": "damaged",
+  "bank": 11,
+  "file": "chassis_07_rot0_damaged_red.png",
+  "slot": 206
+ },
+ {
+  "chassis": 7,
+  "rotation": 1,
+  "state": "damaged",
+  "bank": 11,
+  "file": "chassis_07_rot1_damaged_red.png",
+  "slot": 222
+ },
+ {
+  "chassis": 7,
+  "rotation": 2,
+  "state": "damaged",
+  "bank": 11,
+  "file": "chassis_07_rot2_damaged_red.png",
+  "slot": 238
+ },
+ {
+  "chassis": 7,
+  "rotation": 3,
+  "state": "damaged",
+  "bank": 11,
+  "file": "chassis_07_rot3_damaged_red.png",
+  "slot": 254
+ },
+ {
+  "chassis": 0,
+  "rotation": 0,
+  "state": "clean",
+  "bank": 12,
+  "file": "chassis_00_rot0_clean_gray.png",
+  "slot": 128
+ },
+ {
+  "chassis": 0,
+  "rotation": 1,
+  "state": "clean",
+  "bank": 12,
+  "file": "chassis_00_rot1_clean_gray.png",
+  "slot": 144
+ },
+ {
+  "chassis": 0,
+  "rotation": 2,
+  "state": "clean",
+  "bank": 12,
+  "file": "chassis_00_rot2_clean_gray.png",
+  "slot": 160
+ },
+ {
+  "chassis": 0,
+  "rotation": 3,
+  "state": "clean",
+  "bank": 12,
+  "file": "chassis_00_rot3_clean_gray.png",
+  "slot": 176
+ },
+ {
+  "chassis": 1,
+  "rotation": 0,
+  "state": "clean",
+  "bank": 12,
+  "file": "chassis_01_rot0_clean_gray.png",
+  "slot": 130
+ },
+ {
+  "chassis": 1,
+  "rotation": 1,
+  "state": "clean",
+  "bank": 12,
+  "file": "chassis_01_rot1_clean_gray.png",
+  "slot": 146
+ },
+ {
+  "chassis": 1,
+  "rotation": 2,
+  "state": "clean",
+  "bank": 12,
+  "file": "chassis_01_rot2_clean_gray.png",
+  "slot": 162
+ },
+ {
+  "chassis": 1,
+  "rotation": 3,
+  "state": "clean",
+  "bank": 12,
+  "file": "chassis_01_rot3_clean_gray.png",
+  "slot": 178
+ },
+ {
+  "chassis": 2,
+  "rotation": 0,
+  "state": "clean",
+  "bank": 12,
+  "file": "chassis_02_rot0_clean_gray.png",
+  "slot": 132
+ },
+ {
+  "chassis": 2,
+  "rotation": 1,
+  "state": "clean",
+  "bank": 12,
+  "file": "chassis_02_rot1_clean_gray.png",
+  "slot": 148
+ },
+ {
+  "chassis": 2,
+  "rotation": 2,
+  "state": "clean",
+  "bank": 12,
+  "file": "chassis_02_rot2_clean_gray.png",
+  "slot": 164
+ },
+ {
+  "chassis": 2,
+  "rotation": 3,
+  "state": "clean",
+  "bank": 12,
+  "file": "chassis_02_rot3_clean_gray.png",
+  "slot": 180
+ },
+ {
+  "chassis": 3,
+  "rotation": 0,
+  "state": "clean",
+  "bank": 12,
+  "file": "chassis_03_rot0_clean_gray.png",
+  "slot": 134
+ },
+ {
+  "chassis": 3,
+  "rotation": 1,
+  "state": "clean",
+  "bank": 12,
+  "file": "chassis_03_rot1_clean_gray.png",
+  "slot": 150
+ },
+ {
+  "chassis": 3,
+  "rotation": 2,
+  "state": "clean",
+  "bank": 12,
+  "file": "chassis_03_rot2_clean_gray.png",
+  "slot": 166
+ },
+ {
+  "chassis": 3,
+  "rotation": 3,
+  "state": "clean",
+  "bank": 12,
+  "file": "chassis_03_rot3_clean_gray.png",
+  "slot": 182
+ },
+ {
+  "chassis": 4,
+  "rotation": 0,
+  "state": "clean",
+  "bank": 12,
+  "file": "chassis_04_rot0_clean_gray.png",
+  "slot": 136
+ },
+ {
+  "chassis": 4,
+  "rotation": 1,
+  "state": "clean",
+  "bank": 12,
+  "file": "chassis_04_rot1_clean_gray.png",
+  "slot": 152
+ },
+ {
+  "chassis": 4,
+  "rotation": 2,
+  "state": "clean",
+  "bank": 12,
+  "file": "chassis_04_rot2_clean_gray.png",
+  "slot": 168
+ },
+ {
+  "chassis": 4,
+  "rotation": 3,
+  "state": "clean",
+  "bank": 12,
+  "file": "chassis_04_rot3_clean_gray.png",
+  "slot": 184
+ },
+ {
+  "chassis": 5,
+  "rotation": 0,
+  "state": "clean",
+  "bank": 12,
+  "file": "chassis_05_rot0_clean_gray.png",
+  "slot": 138
+ },
+ {
+  "chassis": 5,
+  "rotation": 1,
+  "state": "clean",
+  "bank": 12,
+  "file": "chassis_05_rot1_clean_gray.png",
+  "slot": 154
+ },
+ {
+  "chassis": 5,
+  "rotation": 2,
+  "state": "clean",
+  "bank": 12,
+  "file": "chassis_05_rot2_clean_gray.png",
+  "slot": 170
+ },
+ {
+  "chassis": 5,
+  "rotation": 3,
+  "state": "clean",
+  "bank": 12,
+  "file": "chassis_05_rot3_clean_gray.png",
+  "slot": 186
+ },
+ {
+  "chassis": 6,
+  "rotation": 0,
+  "state": "clean",
+  "bank": 12,
+  "file": "chassis_06_rot0_clean_gray.png",
+  "slot": 140
+ },
+ {
+  "chassis": 6,
+  "rotation": 1,
+  "state": "clean",
+  "bank": 12,
+  "file": "chassis_06_rot1_clean_gray.png",
+  "slot": 156
+ },
+ {
+  "chassis": 6,
+  "rotation": 2,
+  "state": "clean",
+  "bank": 12,
+  "file": "chassis_06_rot2_clean_gray.png",
+  "slot": 172
+ },
+ {
+  "chassis": 6,
+  "rotation": 3,
+  "state": "clean",
+  "bank": 12,
+  "file": "chassis_06_rot3_clean_gray.png",
+  "slot": 188
+ },
+ {
+  "chassis": 7,
+  "rotation": 0,
+  "state": "clean",
+  "bank": 12,
+  "file": "chassis_07_rot0_clean_gray.png",
+  "slot": 142
+ },
+ {
+  "chassis": 7,
+  "rotation": 1,
+  "state": "clean",
+  "bank": 12,
+  "file": "chassis_07_rot1_clean_gray.png",
+  "slot": 158
+ },
+ {
+  "chassis": 7,
+  "rotation": 2,
+  "state": "clean",
+  "bank": 12,
+  "file": "chassis_07_rot2_clean_gray.png",
+  "slot": 174
+ },
+ {
+  "chassis": 7,
+  "rotation": 3,
+  "state": "clean",
+  "bank": 12,
+  "file": "chassis_07_rot3_clean_gray.png",
+  "slot": 190
+ },
+ {
+  "chassis": 0,
+  "rotation": 0,
+  "state": "damaged",
+  "bank": 12,
+  "file": "chassis_00_rot0_damaged_gray.png",
+  "slot": 192
+ },
+ {
+  "chassis": 0,
+  "rotation": 1,
+  "state": "damaged",
+  "bank": 12,
+  "file": "chassis_00_rot1_damaged_gray.png",
+  "slot": 208
+ },
+ {
+  "chassis": 0,
+  "rotation": 2,
+  "state": "damaged",
+  "bank": 12,
+  "file": "chassis_00_rot2_damaged_gray.png",
+  "slot": 224
+ },
+ {
+  "chassis": 0,
+  "rotation": 3,
+  "state": "damaged",
+  "bank": 12,
+  "file": "chassis_00_rot3_damaged_gray.png",
+  "slot": 240
+ },
+ {
+  "chassis": 1,
+  "rotation": 0,
+  "state": "damaged",
+  "bank": 12,
+  "file": "chassis_01_rot0_damaged_gray.png",
+  "slot": 194
+ },
+ {
+  "chassis": 1,
+  "rotation": 1,
+  "state": "damaged",
+  "bank": 12,
+  "file": "chassis_01_rot1_damaged_gray.png",
+  "slot": 210
+ },
+ {
+  "chassis": 1,
+  "rotation": 2,
+  "state": "damaged",
+  "bank": 12,
+  "file": "chassis_01_rot2_damaged_gray.png",
+  "slot": 226
+ },
+ {
+  "chassis": 1,
+  "rotation": 3,
+  "state": "damaged",
+  "bank": 12,
+  "file": "chassis_01_rot3_damaged_gray.png",
+  "slot": 242
+ },
+ {
+  "chassis": 2,
+  "rotation": 0,
+  "state": "damaged",
+  "bank": 12,
+  "file": "chassis_02_rot0_damaged_gray.png",
+  "slot": 196
+ },
+ {
+  "chassis": 2,
+  "rotation": 1,
+  "state": "damaged",
+  "bank": 12,
+  "file": "chassis_02_rot1_damaged_gray.png",
+  "slot": 212
+ },
+ {
+  "chassis": 2,
+  "rotation": 2,
+  "state": "damaged",
+  "bank": 12,
+  "file": "chassis_02_rot2_damaged_gray.png",
+  "slot": 228
+ },
+ {
+  "chassis": 2,
+  "rotation": 3,
+  "state": "damaged",
+  "bank": 12,
+  "file": "chassis_02_rot3_damaged_gray.png",
+  "slot": 244
+ },
+ {
+  "chassis": 3,
+  "rotation": 0,
+  "state": "damaged",
+  "bank": 12,
+  "file": "chassis_03_rot0_damaged_gray.png",
+  "slot": 198
+ },
+ {
+  "chassis": 3,
+  "rotation": 1,
+  "state": "damaged",
+  "bank": 12,
+  "file": "chassis_03_rot1_damaged_gray.png",
+  "slot": 214
+ },
+ {
+  "chassis": 3,
+  "rotation": 2,
+  "state": "damaged",
+  "bank": 12,
+  "file": "chassis_03_rot2_damaged_gray.png",
+  "slot": 230
+ },
+ {
+  "chassis": 3,
+  "rotation": 3,
+  "state": "damaged",
+  "bank": 12,
+  "file": "chassis_03_rot3_damaged_gray.png",
+  "slot": 246
+ },
+ {
+  "chassis": 4,
+  "rotation": 0,
+  "state": "damaged",
+  "bank": 12,
+  "file": "chassis_04_rot0_damaged_gray.png",
+  "slot": 200
+ },
+ {
+  "chassis": 4,
+  "rotation": 1,
+  "state": "damaged",
+  "bank": 12,
+  "file": "chassis_04_rot1_damaged_gray.png",
+  "slot": 216
+ },
+ {
+  "chassis": 4,
+  "rotation": 2,
+  "state": "damaged",
+  "bank": 12,
+  "file": "chassis_04_rot2_damaged_gray.png",
+  "slot": 232
+ },
+ {
+  "chassis": 4,
+  "rotation": 3,
+  "state": "damaged",
+  "bank": 12,
+  "file": "chassis_04_rot3_damaged_gray.png",
+  "slot": 248
+ },
+ {
+  "chassis": 5,
+  "rotation": 0,
+  "state": "damaged",
+  "bank": 12,
+  "file": "chassis_05_rot0_damaged_gray.png",
+  "slot": 202
+ },
+ {
+  "chassis": 5,
+  "rotation": 1,
+  "state": "damaged",
+  "bank": 12,
+  "file": "chassis_05_rot1_damaged_gray.png",
+  "slot": 218
+ },
+ {
+  "chassis": 5,
+  "rotation": 2,
+  "state": "damaged",
+  "bank": 12,
+  "file": "chassis_05_rot2_damaged_gray.png",
+  "slot": 234
+ },
+ {
+  "chassis": 5,
+  "rotation": 3,
+  "state": "damaged",
+  "bank": 12,
+  "file": "chassis_05_rot3_damaged_gray.png",
+  "slot": 250
+ },
+ {
+  "chassis": 6,
+  "rotation": 0,
+  "state": "damaged",
+  "bank": 12,
+  "file": "chassis_06_rot0_damaged_gray.png",
+  "slot": 204
+ },
+ {
+  "chassis": 6,
+  "rotation": 1,
+  "state": "damaged",
+  "bank": 12,
+  "file": "chassis_06_rot1_damaged_gray.png",
+  "slot": 220
+ },
+ {
+  "chassis": 6,
+  "rotation": 2,
+  "state": "damaged",
+  "bank": 12,
+  "file": "chassis_06_rot2_damaged_gray.png",
+  "slot": 236
+ },
+ {
+  "chassis": 6,
+  "rotation": 3,
+  "state": "damaged",
+  "bank": 12,
+  "file": "chassis_06_rot3_damaged_gray.png",
+  "slot": 252
+ },
+ {
+  "chassis": 7,
+  "rotation": 0,
+  "state": "damaged",
+  "bank": 12,
+  "file": "chassis_07_rot0_damaged_gray.png",
+  "slot": 206
+ },
+ {
+  "chassis": 7,
+  "rotation": 1,
+  "state": "damaged",
+  "bank": 12,
+  "file": "chassis_07_rot1_damaged_gray.png",
+  "slot": 222
+ },
+ {
+  "chassis": 7,
+  "rotation": 2,
+  "state": "damaged",
+  "bank": 12,
+  "file": "chassis_07_rot2_damaged_gray.png",
+  "slot": 238
+ },
+ {
+  "chassis": 7,
+  "rotation": 3,
+  "state": "damaged",
+  "bank": 12,
+  "file": "chassis_07_rot3_damaged_gray.png",
+  "slot": 254
+ }
+]

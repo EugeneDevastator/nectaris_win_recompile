@@ -1,0 +1,2739 @@
+[
+ {
+  "index": 0,
+  "md5": "661fd6d12f5a38f3f14e757eed18d8f5",
+  "first_slot": 64,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_000_661fd6d1.png"
+ },
+ {
+  "index": 1,
+  "md5": "d1bfe0186cdbcc3e6f8e291ba6758c2d",
+  "first_slot": 64,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_001_d1bfe018.png"
+ },
+ {
+  "index": 2,
+  "md5": "e3294f1718cbab54fa58f6d462bfae53",
+  "first_slot": 65,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_002_e3294f17.png"
+ },
+ {
+  "index": 3,
+  "md5": "2f286d7c6a9b8e54fc7cfa1683fc0717",
+  "first_slot": 65,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_003_2f286d7c.png"
+ },
+ {
+  "index": 4,
+  "md5": "d15f52d67019d19d3e97eed228775d04",
+  "first_slot": 66,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_004_d15f52d6.png"
+ },
+ {
+  "index": 5,
+  "md5": "84f6a42b549970ffc73217d228dbf330",
+  "first_slot": 66,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_005_84f6a42b.png"
+ },
+ {
+  "index": 6,
+  "md5": "f191293ca845e83fd5c302490745f6f3",
+  "first_slot": 67,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_006_f191293c.png"
+ },
+ {
+  "index": 7,
+  "md5": "6c0ec6a34368fb92b67fa74cbbfcb84d",
+  "first_slot": 67,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_007_6c0ec6a3.png"
+ },
+ {
+  "index": 8,
+  "md5": "80723583a84974a3d4a39896d19bdb34",
+  "first_slot": 68,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_008_80723583.png"
+ },
+ {
+  "index": 9,
+  "md5": "b58c37ea10aab4172c0e2d2e4cefbe9e",
+  "first_slot": 68,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_009_b58c37ea.png"
+ },
+ {
+  "index": 10,
+  "md5": "4dbd148de84f536b30e63c2536554e8d",
+  "first_slot": 69,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_010_4dbd148d.png"
+ },
+ {
+  "index": 11,
+  "md5": "3a98ec49eeb14431bd24b941393869b7",
+  "first_slot": 69,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_011_3a98ec49.png"
+ },
+ {
+  "index": 12,
+  "md5": "b7161ecc20f1b80c349413738ba3620e",
+  "first_slot": 70,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_012_b7161ecc.png"
+ },
+ {
+  "index": 13,
+  "md5": "4bbefa57c14a0409fb5f092d99f0f12c",
+  "first_slot": 70,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_013_4bbefa57.png"
+ },
+ {
+  "index": 14,
+  "md5": "f5b5295b540e8dba5f933ec32c997f8e",
+  "first_slot": 71,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_014_f5b5295b.png"
+ },
+ {
+  "index": 15,
+  "md5": "eaf7bf0b1dc9a256c2bf42e31b41a0b7",
+  "first_slot": 71,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_015_eaf7bf0b.png"
+ },
+ {
+  "index": 16,
+  "md5": "3f7687f07086b389e7ffb7bab33f529d",
+  "first_slot": 72,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_016_3f7687f0.png"
+ },
+ {
+  "index": 17,
+  "md5": "238e9f1aebe0ca9aac99be03a08fdb12",
+  "first_slot": 72,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_017_238e9f1a.png"
+ },
+ {
+  "index": 18,
+  "md5": "f94a2ac608bcbe610107aafd7d92ba4d",
+  "first_slot": 73,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_018_f94a2ac6.png"
+ },
+ {
+  "index": 19,
+  "md5": "c43d0e07223d4103290752d20ceadd70",
+  "first_slot": 73,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_019_c43d0e07.png"
+ },
+ {
+  "index": 20,
+  "md5": "46794258d6b044d9feb53f872dee507c",
+  "first_slot": 74,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_020_46794258.png"
+ },
+ {
+  "index": 21,
+  "md5": "e2f5c9e7c8395214968fa87e45bff2fc",
+  "first_slot": 74,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_021_e2f5c9e7.png"
+ },
+ {
+  "index": 22,
+  "md5": "1c0fba0ca34fa9ad244903bc0d12797f",
+  "first_slot": 75,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_022_1c0fba0c.png"
+ },
+ {
+  "index": 23,
+  "md5": "2807f2b623d7758c1187277b694eba82",
+  "first_slot": 75,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_023_2807f2b6.png"
+ },
+ {
+  "index": 24,
+  "md5": "54ac58cc1e2711a1a3d88bce15bb152d",
+  "first_slot": 76,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_024_54ac58cc.png"
+ },
+ {
+  "index": 25,
+  "md5": "5df23e6d560e54205a948da10721e35a",
+  "first_slot": 76,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_025_5df23e6d.png"
+ },
+ {
+  "index": 26,
+  "md5": "c76bd601e217fde54854d16ed832dc29",
+  "first_slot": 77,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_026_c76bd601.png"
+ },
+ {
+  "index": 27,
+  "md5": "f63f4f2abf6550ec4ceb72e9a7f0ec64",
+  "first_slot": 77,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_027_f63f4f2a.png"
+ },
+ {
+  "index": 28,
+  "md5": "5296ae8e5b364fac0e0b982cd51b428f",
+  "first_slot": 78,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_028_5296ae8e.png"
+ },
+ {
+  "index": 29,
+  "md5": "fdb245784a8b66e644b6bdfa4a34ead3",
+  "first_slot": 78,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_029_fdb24578.png"
+ },
+ {
+  "index": 30,
+  "md5": "806859ba26382b834c545c426313822c",
+  "first_slot": 79,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_030_806859ba.png"
+ },
+ {
+  "index": 31,
+  "md5": "4fed35f9971b1f5b02f383e7e5deee41",
+  "first_slot": 79,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_031_4fed35f9.png"
+ },
+ {
+  "index": 32,
+  "md5": "89fd955932dce82bf4f5df42df3075e9",
+  "first_slot": 80,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_032_89fd9559.png"
+ },
+ {
+  "index": 33,
+  "md5": "73f9f6c9915122b8d8cb2395a93825b4",
+  "first_slot": 80,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_033_73f9f6c9.png"
+ },
+ {
+  "index": 34,
+  "md5": "3b89ee02fa042b70bf506a8ccdc176dd",
+  "first_slot": 81,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_034_3b89ee02.png"
+ },
+ {
+  "index": 35,
+  "md5": "6de2cbd59e771feb19a299ea631167ac",
+  "first_slot": 81,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_035_6de2cbd5.png"
+ },
+ {
+  "index": 36,
+  "md5": "b933f61e8d80a84cb56e0db15f596938",
+  "first_slot": 82,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_036_b933f61e.png"
+ },
+ {
+  "index": 37,
+  "md5": "a30633cd8a6eec5b29d8929251aa8a50",
+  "first_slot": 82,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_037_a30633cd.png"
+ },
+ {
+  "index": 38,
+  "md5": "53e77fefa81e4c96b0cadc2e1ad45d05",
+  "first_slot": 83,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_038_53e77fef.png"
+ },
+ {
+  "index": 39,
+  "md5": "068fc470bfbefb0622600a691f5d64f7",
+  "first_slot": 83,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_039_068fc470.png"
+ },
+ {
+  "index": 40,
+  "md5": "435acea710002167da9bfed30c8e2369",
+  "first_slot": 84,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_040_435acea7.png"
+ },
+ {
+  "index": 41,
+  "md5": "64e8ba7be20d7c359d941bd54fb5012b",
+  "first_slot": 84,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_041_64e8ba7b.png"
+ },
+ {
+  "index": 42,
+  "md5": "3fab00d23e568ff86ed4e6363ae3e282",
+  "first_slot": 85,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_042_3fab00d2.png"
+ },
+ {
+  "index": 43,
+  "md5": "3429dce14aa22566bb2555a42cb7a3a5",
+  "first_slot": 85,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_043_3429dce1.png"
+ },
+ {
+  "index": 44,
+  "md5": "c71fab8decf7777c26b9cfb406ffe62f",
+  "first_slot": 86,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_044_c71fab8d.png"
+ },
+ {
+  "index": 45,
+  "md5": "bf5e12aa354b00dd57e75021fbc6f785",
+  "first_slot": 86,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_045_bf5e12aa.png"
+ },
+ {
+  "index": 46,
+  "md5": "8e0356d72574b47277e6a128db082879",
+  "first_slot": 87,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_046_8e0356d7.png"
+ },
+ {
+  "index": 47,
+  "md5": "e45a0152f475108a5ed3792af1db6339",
+  "first_slot": 88,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_047_e45a0152.png"
+ },
+ {
+  "index": 48,
+  "md5": "58f4d721f58ac31fe00db366258abbe6",
+  "first_slot": 88,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_048_58f4d721.png"
+ },
+ {
+  "index": 49,
+  "md5": "8f20b1bad8c5bdf1f04320e420b4fde8",
+  "first_slot": 89,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_049_8f20b1ba.png"
+ },
+ {
+  "index": 50,
+  "md5": "8fd1e5ddc2f3b8fdc8253efa5b32a8c6",
+  "first_slot": 89,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_050_8fd1e5dd.png"
+ },
+ {
+  "index": 51,
+  "md5": "5ed00be6d28a64e1c074a453848ac6e4",
+  "first_slot": 90,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_051_5ed00be6.png"
+ },
+ {
+  "index": 52,
+  "md5": "e0b81b34d6ee60f749cd583cb38fa2de",
+  "first_slot": 90,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_052_e0b81b34.png"
+ },
+ {
+  "index": 53,
+  "md5": "d0dfa55f86e2846834bc581c924b46e6",
+  "first_slot": 91,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_053_d0dfa55f.png"
+ },
+ {
+  "index": 54,
+  "md5": "7d01e32dbefa003508d18f4263f56046",
+  "first_slot": 92,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_054_7d01e32d.png"
+ },
+ {
+  "index": 55,
+  "md5": "7a2c097425a44cdd868079d8df7deb18",
+  "first_slot": 92,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_055_7a2c0974.png"
+ },
+ {
+  "index": 56,
+  "md5": "ff9abcd3a401bd504a953c2484e1a835",
+  "first_slot": 93,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_056_ff9abcd3.png"
+ },
+ {
+  "index": 57,
+  "md5": "5ddf2e8c85c69e8b97dde9c3768ff3d1",
+  "first_slot": 93,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_057_5ddf2e8c.png"
+ },
+ {
+  "index": 58,
+  "md5": "838adb652a818c9672be3fb98c74859c",
+  "first_slot": 94,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_058_838adb65.png"
+ },
+ {
+  "index": 59,
+  "md5": "fc20a0c400f469d5506ba853fe0c7777",
+  "first_slot": 94,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_059_fc20a0c4.png"
+ },
+ {
+  "index": 60,
+  "md5": "e6d783793d940c7cfb036a191a834192",
+  "first_slot": 95,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_060_e6d78379.png"
+ },
+ {
+  "index": 61,
+  "md5": "799780235c2c9a9359046d96fa44378c",
+  "first_slot": 95,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_061_79978023.png"
+ },
+ {
+  "index": 62,
+  "md5": "92587051bc9adcc6abb347368f3e2dbe",
+  "first_slot": 96,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_062_92587051.png"
+ },
+ {
+  "index": 63,
+  "md5": "e480f9f8384c03da9f67bfc5b2e5d51a",
+  "first_slot": 96,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_063_e480f9f8.png"
+ },
+ {
+  "index": 64,
+  "md5": "4d10c1bad0731197875bc186eca81e21",
+  "first_slot": 97,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_064_4d10c1ba.png"
+ },
+ {
+  "index": 65,
+  "md5": "0669ddb4477dc477435172ce924a39af",
+  "first_slot": 97,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_065_0669ddb4.png"
+ },
+ {
+  "index": 66,
+  "md5": "f2da22d9c34934bca3db358eb7db1942",
+  "first_slot": 98,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_066_f2da22d9.png"
+ },
+ {
+  "index": 67,
+  "md5": "c41dea0726d716555efa6d91941c9295",
+  "first_slot": 98,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_067_c41dea07.png"
+ },
+ {
+  "index": 68,
+  "md5": "c1dabfc9b45fe45febe76873750532f2",
+  "first_slot": 99,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_068_c1dabfc9.png"
+ },
+ {
+  "index": 69,
+  "md5": "bbf4dadf080df5f09fda406320b1cf6e",
+  "first_slot": 99,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_069_bbf4dadf.png"
+ },
+ {
+  "index": 70,
+  "md5": "7c6248ae43f73c8131da40fa9722a68d",
+  "first_slot": 100,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_070_7c6248ae.png"
+ },
+ {
+  "index": 71,
+  "md5": "41e99f5e70dba723488a1d33b74352aa",
+  "first_slot": 100,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_071_41e99f5e.png"
+ },
+ {
+  "index": 72,
+  "md5": "065d9ee562a369ce38f646fc9e25f407",
+  "first_slot": 101,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_072_065d9ee5.png"
+ },
+ {
+  "index": 73,
+  "md5": "0d58b09543f0ed018544eb692bb469b4",
+  "first_slot": 101,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_073_0d58b095.png"
+ },
+ {
+  "index": 74,
+  "md5": "db583ccebb3b341a1d5b809024bbecc9",
+  "first_slot": 102,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_074_db583cce.png"
+ },
+ {
+  "index": 75,
+  "md5": "9608a93fe60b9aaca359250e3fb15874",
+  "first_slot": 102,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_075_9608a93f.png"
+ },
+ {
+  "index": 76,
+  "md5": "ce783d2ea74580cc1045b01fc46c36f8",
+  "first_slot": 103,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_076_ce783d2e.png"
+ },
+ {
+  "index": 77,
+  "md5": "6db2fb8982e488ec20e781f1d854878e",
+  "first_slot": 103,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_077_6db2fb89.png"
+ },
+ {
+  "index": 78,
+  "md5": "d6cd37863cab00d43ba3c3ac5587af64",
+  "first_slot": 104,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_078_d6cd3786.png"
+ },
+ {
+  "index": 79,
+  "md5": "27d4d8097d664191c38862bf237a734e",
+  "first_slot": 104,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_079_27d4d809.png"
+ },
+ {
+  "index": 80,
+  "md5": "a7faf039495d9aec8b05bff14f1cd746",
+  "first_slot": 105,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_080_a7faf039.png"
+ },
+ {
+  "index": 81,
+  "md5": "49ba5b2ba4a46cd6651bf330f99021f4",
+  "first_slot": 105,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_081_49ba5b2b.png"
+ },
+ {
+  "index": 82,
+  "md5": "d8416762259737859bc02e45ba8a1384",
+  "first_slot": 106,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_082_d8416762.png"
+ },
+ {
+  "index": 83,
+  "md5": "fa82879ed95f6d425786dbcb87fe43f7",
+  "first_slot": 106,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_083_fa82879e.png"
+ },
+ {
+  "index": 84,
+  "md5": "45d1f37209fcbe6e08aaccd63d126974",
+  "first_slot": 107,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_084_45d1f372.png"
+ },
+ {
+  "index": 85,
+  "md5": "62aa410fdafe2b0eea10e2cce7b81926",
+  "first_slot": 107,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_085_62aa410f.png"
+ },
+ {
+  "index": 86,
+  "md5": "79e658548f63dd430d4478864c0afa51",
+  "first_slot": 108,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_086_79e65854.png"
+ },
+ {
+  "index": 87,
+  "md5": "d303ba2f57fc9fbc2b64b60bb4fed355",
+  "first_slot": 108,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_087_d303ba2f.png"
+ },
+ {
+  "index": 88,
+  "md5": "0fa1f230bd0b6ad1391443a2c66fb341",
+  "first_slot": 109,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_088_0fa1f230.png"
+ },
+ {
+  "index": 89,
+  "md5": "1d9b1f0e134c7731971e749132862f56",
+  "first_slot": 110,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_089_1d9b1f0e.png"
+ },
+ {
+  "index": 90,
+  "md5": "5246b03442688ec2657412812c683c05",
+  "first_slot": 111,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_090_5246b034.png"
+ },
+ {
+  "index": 91,
+  "md5": "bbcf14bb19eee0054ba457651973c46a",
+  "first_slot": 112,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_091_bbcf14bb.png"
+ },
+ {
+  "index": 92,
+  "md5": "e6ff78f5229cf2850f22e27eb2c80e52",
+  "first_slot": 112,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_092_e6ff78f5.png"
+ },
+ {
+  "index": 93,
+  "md5": "d752cf63ef77a189748b4451c7364601",
+  "first_slot": 113,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_093_d752cf63.png"
+ },
+ {
+  "index": 94,
+  "md5": "1e3f5a1e84bb7adeb78e454d109f9698",
+  "first_slot": 113,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_094_1e3f5a1e.png"
+ },
+ {
+  "index": 95,
+  "md5": "eecb1d68376b351fdff799dcfdd38828",
+  "first_slot": 114,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_095_eecb1d68.png"
+ },
+ {
+  "index": 96,
+  "md5": "1f88c892bfff93865ecf2b607805aa27",
+  "first_slot": 114,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_096_1f88c892.png"
+ },
+ {
+  "index": 97,
+  "md5": "20ed7a51922b345bc43876dec10df20f",
+  "first_slot": 115,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_097_20ed7a51.png"
+ },
+ {
+  "index": 98,
+  "md5": "344dc5420475f83c0c7c41a3c4352d37",
+  "first_slot": 115,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_098_344dc542.png"
+ },
+ {
+  "index": 99,
+  "md5": "d85a4fd28eb9e4fcd4321040f691e6f9",
+  "first_slot": 116,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_099_d85a4fd2.png"
+ },
+ {
+  "index": 100,
+  "md5": "776c3c126328345eeb44b00a49bea70c",
+  "first_slot": 116,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_100_776c3c12.png"
+ },
+ {
+  "index": 101,
+  "md5": "3d5bcccf2dca99a42a03580a596f19e3",
+  "first_slot": 117,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_101_3d5bcccf.png"
+ },
+ {
+  "index": 102,
+  "md5": "388a6ae857390f35491d672eb4c8aa0c",
+  "first_slot": 117,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_102_388a6ae8.png"
+ },
+ {
+  "index": 103,
+  "md5": "d836579cae8e78a5a1ce14e265284f8e",
+  "first_slot": 118,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_103_d836579c.png"
+ },
+ {
+  "index": 104,
+  "md5": "07f9cf26085298cff2b933de819162ee",
+  "first_slot": 118,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_104_07f9cf26.png"
+ },
+ {
+  "index": 105,
+  "md5": "77d4f307fc3a802dd31358e92389f6d7",
+  "first_slot": 119,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_105_77d4f307.png"
+ },
+ {
+  "index": 106,
+  "md5": "7c1bb02af8c2ea35291e1d57d196a0b7",
+  "first_slot": 119,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_106_7c1bb02a.png"
+ },
+ {
+  "index": 107,
+  "md5": "394d6d74cf8305fdbf2e7b45514baa59",
+  "first_slot": 120,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_107_394d6d74.png"
+ },
+ {
+  "index": 108,
+  "md5": "69d2d5dde80aab0e724df356e3d5e64c",
+  "first_slot": 120,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_108_69d2d5dd.png"
+ },
+ {
+  "index": 109,
+  "md5": "bb5b2ce50d26873bc89a1cd73f6df804",
+  "first_slot": 121,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_109_bb5b2ce5.png"
+ },
+ {
+  "index": 110,
+  "md5": "a774274853e2c8d98ac354845c651175",
+  "first_slot": 121,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_110_a7742748.png"
+ },
+ {
+  "index": 111,
+  "md5": "78af70a236d4dd020c54208a1a461392",
+  "first_slot": 122,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_111_78af70a2.png"
+ },
+ {
+  "index": 112,
+  "md5": "e654b3a1b2628717f38f68ee90ee3264",
+  "first_slot": 122,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_112_e654b3a1.png"
+ },
+ {
+  "index": 113,
+  "md5": "6f27ec35a2b3a8861ec1ff1cf1c1eed9",
+  "first_slot": 123,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_113_6f27ec35.png"
+ },
+ {
+  "index": 114,
+  "md5": "735727b2777a6b9251ef26e012a3676c",
+  "first_slot": 123,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_114_735727b2.png"
+ },
+ {
+  "index": 115,
+  "md5": "34ce8367ad7163df823156309be7890c",
+  "first_slot": 124,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_115_34ce8367.png"
+ },
+ {
+  "index": 116,
+  "md5": "b3bbdf11ad0bdea0b46ca74aa976c581",
+  "first_slot": 124,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_116_b3bbdf11.png"
+ },
+ {
+  "index": 117,
+  "md5": "97258b501acd9bc83acbfe002c289d45",
+  "first_slot": 125,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_117_97258b50.png"
+ },
+ {
+  "index": 118,
+  "md5": "abc7a461894d2a3a53887004b62c5c58",
+  "first_slot": 125,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_118_abc7a461.png"
+ },
+ {
+  "index": 119,
+  "md5": "65d43d54eecd81b16651384c42cb8f56",
+  "first_slot": 126,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_119_65d43d54.png"
+ },
+ {
+  "index": 120,
+  "md5": "a8e829078b04581f5a906d48e7d42711",
+  "first_slot": 126,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_120_a8e82907.png"
+ },
+ {
+  "index": 121,
+  "md5": "e1cd137b8eba08eba263480418f1b72c",
+  "first_slot": 127,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_121_e1cd137b.png"
+ },
+ {
+  "index": 122,
+  "md5": "c3794f2fbfee7bf8c2710cf6e2966b15",
+  "first_slot": 127,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_122_c3794f2f.png"
+ },
+ {
+  "index": 123,
+  "md5": "b9b10f123c07161cd5d0992d4c49c4b5",
+  "first_slot": 128,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_123_b9b10f12.png"
+ },
+ {
+  "index": 124,
+  "md5": "112b4207e625cd51f359215a38a9177c",
+  "first_slot": 128,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_124_112b4207.png"
+ },
+ {
+  "index": 125,
+  "md5": "37356ccacbbb42f64e0abcc98d7e4b34",
+  "first_slot": 129,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_125_37356cca.png"
+ },
+ {
+  "index": 126,
+  "md5": "d6b1bea000dff7c52890e6b15db685b9",
+  "first_slot": 129,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_126_d6b1bea0.png"
+ },
+ {
+  "index": 127,
+  "md5": "a811751334ffa0785dc55c039e44e6ef",
+  "first_slot": 130,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_127_a8117513.png"
+ },
+ {
+  "index": 128,
+  "md5": "836fbbec223d79a32a528c80d58934c1",
+  "first_slot": 130,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_128_836fbbec.png"
+ },
+ {
+  "index": 129,
+  "md5": "9776bcd031efcc471134acf3d47eb7d7",
+  "first_slot": 131,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_129_9776bcd0.png"
+ },
+ {
+  "index": 130,
+  "md5": "c146b891cb28bfc5f11a63df6614a01d",
+  "first_slot": 131,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_130_c146b891.png"
+ },
+ {
+  "index": 131,
+  "md5": "1b1bf4e64e7161fe2c5ee0074d091818",
+  "first_slot": 132,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_131_1b1bf4e6.png"
+ },
+ {
+  "index": 132,
+  "md5": "5475a9e784b13aba468c0923fbd70a8a",
+  "first_slot": 132,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_132_5475a9e7.png"
+ },
+ {
+  "index": 133,
+  "md5": "40fec717f657a6b6c1a49d356edf2c53",
+  "first_slot": 133,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_133_40fec717.png"
+ },
+ {
+  "index": 134,
+  "md5": "71156c7b12d5f5f96c6d8aeb53151e2f",
+  "first_slot": 133,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_134_71156c7b.png"
+ },
+ {
+  "index": 135,
+  "md5": "7c1b19007ab33a85ea5a6a4b98ea8ac7",
+  "first_slot": 134,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_135_7c1b1900.png"
+ },
+ {
+  "index": 136,
+  "md5": "30cd627854b7a8b4813a01bb553eccc2",
+  "first_slot": 134,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_136_30cd6278.png"
+ },
+ {
+  "index": 137,
+  "md5": "e1def7f4fe083d533fca6c8a71e3d8f7",
+  "first_slot": 135,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_137_e1def7f4.png"
+ },
+ {
+  "index": 138,
+  "md5": "6cf62a972128f8a6ee640d5bb6a947e0",
+  "first_slot": 135,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_138_6cf62a97.png"
+ },
+ {
+  "index": 139,
+  "md5": "4c71c9c544e4c87507bca52d74bd0735",
+  "first_slot": 136,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_139_4c71c9c5.png"
+ },
+ {
+  "index": 140,
+  "md5": "3239c3b10e5e76bd6547454186230c34",
+  "first_slot": 136,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_140_3239c3b1.png"
+ },
+ {
+  "index": 141,
+  "md5": "245e18153d8583cbb86c965519e795ce",
+  "first_slot": 137,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_141_245e1815.png"
+ },
+ {
+  "index": 142,
+  "md5": "e55d507735c1f479c274d56005640c64",
+  "first_slot": 137,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_142_e55d5077.png"
+ },
+ {
+  "index": 143,
+  "md5": "3391c0596de8ea935bee1668cd558842",
+  "first_slot": 138,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_143_3391c059.png"
+ },
+ {
+  "index": 144,
+  "md5": "165b3c9522724d488806ec7d7a1c4cf1",
+  "first_slot": 138,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_144_165b3c95.png"
+ },
+ {
+  "index": 145,
+  "md5": "4e9f3c6cfb897e81375b7bc3cd9870a4",
+  "first_slot": 139,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_145_4e9f3c6c.png"
+ },
+ {
+  "index": 146,
+  "md5": "a518aa379b0332b3ada2d78cec34a042",
+  "first_slot": 139,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_146_a518aa37.png"
+ },
+ {
+  "index": 147,
+  "md5": "b6f22ec4303ad06fbcbb254d4ecae8e2",
+  "first_slot": 140,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_147_b6f22ec4.png"
+ },
+ {
+  "index": 148,
+  "md5": "2f67396cf98ae01acc0870328194ddf0",
+  "first_slot": 140,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_148_2f67396c.png"
+ },
+ {
+  "index": 149,
+  "md5": "c17cdaf867bd3ecb006fe90bf3e8f110",
+  "first_slot": 141,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_149_c17cdaf8.png"
+ },
+ {
+  "index": 150,
+  "md5": "6ea8c6eed8c18955f545d3bd02adfa92",
+  "first_slot": 141,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_150_6ea8c6ee.png"
+ },
+ {
+  "index": 151,
+  "md5": "431494bad89117f494d9aed6fa9ad907",
+  "first_slot": 142,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_151_431494ba.png"
+ },
+ {
+  "index": 152,
+  "md5": "5a13954f818ad61fbff08162db02fc78",
+  "first_slot": 142,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_152_5a13954f.png"
+ },
+ {
+  "index": 153,
+  "md5": "1a20cfb88c22b7efb74ae019a1f8b70f",
+  "first_slot": 143,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_153_1a20cfb8.png"
+ },
+ {
+  "index": 154,
+  "md5": "414806c99d8bf77f4f045e0164c306c9",
+  "first_slot": 143,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_154_414806c9.png"
+ },
+ {
+  "index": 155,
+  "md5": "b200fec99ab364feee118dc8d46b5a79",
+  "first_slot": 144,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_155_b200fec9.png"
+ },
+ {
+  "index": 156,
+  "md5": "f758435c2d0451d5a87e4cf221f1910b",
+  "first_slot": 144,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_156_f758435c.png"
+ },
+ {
+  "index": 157,
+  "md5": "8243a8534717e4bbcab6ccaa9668334a",
+  "first_slot": 145,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_157_8243a853.png"
+ },
+ {
+  "index": 158,
+  "md5": "d1770de1e02070c9e23a39c574a96a60",
+  "first_slot": 145,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_158_d1770de1.png"
+ },
+ {
+  "index": 159,
+  "md5": "1b59f084dfd2dc8ef6d50dca2dc2ee3a",
+  "first_slot": 146,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_159_1b59f084.png"
+ },
+ {
+  "index": 160,
+  "md5": "ce31a4fb12c8348f2d5c1ea84e94ee0a",
+  "first_slot": 146,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_160_ce31a4fb.png"
+ },
+ {
+  "index": 161,
+  "md5": "bd2fdad7129c601244fc1a0c092131d8",
+  "first_slot": 147,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_161_bd2fdad7.png"
+ },
+ {
+  "index": 162,
+  "md5": "bf89f0e0af51aca8ba007f94f6cee851",
+  "first_slot": 147,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_162_bf89f0e0.png"
+ },
+ {
+  "index": 163,
+  "md5": "00518febbabe96406ad6abb1e6fa6567",
+  "first_slot": 148,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_163_00518feb.png"
+ },
+ {
+  "index": 164,
+  "md5": "9282281dc1e1ee83c50398867e0775db",
+  "first_slot": 148,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_164_9282281d.png"
+ },
+ {
+  "index": 165,
+  "md5": "96ef4b84186ee5d3187662e7369231bf",
+  "first_slot": 149,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_165_96ef4b84.png"
+ },
+ {
+  "index": 166,
+  "md5": "1e8f26c2cefe75f21f9c55db0557549f",
+  "first_slot": 149,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_166_1e8f26c2.png"
+ },
+ {
+  "index": 167,
+  "md5": "f1022369fc396f41c0a816ae893d6d8a",
+  "first_slot": 150,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_167_f1022369.png"
+ },
+ {
+  "index": 168,
+  "md5": "78643ce0198aab6e8e6c37f759aae185",
+  "first_slot": 150,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_168_78643ce0.png"
+ },
+ {
+  "index": 169,
+  "md5": "9664b1ce25546f2ae7c9e66f331e4490",
+  "first_slot": 151,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_169_9664b1ce.png"
+ },
+ {
+  "index": 170,
+  "md5": "5c0fced65106903bc65c5d49946bad0a",
+  "first_slot": 151,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_170_5c0fced6.png"
+ },
+ {
+  "index": 171,
+  "md5": "96bad4966806fed0eda69ffec08652d0",
+  "first_slot": 152,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_171_96bad496.png"
+ },
+ {
+  "index": 172,
+  "md5": "9a62c001b26850e4f48e12db894a870f",
+  "first_slot": 152,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_172_9a62c001.png"
+ },
+ {
+  "index": 173,
+  "md5": "f9eeb2d7b5d55703e3e72f266655dced",
+  "first_slot": 153,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_173_f9eeb2d7.png"
+ },
+ {
+  "index": 174,
+  "md5": "6efc8cf864a60c72341f5e80ca76c6f3",
+  "first_slot": 153,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_174_6efc8cf8.png"
+ },
+ {
+  "index": 175,
+  "md5": "2688b64ad9746abf1d1e813afd43f994",
+  "first_slot": 154,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_175_2688b64a.png"
+ },
+ {
+  "index": 176,
+  "md5": "0f646830973923afc68f7915f1edd6f7",
+  "first_slot": 154,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_176_0f646830.png"
+ },
+ {
+  "index": 177,
+  "md5": "bfe8740ce5de0d8942232ad8a115167e",
+  "first_slot": 155,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_177_bfe8740c.png"
+ },
+ {
+  "index": 178,
+  "md5": "66a761045d5f486e34967fbb96416cd6",
+  "first_slot": 155,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_178_66a76104.png"
+ },
+ {
+  "index": 179,
+  "md5": "e1f614ddc44a8b7bc7a6d43ddc2bd9a5",
+  "first_slot": 156,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_179_e1f614dd.png"
+ },
+ {
+  "index": 180,
+  "md5": "03b3099577e54984991b597149e001b2",
+  "first_slot": 156,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_180_03b30995.png"
+ },
+ {
+  "index": 181,
+  "md5": "97cf079e81ea27e941ea4f839f6a7a2c",
+  "first_slot": 157,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_181_97cf079e.png"
+ },
+ {
+  "index": 182,
+  "md5": "cd3f62c0b4d1d986d952a428f501c513",
+  "first_slot": 157,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_182_cd3f62c0.png"
+ },
+ {
+  "index": 183,
+  "md5": "fab82e163ac9046847682e14b065ccb6",
+  "first_slot": 158,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_183_fab82e16.png"
+ },
+ {
+  "index": 184,
+  "md5": "de3e2556fc7c7460049523d0fde66bb0",
+  "first_slot": 159,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_184_de3e2556.png"
+ },
+ {
+  "index": 185,
+  "md5": "7f470e0b821cf6ec624e886ee9fe6450",
+  "first_slot": 160,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_185_7f470e0b.png"
+ },
+ {
+  "index": 186,
+  "md5": "59b8a55ac84c671d62e5c71abb23b918",
+  "first_slot": 161,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_186_59b8a55a.png"
+ },
+ {
+  "index": 187,
+  "md5": "2e0efdefb3301540bc0f878f65e4b313",
+  "first_slot": 162,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_187_2e0efdef.png"
+ },
+ {
+  "index": 188,
+  "md5": "80be8e8397930690fd0ca0eca675e9de",
+  "first_slot": 163,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_188_80be8e83.png"
+ },
+ {
+  "index": 189,
+  "md5": "2da7eacdf3cee49c686b77b5841fbf6e",
+  "first_slot": 164,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_189_2da7eacd.png"
+ },
+ {
+  "index": 190,
+  "md5": "a108d35abe7532c8eb9268c1cff46049",
+  "first_slot": 165,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_190_a108d35a.png"
+ },
+ {
+  "index": 191,
+  "md5": "197464a05d2f2e88ea57e0ca7aa746d3",
+  "first_slot": 166,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_191_197464a0.png"
+ },
+ {
+  "index": 192,
+  "md5": "df1cfae22f233779a4773ef84a84cd42",
+  "first_slot": 167,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_192_df1cfae2.png"
+ },
+ {
+  "index": 193,
+  "md5": "e221db72e8b3f7cd965da502be5795ad",
+  "first_slot": 168,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_193_e221db72.png"
+ },
+ {
+  "index": 194,
+  "md5": "7c748083ac7689fd5048438973113b7d",
+  "first_slot": 169,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_194_7c748083.png"
+ },
+ {
+  "index": 195,
+  "md5": "2b8df0f3f1c2d6e63f0193d31380bc05",
+  "first_slot": 170,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_195_2b8df0f3.png"
+ },
+ {
+  "index": 196,
+  "md5": "8fe56116fb864f46471db901478ad172",
+  "first_slot": 171,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_196_8fe56116.png"
+ },
+ {
+  "index": 197,
+  "md5": "cda02b9fc4ddf329decea5e943461f67",
+  "first_slot": 172,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_197_cda02b9f.png"
+ },
+ {
+  "index": 198,
+  "md5": "5704930ed0b361f5738aa95b75d18d60",
+  "first_slot": 173,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_198_5704930e.png"
+ },
+ {
+  "index": 199,
+  "md5": "f34c00327f99eacfc2d8e950509b456d",
+  "first_slot": 174,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_199_f34c0032.png"
+ },
+ {
+  "index": 200,
+  "md5": "4e6f68e8c7d1475b99932fa78b6c78ba",
+  "first_slot": 175,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_200_4e6f68e8.png"
+ },
+ {
+  "index": 201,
+  "md5": "57142a7821c5ff62a9741d94a08a7397",
+  "first_slot": 176,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_201_57142a78.png"
+ },
+ {
+  "index": 202,
+  "md5": "7b8256a6c6667a7e8be344b03bf5b9a1",
+  "first_slot": 177,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_202_7b8256a6.png"
+ },
+ {
+  "index": 203,
+  "md5": "28bbfa7c3054bb9e81ed6c38eaab4ec5",
+  "first_slot": 178,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_203_28bbfa7c.png"
+ },
+ {
+  "index": 204,
+  "md5": "3d2d631263eb505fd6b660942f79c5c3",
+  "first_slot": 179,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_204_3d2d6312.png"
+ },
+ {
+  "index": 205,
+  "md5": "fd7c73cc4956e46a959bbeb908db4a2e",
+  "first_slot": 180,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_205_fd7c73cc.png"
+ },
+ {
+  "index": 206,
+  "md5": "8cc0bc46809813656b2a16cba336c2f3",
+  "first_slot": 181,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_206_8cc0bc46.png"
+ },
+ {
+  "index": 207,
+  "md5": "639cfe4410895f6ab35121604cf2a303",
+  "first_slot": 182,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_207_639cfe44.png"
+ },
+ {
+  "index": 208,
+  "md5": "4de839556a352ef4c4f06c0c3570f142",
+  "first_slot": 183,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_208_4de83955.png"
+ },
+ {
+  "index": 209,
+  "md5": "e144cf1a2ee4a656aae61af1afcc09be",
+  "first_slot": 184,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_209_e144cf1a.png"
+ },
+ {
+  "index": 210,
+  "md5": "001a8e48782500774c564377f150285f",
+  "first_slot": 185,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_210_001a8e48.png"
+ },
+ {
+  "index": 211,
+  "md5": "a2319a67392ae45b3b1d5516ec8be504",
+  "first_slot": 186,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_211_a2319a67.png"
+ },
+ {
+  "index": 212,
+  "md5": "52303807a2d333ab85570670a7cff594",
+  "first_slot": 187,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_212_52303807.png"
+ },
+ {
+  "index": 213,
+  "md5": "59a05e04c5254b46a08004cd0526e701",
+  "first_slot": 188,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_213_59a05e04.png"
+ },
+ {
+  "index": 214,
+  "md5": "797b2d07eabfc89626bd91b57f7d503d",
+  "first_slot": 189,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_214_797b2d07.png"
+ },
+ {
+  "index": 215,
+  "md5": "925cdc6b2201d528cd84f0a164c80691",
+  "first_slot": 190,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_215_925cdc6b.png"
+ },
+ {
+  "index": 216,
+  "md5": "10e7d57e023c55a469fe6782584022ea",
+  "first_slot": 191,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_216_10e7d57e.png"
+ },
+ {
+  "index": 217,
+  "md5": "371eaa9f168a5676d2d73555bcb5c3fd",
+  "first_slot": 192,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_217_371eaa9f.png"
+ },
+ {
+  "index": 218,
+  "md5": "47d7b02124ec80a625bc4908455eda5c",
+  "first_slot": 192,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_218_47d7b021.png"
+ },
+ {
+  "index": 219,
+  "md5": "98ae652b600c857ba2e1e4bebed3a09d",
+  "first_slot": 193,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_219_98ae652b.png"
+ },
+ {
+  "index": 220,
+  "md5": "8de9eda0b06aa41daa6e5dbe2b34d039",
+  "first_slot": 193,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_220_8de9eda0.png"
+ },
+ {
+  "index": 221,
+  "md5": "79e2ebfa1aeb77f7457d2c2c7c892c2b",
+  "first_slot": 194,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_221_79e2ebfa.png"
+ },
+ {
+  "index": 222,
+  "md5": "35da51ff8b67a3db3924d49412cbdac7",
+  "first_slot": 194,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_222_35da51ff.png"
+ },
+ {
+  "index": 223,
+  "md5": "f38a8606497c435e58095a53e64fa7ad",
+  "first_slot": 195,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_223_f38a8606.png"
+ },
+ {
+  "index": 224,
+  "md5": "90579b2b47f2f6a88c5c5fd09735451d",
+  "first_slot": 196,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_224_90579b2b.png"
+ },
+ {
+  "index": 225,
+  "md5": "b319939bc172bfd343c87ff6d04778ea",
+  "first_slot": 196,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_225_b319939b.png"
+ },
+ {
+  "index": 226,
+  "md5": "882b609fb19d8e2d5fb9538809e6cf32",
+  "first_slot": 197,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_226_882b609f.png"
+ },
+ {
+  "index": 227,
+  "md5": "4b2e4ebbeecc03b814a775fa24d069c2",
+  "first_slot": 197,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_227_4b2e4ebb.png"
+ },
+ {
+  "index": 228,
+  "md5": "1d5cc3465159506a61bad1425e595bd3",
+  "first_slot": 198,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_228_1d5cc346.png"
+ },
+ {
+  "index": 229,
+  "md5": "4b3a03154fdb0c6fb19cc69eaa438aed",
+  "first_slot": 198,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_229_4b3a0315.png"
+ },
+ {
+  "index": 230,
+  "md5": "e7dd534f54a98126cfac037d48268915",
+  "first_slot": 199,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_230_e7dd534f.png"
+ },
+ {
+  "index": 231,
+  "md5": "a56292cc5cdb62d5711976d3e99f35c3",
+  "first_slot": 199,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_231_a56292cc.png"
+ },
+ {
+  "index": 232,
+  "md5": "0912285579869cb51225aa5cff0b9693",
+  "first_slot": 200,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_232_09122855.png"
+ },
+ {
+  "index": 233,
+  "md5": "fd55c784955aeea96586cb5e1b4ba5d8",
+  "first_slot": 200,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_233_fd55c784.png"
+ },
+ {
+  "index": 234,
+  "md5": "2e1edd39f5c5bbc340440ba9ee98e6ad",
+  "first_slot": 201,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_234_2e1edd39.png"
+ },
+ {
+  "index": 235,
+  "md5": "8ee5ef93c046766b70ffb4ca6677993c",
+  "first_slot": 201,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_235_8ee5ef93.png"
+ },
+ {
+  "index": 236,
+  "md5": "a1d7c461c6f9808dde99118751217057",
+  "first_slot": 202,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_236_a1d7c461.png"
+ },
+ {
+  "index": 237,
+  "md5": "12207d5859402ba5f22c0831d3ce54e5",
+  "first_slot": 202,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_237_12207d58.png"
+ },
+ {
+  "index": 238,
+  "md5": "ffb0c13d30a5ce5844f5078d53e95e13",
+  "first_slot": 203,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_238_ffb0c13d.png"
+ },
+ {
+  "index": 239,
+  "md5": "5259dba90eb5aa8c500ee119d2f830cb",
+  "first_slot": 203,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_239_5259dba9.png"
+ },
+ {
+  "index": 240,
+  "md5": "a07d5a947fab89d1af11ec9c5bb31042",
+  "first_slot": 204,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_240_a07d5a94.png"
+ },
+ {
+  "index": 241,
+  "md5": "ff2c9beee494585e2a35ff894a8bdb93",
+  "first_slot": 204,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_241_ff2c9bee.png"
+ },
+ {
+  "index": 242,
+  "md5": "c92451753ef756cb1410a8330747461e",
+  "first_slot": 205,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_242_c9245175.png"
+ },
+ {
+  "index": 243,
+  "md5": "2bfcc8f37da9124b9ab16b059718598c",
+  "first_slot": 206,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_243_2bfcc8f3.png"
+ },
+ {
+  "index": 244,
+  "md5": "e2ac73aa4c226c2f92fec2a0e304c9e6",
+  "first_slot": 206,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_244_e2ac73aa.png"
+ },
+ {
+  "index": 245,
+  "md5": "53b738dc1b8864e847d418da75bb098d",
+  "first_slot": 207,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_245_53b738dc.png"
+ },
+ {
+  "index": 246,
+  "md5": "a42d9ee8ee0e24618c0a093d7da1deda",
+  "first_slot": 208,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_246_a42d9ee8.png"
+ },
+ {
+  "index": 247,
+  "md5": "68ef9fe187fc6b5f2b8c8a59a91b8039",
+  "first_slot": 208,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_247_68ef9fe1.png"
+ },
+ {
+  "index": 248,
+  "md5": "18122dcd501d1f4a7f62629037f4dd07",
+  "first_slot": 209,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_248_18122dcd.png"
+ },
+ {
+  "index": 249,
+  "md5": "30cc7633320d7cb6f843b194eb2eb67f",
+  "first_slot": 209,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_249_30cc7633.png"
+ },
+ {
+  "index": 250,
+  "md5": "2b5b0abb819a488c1d3624f8ccd0a4d6",
+  "first_slot": 210,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_250_2b5b0abb.png"
+ },
+ {
+  "index": 251,
+  "md5": "108c2b2c4e7750fe7526d70ff94aba8e",
+  "first_slot": 210,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_251_108c2b2c.png"
+ },
+ {
+  "index": 252,
+  "md5": "93c6cfc9766538e03a0c42e7700ef697",
+  "first_slot": 211,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_252_93c6cfc9.png"
+ },
+ {
+  "index": 253,
+  "md5": "39632d2685369859de86b4e173da6e88",
+  "first_slot": 211,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_253_39632d26.png"
+ },
+ {
+  "index": 254,
+  "md5": "780b6a57fecc9ae5a5432a86ec9f4737",
+  "first_slot": 212,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_254_780b6a57.png"
+ },
+ {
+  "index": 255,
+  "md5": "f8e70eb789d67a13c9de4a1866550270",
+  "first_slot": 212,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_255_f8e70eb7.png"
+ },
+ {
+  "index": 256,
+  "md5": "e910f8695e9f31ebbe57e99cd19c138b",
+  "first_slot": 213,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_256_e910f869.png"
+ },
+ {
+  "index": 257,
+  "md5": "c4cd606968daf191f4adb351355ef8db",
+  "first_slot": 213,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_257_c4cd6069.png"
+ },
+ {
+  "index": 258,
+  "md5": "a498070c68d5c6d637a419e1a2804f98",
+  "first_slot": 214,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_258_a498070c.png"
+ },
+ {
+  "index": 259,
+  "md5": "d4c847e697645e1e9ecb09e05bcaf627",
+  "first_slot": 215,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_259_d4c847e6.png"
+ },
+ {
+  "index": 260,
+  "md5": "eabf5cb71b1bf3d58738cbdb95f72057",
+  "first_slot": 215,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_260_eabf5cb7.png"
+ },
+ {
+  "index": 261,
+  "md5": "145bd41ba56ce5d2e69be96f2aff2896",
+  "first_slot": 216,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_261_145bd41b.png"
+ },
+ {
+  "index": 262,
+  "md5": "81473f13d904b0e58ca3fd8d13ddf992",
+  "first_slot": 216,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_262_81473f13.png"
+ },
+ {
+  "index": 263,
+  "md5": "d918146563b473ee30225816a73a36bc",
+  "first_slot": 217,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_263_d9181465.png"
+ },
+ {
+  "index": 264,
+  "md5": "f4f84bf23cea32c9431d5f22871a17be",
+  "first_slot": 217,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_264_f4f84bf2.png"
+ },
+ {
+  "index": 265,
+  "md5": "dc0c33f48401b73f45db66c5b55a2209",
+  "first_slot": 218,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_265_dc0c33f4.png"
+ },
+ {
+  "index": 266,
+  "md5": "78a3c40ff7f2cd9abb2c27816ebb90eb",
+  "first_slot": 218,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_266_78a3c40f.png"
+ },
+ {
+  "index": 267,
+  "md5": "e4af6a93896f6eceb703220b88e39f7f",
+  "first_slot": 219,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_267_e4af6a93.png"
+ },
+ {
+  "index": 268,
+  "md5": "b79d3be30d020c339cf607c3719bbed9",
+  "first_slot": 219,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_268_b79d3be3.png"
+ },
+ {
+  "index": 269,
+  "md5": "74891c04d5d70dc8215cb335b857b659",
+  "first_slot": 220,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_269_74891c04.png"
+ },
+ {
+  "index": 270,
+  "md5": "9a8214d3276a0b70007b9eeb5f7ecdfe",
+  "first_slot": 221,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_270_9a8214d3.png"
+ },
+ {
+  "index": 271,
+  "md5": "86e71b6dfb5c7da7cafc0062cbe0e964",
+  "first_slot": 222,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_271_86e71b6d.png"
+ },
+ {
+  "index": 272,
+  "md5": "6966336c8052323f44da16c89fbd82d1",
+  "first_slot": 223,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_272_6966336c.png"
+ },
+ {
+  "index": 273,
+  "md5": "9c838761ec52589a05999d00f3d85043",
+  "first_slot": 224,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_273_9c838761.png"
+ },
+ {
+  "index": 274,
+  "md5": "378e166793e87ad574acd301cbc85979",
+  "first_slot": 224,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_274_378e1667.png"
+ },
+ {
+  "index": 275,
+  "md5": "e13ea0cf8972b606356bda156f7b0bcb",
+  "first_slot": 225,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_275_e13ea0cf.png"
+ },
+ {
+  "index": 276,
+  "md5": "16b7ba269ab8b212131783d1e10c72f7",
+  "first_slot": 225,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_276_16b7ba26.png"
+ },
+ {
+  "index": 277,
+  "md5": "965ae322206c362573a94ac2380896cc",
+  "first_slot": 226,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_277_965ae322.png"
+ },
+ {
+  "index": 278,
+  "md5": "fb511b5c8c2ec3b0e518edeffe80ce23",
+  "first_slot": 226,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_278_fb511b5c.png"
+ },
+ {
+  "index": 279,
+  "md5": "28fede61ecc8c589ccbea47588b84c33",
+  "first_slot": 227,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_279_28fede61.png"
+ },
+ {
+  "index": 280,
+  "md5": "4bffe7d3ec696189496126b05b18fdca",
+  "first_slot": 227,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_280_4bffe7d3.png"
+ },
+ {
+  "index": 281,
+  "md5": "b5ecceec93fdd6839c1644d627e8263e",
+  "first_slot": 228,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_281_b5ecceec.png"
+ },
+ {
+  "index": 282,
+  "md5": "8754b22f7f05d7e76dc5c11395791d8c",
+  "first_slot": 230,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_282_8754b22f.png"
+ },
+ {
+  "index": 283,
+  "md5": "f49912230f6f0bc17797a44908f40c0c",
+  "first_slot": 231,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_283_f4991223.png"
+ },
+ {
+  "index": 284,
+  "md5": "d4f5eb42f57d86453a96d070de15f64a",
+  "first_slot": 232,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_284_d4f5eb42.png"
+ },
+ {
+  "index": 285,
+  "md5": "af8611235077021ea16badca0ca650dc",
+  "first_slot": 232,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_285_af861123.png"
+ },
+ {
+  "index": 286,
+  "md5": "6bfab10856c833af3c5e4f81ea032b83",
+  "first_slot": 233,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_286_6bfab108.png"
+ },
+ {
+  "index": 287,
+  "md5": "1e8038269b2a8165f87e5e4f16c2bdf3",
+  "first_slot": 233,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_287_1e803826.png"
+ },
+ {
+  "index": 288,
+  "md5": "d5a5c62563e58eef216bacc8cca3a6ae",
+  "first_slot": 234,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_288_d5a5c625.png"
+ },
+ {
+  "index": 289,
+  "md5": "f3043b2ab12d4b1e4e345b50221ea563",
+  "first_slot": 234,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_289_f3043b2a.png"
+ },
+ {
+  "index": 290,
+  "md5": "9937746df6c5fdb770c6df2ce6c66e4a",
+  "first_slot": 235,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_290_9937746d.png"
+ },
+ {
+  "index": 291,
+  "md5": "ee1d4a313ae89c7e9dfba59500a7257f",
+  "first_slot": 235,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_291_ee1d4a31.png"
+ },
+ {
+  "index": 292,
+  "md5": "f2aa1f59fb122a9098cceb69dfc798e8",
+  "first_slot": 236,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_292_f2aa1f59.png"
+ },
+ {
+  "index": 293,
+  "md5": "fa0ca62a2c5d2a2d37a7e7630e03de4e",
+  "first_slot": 236,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_293_fa0ca62a.png"
+ },
+ {
+  "index": 294,
+  "md5": "e8ad5cb405bac2740ffff0d488e76dca",
+  "first_slot": 237,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_294_e8ad5cb4.png"
+ },
+ {
+  "index": 295,
+  "md5": "f4cf42d2e6d31f5cae17d6b3fce46156",
+  "first_slot": 237,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_295_f4cf42d2.png"
+ },
+ {
+  "index": 296,
+  "md5": "2bcafa9d4c33936c45f4abd0f748ac6a",
+  "first_slot": 238,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_296_2bcafa9d.png"
+ },
+ {
+  "index": 297,
+  "md5": "6457de30ac8eac2ab1bc04c0add12d7f",
+  "first_slot": 239,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_297_6457de30.png"
+ },
+ {
+  "index": 298,
+  "md5": "3bad333ae9fd95cdc50bac5699f6561f",
+  "first_slot": 240,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_298_3bad333a.png"
+ },
+ {
+  "index": 299,
+  "md5": "45dac2142eb5927205a9a0a1aeb8954e",
+  "first_slot": 240,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_299_45dac214.png"
+ },
+ {
+  "index": 300,
+  "md5": "dfc2da4f25f2156b7cc4f9a5d939f80a",
+  "first_slot": 241,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_300_dfc2da4f.png"
+ },
+ {
+  "index": 301,
+  "md5": "752eed8eae79f31a9a0bb7c2d29dd6c7",
+  "first_slot": 241,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_301_752eed8e.png"
+ },
+ {
+  "index": 302,
+  "md5": "1fd5254a40a9cec9d7affc854c188ffb",
+  "first_slot": 242,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_302_1fd5254a.png"
+ },
+ {
+  "index": 303,
+  "md5": "b332d7b37dc3d2d94631e5cca40b06ff",
+  "first_slot": 242,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_303_b332d7b3.png"
+ },
+ {
+  "index": 304,
+  "md5": "a030a5d04bf6caa2dcd4c21cc22be128",
+  "first_slot": 243,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_304_a030a5d0.png"
+ },
+ {
+  "index": 305,
+  "md5": "ebd2957d547ebfa717deab8c328bed7f",
+  "first_slot": 243,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_305_ebd2957d.png"
+ },
+ {
+  "index": 306,
+  "md5": "7ad2893d7a90e67c98f88c29e1cab75b",
+  "first_slot": 244,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_306_7ad2893d.png"
+ },
+ {
+  "index": 307,
+  "md5": "593f0b9d1ceb90f94ea5820f37e2aa71",
+  "first_slot": 245,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_307_593f0b9d.png"
+ },
+ {
+  "index": 308,
+  "md5": "554a0b3451632525cce9a40f04971642",
+  "first_slot": 246,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_308_554a0b34.png"
+ },
+ {
+  "index": 309,
+  "md5": "2adb8bb02348eaa38248e023c10b118b",
+  "first_slot": 247,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_309_2adb8bb0.png"
+ },
+ {
+  "index": 310,
+  "md5": "03379f9a9941427af9d2534780c766bf",
+  "first_slot": 248,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_310_03379f9a.png"
+ },
+ {
+  "index": 311,
+  "md5": "f6da3631b1e9faffe43424fb1ce41e71",
+  "first_slot": 254,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_311_f6da3631.png"
+ },
+ {
+  "index": 312,
+  "md5": "44a30fdfa5f53ace59574c6533515df3",
+  "first_slot": 255,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_312_44a30fdf.png"
+ },
+ {
+  "index": 313,
+  "md5": "ecc2e9a6e73c1ae45c4f3de7fe014a95",
+  "first_slot": 256,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_313_ecc2e9a6.png"
+ },
+ {
+  "index": 314,
+  "md5": "d9919ba77ee7e57efb20818e3b3e08f4",
+  "first_slot": 258,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_314_d9919ba7.png"
+ },
+ {
+  "index": 315,
+  "md5": "f10ff676d5a8ff09cdcfe6b630465586",
+  "first_slot": 259,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_315_f10ff676.png"
+ },
+ {
+  "index": 316,
+  "md5": "3293c0e3d5d2e4cadd86ff197eb06c81",
+  "first_slot": 262,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_316_3293c0e3.png"
+ },
+ {
+  "index": 317,
+  "md5": "30156ebf5424e1ed8c5226a86edd3580",
+  "first_slot": 263,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_317_30156ebf.png"
+ },
+ {
+  "index": 318,
+  "md5": "da0c2053747fbcb83dcc526cc6b3ebf7",
+  "first_slot": 266,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_318_da0c2053.png"
+ },
+ {
+  "index": 319,
+  "md5": "3e5fa4f2de74a66310888406a82c03a7",
+  "first_slot": 267,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_319_3e5fa4f2.png"
+ },
+ {
+  "index": 320,
+  "md5": "a5110fa6db418a91202a8c39edbd36d6",
+  "first_slot": 270,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_320_a5110fa6.png"
+ },
+ {
+  "index": 321,
+  "md5": "6a74a5aafed6c1267f23bd4652932d63",
+  "first_slot": 271,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_321_6a74a5aa.png"
+ },
+ {
+  "index": 322,
+  "md5": "073957a70b1a7b56ecd967f6d258a9c3",
+  "first_slot": 274,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_322_073957a7.png"
+ },
+ {
+  "index": 323,
+  "md5": "cc25e3df338ff7f36a1ae82b851872f1",
+  "first_slot": 275,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_323_cc25e3df.png"
+ },
+ {
+  "index": 324,
+  "md5": "fd50d10c8ef60cab657a5ed254ada045",
+  "first_slot": 278,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_324_fd50d10c.png"
+ },
+ {
+  "index": 325,
+  "md5": "fe362b0c7a0026a96fbf444e7fd1ee63",
+  "first_slot": 279,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_325_fe362b0c.png"
+ },
+ {
+  "index": 326,
+  "md5": "7082409abefc0d536a40d6ef0ea22489",
+  "first_slot": 282,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_326_7082409a.png"
+ },
+ {
+  "index": 327,
+  "md5": "c4e217e66c4a8ada9c3a862677b490a4",
+  "first_slot": 283,
+  "source": "dump\\banks\\spritebank.bin",
+  "file": "chunk_327_c4e217e6.png"
+ },
+ {
+  "index": 328,
+  "md5": "c4ee1f5dc635daeb129b69779f32499c",
+  "first_slot": 320,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_328_c4ee1f5d.png"
+ },
+ {
+  "index": 329,
+  "md5": "78464ee7e7ffd3ad9973efcb1e56544a",
+  "first_slot": 321,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_329_78464ee7.png"
+ },
+ {
+  "index": 330,
+  "md5": "3f2adee7bb91260667239a482d6e820b",
+  "first_slot": 322,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_330_3f2adee7.png"
+ },
+ {
+  "index": 331,
+  "md5": "f5d7aacde73e6dbbbf9437e2040587a9",
+  "first_slot": 323,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_331_f5d7aacd.png"
+ },
+ {
+  "index": 332,
+  "md5": "73d32a8770d2027d7163a3112bcd9833",
+  "first_slot": 324,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_332_73d32a87.png"
+ },
+ {
+  "index": 333,
+  "md5": "5260f4d522e9212d2e6a78d24d06994f",
+  "first_slot": 325,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_333_5260f4d5.png"
+ },
+ {
+  "index": 334,
+  "md5": "141afc9164613d9189b4561059e34265",
+  "first_slot": 326,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_334_141afc91.png"
+ },
+ {
+  "index": 335,
+  "md5": "eaaefaa1603df808e63a386f7c158afc",
+  "first_slot": 327,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_335_eaaefaa1.png"
+ },
+ {
+  "index": 336,
+  "md5": "382068ba9313206d528a6770ce4514e2",
+  "first_slot": 328,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_336_382068ba.png"
+ },
+ {
+  "index": 337,
+  "md5": "88d8364709b167da94dcb414f83bf36a",
+  "first_slot": 329,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_337_88d83647.png"
+ },
+ {
+  "index": 338,
+  "md5": "21cdef68b6137a2149d8411e7fa62eb5",
+  "first_slot": 330,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_338_21cdef68.png"
+ },
+ {
+  "index": 339,
+  "md5": "542f65167d4c791c8da2386972f00e3f",
+  "first_slot": 331,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_339_542f6516.png"
+ },
+ {
+  "index": 340,
+  "md5": "91937830c7c78977628d8a4ac0dbfee9",
+  "first_slot": 332,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_340_91937830.png"
+ },
+ {
+  "index": 341,
+  "md5": "f0b2b878d61aaef6b6a4af51fee1373d",
+  "first_slot": 333,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_341_f0b2b878.png"
+ },
+ {
+  "index": 342,
+  "md5": "92e00d2e6d77ea9bb1adb597388ed571",
+  "first_slot": 334,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_342_92e00d2e.png"
+ },
+ {
+  "index": 343,
+  "md5": "6a5c514e978961182ac27b96b31582ac",
+  "first_slot": 335,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_343_6a5c514e.png"
+ },
+ {
+  "index": 344,
+  "md5": "fd02b17e7fe2937b082c0d333c51dad6",
+  "first_slot": 336,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_344_fd02b17e.png"
+ },
+ {
+  "index": 345,
+  "md5": "6c2d02775bceb533cbb3b0f365479e83",
+  "first_slot": 337,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_345_6c2d0277.png"
+ },
+ {
+  "index": 346,
+  "md5": "1e91c2e20fc3f7f79c0f6bbab19dad32",
+  "first_slot": 338,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_346_1e91c2e2.png"
+ },
+ {
+  "index": 347,
+  "md5": "08ae7fe4cb4fea901e31b19a2ffd24ca",
+  "first_slot": 339,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_347_08ae7fe4.png"
+ },
+ {
+  "index": 348,
+  "md5": "525ba7e9f3562f54dcf36dcde8ec50c6",
+  "first_slot": 340,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_348_525ba7e9.png"
+ },
+ {
+  "index": 349,
+  "md5": "6240f0fc9eac262e57af334ea719827c",
+  "first_slot": 341,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_349_6240f0fc.png"
+ },
+ {
+  "index": 350,
+  "md5": "a288eb4270b8176f51c06de817833bfd",
+  "first_slot": 342,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_350_a288eb42.png"
+ },
+ {
+  "index": 351,
+  "md5": "1a996b6b10bc389b695f127ed8292497",
+  "first_slot": 343,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_351_1a996b6b.png"
+ },
+ {
+  "index": 352,
+  "md5": "cda48feb2b948ed0f1ad26033fbd62de",
+  "first_slot": 344,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_352_cda48feb.png"
+ },
+ {
+  "index": 353,
+  "md5": "83e2fe449c44cfa391ae145726a496a6",
+  "first_slot": 345,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_353_83e2fe44.png"
+ },
+ {
+  "index": 354,
+  "md5": "21d89385641b1da000b18d6a0025a977",
+  "first_slot": 346,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_354_21d89385.png"
+ },
+ {
+  "index": 355,
+  "md5": "43f22d47c7dd220bd280050cc9e7c132",
+  "first_slot": 347,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_355_43f22d47.png"
+ },
+ {
+  "index": 356,
+  "md5": "6d3ea2edf7a386a08272070a7b5f35b6",
+  "first_slot": 348,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_356_6d3ea2ed.png"
+ },
+ {
+  "index": 357,
+  "md5": "a1219c455816bf0158fda755cafc296e",
+  "first_slot": 349,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_357_a1219c45.png"
+ },
+ {
+  "index": 358,
+  "md5": "550388202aa4d05a045116acd570407a",
+  "first_slot": 350,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_358_55038820.png"
+ },
+ {
+  "index": 359,
+  "md5": "0da69d2271cd28c52cb62fc4da127548",
+  "first_slot": 351,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_359_0da69d22.png"
+ },
+ {
+  "index": 360,
+  "md5": "de9909a3c16af7d42cee940b236c4dea",
+  "first_slot": 352,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_360_de9909a3.png"
+ },
+ {
+  "index": 361,
+  "md5": "0e1e768042ac15d3e29d9c981ae24ba0",
+  "first_slot": 353,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_361_0e1e7680.png"
+ },
+ {
+  "index": 362,
+  "md5": "258fc6d4042712da73269e9e2bdb104d",
+  "first_slot": 354,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_362_258fc6d4.png"
+ },
+ {
+  "index": 363,
+  "md5": "51bc3dffcff86d7898bf51cb393576d1",
+  "first_slot": 355,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_363_51bc3dff.png"
+ },
+ {
+  "index": 364,
+  "md5": "e6655b0293a1c1711fbe91b9a1d981d9",
+  "first_slot": 356,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_364_e6655b02.png"
+ },
+ {
+  "index": 365,
+  "md5": "a3f98f84c1b87ab7ebb4782ec0b439a5",
+  "first_slot": 357,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_365_a3f98f84.png"
+ },
+ {
+  "index": 366,
+  "md5": "1711ebdcce75914b1b28880d7423af18",
+  "first_slot": 358,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_366_1711ebdc.png"
+ },
+ {
+  "index": 367,
+  "md5": "66398b382db0c1195e2b2a0dad6c30a0",
+  "first_slot": 359,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_367_66398b38.png"
+ },
+ {
+  "index": 368,
+  "md5": "94044d0eca300e2c1ed92c43987b12a8",
+  "first_slot": 360,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_368_94044d0e.png"
+ },
+ {
+  "index": 369,
+  "md5": "9212a4653a0f48bc0230d40d25e976cc",
+  "first_slot": 361,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_369_9212a465.png"
+ },
+ {
+  "index": 370,
+  "md5": "35fe3df73f08782c3b4e935389081a11",
+  "first_slot": 362,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_370_35fe3df7.png"
+ },
+ {
+  "index": 371,
+  "md5": "578888d109b93ff5adaaa0382ab80d1a",
+  "first_slot": 363,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_371_578888d1.png"
+ },
+ {
+  "index": 372,
+  "md5": "243582c067d5eb85e86c6d9c71c5ba5e",
+  "first_slot": 364,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_372_243582c0.png"
+ },
+ {
+  "index": 373,
+  "md5": "02413a007714096a2531d066da7d7162",
+  "first_slot": 365,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_373_02413a00.png"
+ },
+ {
+  "index": 374,
+  "md5": "488da31d8cba2b2547d3164c0ff96b23",
+  "first_slot": 366,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_374_488da31d.png"
+ },
+ {
+  "index": 375,
+  "md5": "89015b82517ba6e8fee075748037096c",
+  "first_slot": 367,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_375_89015b82.png"
+ },
+ {
+  "index": 376,
+  "md5": "18bc6ca3a66988e737d4ac132cfe7f73",
+  "first_slot": 368,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_376_18bc6ca3.png"
+ },
+ {
+  "index": 377,
+  "md5": "358b28f3c642b734fa13cd57b223cfea",
+  "first_slot": 369,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_377_358b28f3.png"
+ },
+ {
+  "index": 378,
+  "md5": "b3eef7666c0a82b222994f73fc9699ee",
+  "first_slot": 370,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_378_b3eef766.png"
+ },
+ {
+  "index": 379,
+  "md5": "c587c32583afa2659c6dc3e9ce75aa17",
+  "first_slot": 371,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_379_c587c325.png"
+ },
+ {
+  "index": 380,
+  "md5": "c50553039734e5583f2b130bbd927252",
+  "first_slot": 372,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_380_c5055303.png"
+ },
+ {
+  "index": 381,
+  "md5": "625619ada5192d599d30babe050fadcb",
+  "first_slot": 373,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_381_625619ad.png"
+ },
+ {
+  "index": 382,
+  "md5": "9950be473a4719f28708314f452dc5f4",
+  "first_slot": 374,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_382_9950be47.png"
+ },
+ {
+  "index": 383,
+  "md5": "1f99700f674000328cd6b464cfee17ae",
+  "first_slot": 375,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_383_1f99700f.png"
+ },
+ {
+  "index": 384,
+  "md5": "7ebe546150ab2a06f9eef032784dbbfe",
+  "first_slot": 376,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_384_7ebe5461.png"
+ },
+ {
+  "index": 385,
+  "md5": "62442c6d095a0cfa29cd7adccd6993ba",
+  "first_slot": 377,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_385_62442c6d.png"
+ },
+ {
+  "index": 386,
+  "md5": "bb9d7f5dd1f367a51f8a23f08c59f6da",
+  "first_slot": 378,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_386_bb9d7f5d.png"
+ },
+ {
+  "index": 387,
+  "md5": "3f72ec3be3f51a4250de2cf44eb17a76",
+  "first_slot": 379,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_387_3f72ec3b.png"
+ },
+ {
+  "index": 388,
+  "md5": "ea8aae7db29b38057939a42283612425",
+  "first_slot": 380,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_388_ea8aae7d.png"
+ },
+ {
+  "index": 389,
+  "md5": "ab3d678272f9050651212be79cafb47c",
+  "first_slot": 381,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_389_ab3d6782.png"
+ },
+ {
+  "index": 390,
+  "md5": "0aa5fafc831e6fce85ffe7c90858adf1",
+  "first_slot": 382,
+  "source": "dump\\art_resources\\spritebank.bin",
+  "file": "chunk_390_0aa5fafc.png"
+ }
+]

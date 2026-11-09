@@ -1,0 +1,14 @@
+[
+ {
+  "band": "res13 (units 0..15 x4 rot)",
+  "sprites": 64
+ },
+ {
+  "band": "res14 (units 16..21 x4 rot)",
+  "sprites": 64
+ },
+ {
+  "band": "res21 (extra)",
+  "sprites": 43
+ }
+]

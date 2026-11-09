@@ -1,0 +1,141 @@
+{
+ "units": [
+  {
+   "unit": 0,
+   "name": "M-77"
+  },
+  {
+   "unit": 1,
+   "name": "FX-1",
+   "blue": "combat_type_01_blue.png",
+   "green": "combat_type_01_green.png"
+  },
+  {
+   "unit": 2,
+   "name": "AX-87",
+   "blue": "combat_type_02_blue.png",
+   "green": "combat_type_02_green.png"
+  },
+  {
+   "unit": 3,
+   "name": "EF-88",
+   "blue": "combat_type_03_blue.png",
+   "green": "combat_type_03_green.png"
+  },
+  {
+   "unit": 4,
+   "name": "T-79",
+   "blue": "combat_type_04_blue.png",
+   "green": "combat_type_04_green.png"
+  },
+  {
+   "unit": 5,
+   "name": "PT-6",
+   "blue": "combat_type_05_blue.png",
+   "green": "combat_type_05_green.png"
+  },
+  {
+   "unit": 6,
+   "name": "S-61",
+   "blue": "combat_type_06_blue.png",
+   "green": "combat_type_06_green.png"
+  },
+  {
+   "unit": 7,
+   "name": "GS-81",
+   "blue": "combat_type_07_blue.png",
+   "green": "combat_type_07_green.png"
+  },
+  {
+   "unit": 8,
+   "name": "GT-86",
+   "blue": "combat_type_08_blue.png",
+   "green": "combat_type_08_green.png"
+  },
+  {
+   "unit": 9,
+   "name": "HMB-2"
+  },
+  {
+   "unit": 10,
+   "name": "TT-1",
+   "blue": "combat_type_10_blue.png",
+   "green": "combat_type_10_green.png"
+  },
+  {
+   "unit": 11,
+   "name": "SG-4",
+   "blue": "combat_type_11_blue.png",
+   "green": "combat_type_11_green.png"
+  },
+  {
+   "unit": 12,
+   "name": "MR-22",
+   "blue": "combat_type_12_blue.png",
+   "green": "combat_type_12_green.png"
+  },
+  {
+   "unit": 13,
+   "name": "MB-5",
+   "blue": "combat_type_13_blue.png",
+   "green": "combat_type_13_green.png"
+  },
+  {
+   "unit": 14,
+   "name": "MB-4",
+   "blue": "combat_type_14_blue.png",
+   "green": "combat_type_14_green.png"
+  },
+  {
+   "unit": 15,
+   "name": "AAG-4",
+   "blue": "combat_type_15_blue.png",
+   "green": "combat_type_15_green.png"
+  },
+  {
+   "unit": 16,
+   "name": "MM107",
+   "blue": "combat_type_16_blue.png",
+   "green": "combat_type_16_green.png"
+  },
+  {
+   "unit": 17,
+   "name": "SS-80"
+  },
+  {
+   "unit": 18,
+   "name": "GX-77",
+   "blue": "combat_type_18_blue.png",
+   "green": "combat_type_18_green.png"
+  },
+  {
+   "unit": 19,
+   "name": "GX-87",
+   "blue": "combat_type_19_blue.png",
+   "green": "combat_type_19_green.png"
+  },
+  {
+   "unit": 20,
+   "name": "CBX-1",
+   "blue": "combat_type_20_blue.png",
+   "green": "combat_type_20_green.png"
+  },
+  {
+   "unit": 21,
+   "name": "NC-1",
+   "blue": "combat_type_21_blue.png",
+   "green": "combat_type_21_green.png"
+  },
+  {
+   "unit": 22,
+   "name": "C-61",
+   "blue": "combat_type_22_blue.png",
+   "green": "combat_type_22_green.png"
+  }
+ ],
+ "missing": [
+  0,
+  9,
+  17
+ ]
+}

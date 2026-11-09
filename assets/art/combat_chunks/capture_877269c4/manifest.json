@@ -1,0 +1,162 @@
+[
+ {
+  "slot": 128,
+  "kind": "sim",
+  "file": "slot_128_sim.png"
+ },
+ {
+  "slot": 129,
+  "kind": "sim",
+  "file": "slot_129_sim.png"
+ },
+ {
+  "slot": 130,
+  "kind": "sim",
+  "file": "slot_130_sim.png"
+ },
+ {
+  "slot": 131,
+  "kind": "sim",
+  "file": "slot_131_sim.png"
+ },
+ {
+  "slot": 132,
+  "kind": "sim",
+  "file": "slot_132_sim.png"
+ },
+ {
+  "slot": 133,
+  "kind": "sim",
+  "file": "slot_133_sim.png"
+ },
+ {
+  "slot": 134,
+  "kind": "sim",
+  "file": "slot_134_sim.png"
+ },
+ {
+  "slot": 135,
+  "kind": "sim",
+  "file": "slot_135_sim.png"
+ },
+ {
+  "slot": 136,
+  "kind": "map",
+  "file": "slot_136_map.png"
+ },
+ {
+  "slot": 137,
+  "kind": "map",
+  "file": "slot_137_map.png"
+ },
+ {
+  "slot": 138,
+  "kind": "map",
+  "file": "slot_138_map.png"
+ },
+ {
+  "slot": 139,
+  "kind": "map",
+  "file": "slot_139_map.png"
+ },
+ {
+  "slot": 140,
+  "kind": "sim",
+  "file": "slot_140_sim.png"
+ },
+ {
+  "slot": 141,
+  "kind": "sim",
+  "file": "slot_141_sim.png"
+ },
+ {
+  "slot": 142,
+  "kind": "sim",
+  "file": "slot_142_sim.png"
+ },
+ {
+  "slot": 143,
+  "kind": "sim",
+  "file": "slot_143_sim.png"
+ },
+ {
+  "slot": 144,
+  "kind": "sim",
+  "file": "slot_144_sim.png"
+ },
+ {
+  "slot": 145,
+  "kind": "sim",
+  "file": "slot_145_sim.png"
+ },
+ {
+  "slot": 146,
+  "kind": "sim",
+  "file": "slot_146_sim.png"
+ },
+ {
+  "slot": 147,
+  "kind": "sim",
+  "file": "slot_147_sim.png"
+ },
+ {
+  "slot": 148,
+  "kind": "map",
+  "file": "slot_148_map.png"
+ },
+ {
+  "slot": 149,
+  "kind": "map",
+  "file": "slot_149_map.png"
+ },
+ {
+  "slot": 150,
+  "kind": "map",
+  "file": "slot_150_map.png"
+ },
+ {
+  "slot": 151,
+  "kind": "map",
+  "file": "slot_151_map.png"
+ },
+ {
+  "slot": 152,
+  "kind": "sim",
+  "file": "slot_152_sim.png"
+ },
+ {
+  "slot": 153,
+  "kind": "sim",
+  "file": "slot_153_sim.png"
+ },
+ {
+  "slot": 154,
+  "kind": "sim",
+  "file": "slot_154_sim.png"
+ },
+ {
+  "slot": 155,
+  "kind": "sim",
+  "file": "slot_155_sim.png"
+ },
+ {
+  "slot": 156,
+  "kind": "sim",
+  "file": "slot_156_sim.png"
+ },
+ {
+  "slot": 157,
+  "kind": "sim",
+  "file": "slot_157_sim.png"
+ },
+ {
+  "slot": 158,
+  "kind": "sim",
+  "file": "slot_158_sim.png"
+ },
+ {
+  "slot": 159,
+  "kind": "sim",
+  "file": "slot_159_sim.png"
+ }
+]

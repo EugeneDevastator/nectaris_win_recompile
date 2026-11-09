@@ -1,0 +1,235 @@
+{
+ "table_va": "0x42fee8",
+ "scripts": [
+  {
+   "va": "0x42fce8",
+   "bytes": 16,
+   "file": "script_0042fce8.bin",
+   "hex": "0204c0a1826304c5a687680000000000"
+  },
+  {
+   "va": "0x42fcf8",
+   "bytes": 40,
+   "file": "script_0042fcf8.bin",
+   "hex": "0605c0a162230405ceaf70311205c9aa6b2c0d04d8b97a3b05d3b475361704c5a687680000000000"
+  },
+  {
+   "va": "0x42fd20",
+   "bytes": 40,
+   "file": "script_0042fd20.bin",
+   "hex": "0a05e0c1826344036c4d9b03eecf9a02785902c58603e9ca8b0390715203d3b49502c78802765700"
+  },
+  {
+   "va": "0x42fd48",
+   "bytes": 40,
+   "file": "script_0042fd48.bin",
+   "hex": "0509e0c1826344c586c78806e9ca8b6c4d9b06eecf9071529a047657785903d3b495000000000000"
+  },
+  {
+   "va": "0x42fd70",
+   "bytes": 8,
+   "file": "script_0042fd70.bin",
+   "hex": "0105604122230400"
+  },
+  {
+   "va": "0x42fd78",
+   "bytes": 40,
+   "file": "script_0042fd78.bin",
+   "hex": "0605c0a182634406c9aa8b6c4d9b05ceaf907152047657785903d3b49505c5a687685a0000000000"
+  },
+  {
+   "va": "0x42fda0",
+   "bytes": 40,
+   "file": "script_0042fda0.bin",
+   "hex": "0805c5a687685a019b05c0a182634405c9aa8b6c4d03d3b49505ceaf907152027657027859000000"
+  },
+  {
+   "va": "0x42fdc8",
+   "bytes": 40,
+   "file": "script_0042fdc8.bin",
+   "hex": "050aa081624324a58667483a06a98a6b7b4c2d05ae8f705132045637583903937455000000000000"
+  },
+  {
+   "va": "0x42fdf0",
+   "bytes": 40,
+   "file": "script_0042fdf0.bin",
+   "hex": "0a05c0a182634405c9aa8b6c4d02ceaf019001d301d405d5b6977859027152017b05c5a687685a00"
+  },
+  {
+   "va": "0x42fe18",
+   "bytes": 40,
+   "file": "script_0042fe18.bin",
+   "hex": "0707c0a1826344a66706c9aa8b6c4d9b05ceaf907152047657785903b3947501c502685a00000000"
+  },
+  {
+   "va": "0x42fe40",
+   "bytes": 16,
+   "file": "script_0042fe40.bin",
+   "hex": "03016001610362634400000000000000"
+  },
+  {
+   "va": "0x42fe50",
+   "bytes": 32,
+   "file": "script_0042fe50.bin",
+   "hex": "06046041220304694a2b0c04765738190465462708046e4f3011047354351a00"
+  },
+  {
+   "va": "0x42fe70",
+   "bytes": 40,
+   "file": "script_0042fe70.bin",
+   "hex": "0605806142230405896a4b2c0d0476573819058e6f50311205856647281b049374551a0000000000"
+  },
+  {
+   "va": "0x42fe98",
+   "bytes": 40,
+   "file": "script_0042fe98.bin",
+   "hex": "0509c0a1826344c586c78806c9aa8b6c4d9b06ceaf9071529a047657785903d3b495000000000000"
+  },
+  {
+   "va": "0x42fec0",
+   "bytes": 40,
+   "file": "script_0042fec0.bin",
+   "hex": "0509c0a1622304a566270805ceaf70311205c9aa6b2c0d04d8b97a3b05d3b4753617000000000000"
+  }
+ ],
+ "units": [
+  {
+   "unit": 0,
+   "name": "M-77",
+   "script_va": "0x42fce8",
+   "script": "script_0042fce8.bin"
+  },
+  {
+   "unit": 1,
+   "name": "FX-1",
+   "script_va": "0x42fcf8",
+   "script": "script_0042fcf8.bin"
+  },
+  {
+   "unit": 2,
+   "name": "AX-87",
+   "script_va": "0x42fcf8",
+   "script": "script_0042fcf8.bin"
+  },
+  {
+   "unit": 3,
+   "name": "EF-88",
+   "script_va": "0x42fcf8",
+   "script": "script_0042fcf8.bin"
+  },
+  {
+   "unit": 4,
+   "name": "T-79",
+   "script_va": "0x42fd20",
+   "script": "script_0042fd20.bin"
+  },
+  {
+   "unit": 5,
+   "name": "PT-6",
+   "script_va": "0x42fd20",
+   "script": "script_0042fd20.bin"
+  },
+  {
+   "unit": 6,
+   "name": "S-61",
+   "script_va": "0x42fd20",
+   "script": "script_0042fd20.bin"
+  },
+  {
+   "unit": 7,
+   "name": "GS-81",
+   "script_va": "0x42fd48",
+   "script": "script_0042fd48.bin"
+  },
+  {
+   "unit": 8,
+   "name": "GT-86",
+   "script_va": "0x42fd48",
+   "script": "script_0042fd48.bin"
+  },
+  {
+   "unit": 9,
+   "name": "HMB-2",
+   "script_va": "0x42fd70",
+   "script": "script_0042fd70.bin"
+  },
+  {
+   "unit": 10,
+   "name": "TT-1",
+   "script_va": "0x42fd20",
+   "script": "script_0042fd20.bin"
+  },
+  {
+   "unit": 11,
+   "name": "SG-4",
+   "script_va": "0x42fd78",
+   "script": "script_0042fd78.bin"
+  },
+  {
+   "unit": 12,
+   "name": "MR-22",
+   "script_va": "0x42fda0",
+   "script": "script_0042fda0.bin"
+  },
+  {
+   "unit": 13,
+   "name": "MB-5",
+   "script_va": "0x42fdc8",
+   "script": "script_0042fdc8.bin"
+  },
+  {
+   "unit": 14,
+   "name": "MB-4",
+   "script_va": "0x42fdc8",
+   "script": "script_0042fdc8.bin"
+  },
+  {
+   "unit": 15,
+   "name": "AAG-4",
+   "script_va": "0x42fdf0",
+   "script": "script_0042fdf0.bin"
+  },
+  {
+   "unit": 16,
+   "name": "MM107",
+   "script_va": "0x42fe18",
+   "script": "script_0042fe18.bin"
+  },
+  {
+   "unit": 17,
+   "name": "SS-80",
+   "script_va": "0x42fe40",
+   "script": "script_0042fe40.bin"
+  },
+  {
+   "unit": 18,
+   "name": "GX-77",
+   "script_va": "0x42fe50",
+   "script": "script_0042fe50.bin"
+  },
+  {
+   "unit": 19,
+   "name": "GX-87",
+   "script_va": "0x42fe50",
+   "script": "script_0042fe50.bin"
+  },
+  {
+   "unit": 20,
+   "name": "CBX-1",
+   "script_va": "0x42fe70",
+   "script": "script_0042fe70.bin"
+  },
+  {
+   "unit": 21,
+   "name": "NC-1",
+   "script_va": "0x42fe98",
+   "script": "script_0042fe98.bin"
+  },
+  {
+   "unit": 22,
+   "name": "C-61",
+   "script_va": "0x42fec0",
+   "script": "script_0042fec0.bin"
+  }
+ ]
+}
