@@ -1,7 +1,48 @@
-tools/ghidra_12.2_PUBLIC 
-tools/ghidra_12.2_PUBLIC/*
-port/build
-port/build/*
-_bak
-_bak/*
+# ------------------------------------------------------------------ toolchains
+# Ghidra is installed locally for reverse engineering; it is not part of the
+# project and is far too large to keep on the remote.
+tools/ghidra_12.2_PUBLIC/
+tools/ghidra_12.2_PUBLIC
+tools/ghidra_12.2.zip
+ghidra_proj/
+*.gpr
+*.rep/
+
+# Downloaded archives / packages
 *.zip
+*.7z
+*.rar
+
+# ------------------------------------------------------------------ build output
+port/build/
+port/build/*
+**/CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+*.o
+*.obj
+*.pdb
+*.ilk
+
+# ------------------------------------------------------------------ Python
+__pycache__/
+*.py[cod]
+
+# ------------------------------------------------------------------ OS / editor junk
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# ------------------------------------------------------------------ large research captures
+# Raw process-memory dumps, sprite-bank snapshots and old decoder output are
+# regenerable with the scripts in tools/ and do not belong on the remote.
+dump/banks/
+dump/ai_turn2/
+dump/block_changes/
+dump/resources_lzss/
+dump/force_pair/
+dump/combat_full/
+
+# ------------------------------------------------------------------ existing local artifacts
+_bak/
+_bak/*
