@@ -153,6 +153,10 @@ port/build/nectaris.exe assets dump/_validation_mission.json --resolvetest 4 6 0
   1). Cost bit `0x80` is impassable; cost `0x7f` consumes the unit's whole
   movement allowance and is only enterable with full movement left. Regenerate
   with `python tools/export_terrain_rules.py`.
+* **Zone of control:** every living enemy unit projects ZOC over its six
+  adjacent hexes (all unit types, including aircraft). A unit may enter an
+  enemy ZOC hex but must stop there; a unit that starts its turn inside an
+  enemy ZOC may move only one hex that turn. Combat surround uses the same ZOC.
 * `units[].owner`: `0` = player, `1` = enemy.
 * `units[].type`: index into `assets/data/units.json` (0..23).
 * `units[].hp`: 0..7 (7 = full).

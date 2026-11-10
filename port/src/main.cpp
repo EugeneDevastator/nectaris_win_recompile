@@ -389,6 +389,21 @@ static std::vector<int> attackable(const Mission& m, int slot) {
 }
 
 // ------------------------------------------------------------------ movement
+// Enemy zone of control: the six hexes around every living enemy unit.
+// (The original applies ZOC to all unit types, including aircraft.)
+static std::vector<unsigned char> enemyZoc(const Mission& m, int moverOwner) {
+    std::vector<unsigned char> zoc(m.w * m.h, 0);
+    for (const Unit& e : m.units) {
+        if (e.hp <= 0 || e.carried || e.owner == moverOwner) continue;
+        for (int d = 0; d < 6; ++d) {
+            int nx, ny;
+            hexNeighbor(e.x, e.y, d, nx, ny);
+            if (inBounds(m, nx, ny)) zoc[ny * m.w + nx] = 1;
+        }
+    }
+    return zoc;
+}
+
 static std::vector<int> reachable(const Mission& m, int slot) {
     std::vector<int> dist(m.w * m.h, 1 << 29);
     const Unit& u = m.units[slot];
@@ -396,6 +411,25 @@ static std::vector<int> reachable(const Mission& m, int slot) {
     using P = std::pair<int, int>;
     std::priority_queue<P, std::vector<P>, std::greater<P>> pq;
     dist[u.y * m.w + u.x] = 0;
+
+    const std::vector<unsigned char> zoc = enemyZoc(m, u.owner);
+    const bool startInZoc = zoc[u.y * m.w + u.x] != 0;
+
+    // Starting inside an enemy ZOC: only one hex of movement this turn.
+    if (startInZoc) {
+        for (int d = 0; d < 6; ++d) {
+            int nx, ny;
+            hexNeighbor(u.x, u.y, d, nx, ny);
+            if (!inBounds(m, nx, ny)) continue;
+            int mc = moveCost(m, nx, ny, t.moveClass);
+            if (mc & kMoveImpassable) continue;
+            if (unitAt(m, nx, ny) >= 0) continue;
+            int eff = (mc == kMoveAll) ? t.movePts : mc;
+            if (eff <= t.movePts) dist[ny * m.w + nx] = eff;
+        }
+        return dist;
+    }
+
     pq.push({0, u.y * m.w + u.x});
     while (!pq.empty()) {
         auto [c, idx] = pq.top();
@@ -421,7 +455,8 @@ static std::vector<int> reachable(const Mission& m, int slot) {
             }
             if (nc <= t.movePts && nc < dist[ny * m.w + nx]) {
                 dist[ny * m.w + nx] = nc;
-                pq.push({nc, ny * m.w + nx});
+                // Entering an enemy ZOC ends movement: do not expand from it.
+                if (!zoc[ny * m.w + nx]) pq.push({nc, ny * m.w + nx});
             }
         }
     }
