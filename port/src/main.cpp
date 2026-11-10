@@ -1909,11 +1909,13 @@ int main(int argc, char** argv) {
         }
         if (!aiPath.empty()) aiStartWaypoint();
         else aiWait = 0.18f;      // no move: brief pause, then resolve attack
+        std::cout << "[ai] " << gTypes[u.type].name << " "
+                  << u.x << "," << u.y << " path " << aiPath.size() << std::endl;
         return true;
     };
 
     std::cout << "loaded " << gMission.name << " " << gMission.w << "x" << gMission.h
-              << ", units " << gMission.units.size() << "\n";
+              << ", units " << gMission.units.size() << std::endl;
 
     int frame = 0;
     while (!WindowShouldClose()) {
@@ -2149,6 +2151,7 @@ int main(int argc, char** argv) {
             } else if (currentPlayer == 0) {
                 currentPlayer = 1;
                 for (auto& u : gMission.units) u.acted = (u.owner == 0);
+                std::cout << "[turn] enemy" << std::endl;
                 // Start the animated enemy turn; units act one at a time.
                 aiActive = true;
                 aiWait = 0.45f;
@@ -2312,6 +2315,7 @@ int main(int argc, char** argv) {
                 currentPlayer = 0;
                 for (auto& u : gMission.units) u.acted = (u.owner == 1);
                 resetSelection();
+                std::cout << "[turn] player" << std::endl;
             }
         }
 
