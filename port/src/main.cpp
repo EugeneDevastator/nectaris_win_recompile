@@ -404,61 +404,71 @@ static void syncCargo(Mission& m) {
 static void queueCombat(int atk, int def, int hpA0, int hpD0, int hpA1, int hpD1,
                         const CombatResult& r, int mode);
 
-static void aiTurn() {
-    // Simple: each enemy moves one step toward the nearest player unit and attacks if adjacent.
-    for (int i = 0; i < (int)gMission.units.size(); ++i) {
-        Unit& u = gMission.units[i];
-        if (u.hp <= 0 || u.owner != 1 || u.acted || u.carried) continue;
-
-        int best = -1, bestD = 1 << 20;
-        for (int j = 0; j < (int)gMission.units.size(); ++j) {
-            const Unit& p = gMission.units[j];
-            if (p.hp <= 0 || p.owner != 1 || p.carried) continue;
-            int d = std::abs(p.x - u.x) + std::abs(p.y - u.y);
-            if (d < bestD) { bestD = d; best = j; }
-        }
-        if (best < 0) continue;
-        const Unit& target = gMission.units[best];
-
-        auto dist = reachable(gMission, i);
-        int bestCell = -1, bestScore = 1 << 20;
-        bool targetAir = gTypes[target.type].moveClass == 4;
-        int range = targetAir ? gTypes[u.type].ctrAir : gTypes[u.type].ctrGround;
-        for (int y = 0; y < gMission.h; ++y)
-            for (int x = 0; x < gMission.w; ++x) {
-                int idx = y * gMission.w + x;
-                if (dist[idx] >= (1 << 29)) continue;
-                if (unitAt(gMission, x, y) >= 0 && !(x == u.x && y == u.y)) continue;
-                int d = hexDistance(x, y, target.x, target.y);
-                int s;
-                if (range >= 2) {
-                    if (d < 2) s = 100 + (2 - d);
-                    else if (d > range) s = d - range;
-                    else s = std::abs(d - range) / 4;
-                } else {
-                    s = d;
-                }
-                if (s < bestScore) { bestScore = s; bestCell = idx; }
-            }
-        if (bestCell >= 0) {
-            u.x = bestCell % gMission.w;
-            u.y = bestCell / gMission.w;
-        }
-        auto targets = attackable(gMission, i);
-        if (!targets.empty()) {
-            int tgt = targets.front();
-            Unit& D = gMission.units[tgt];
-            int mode = hexDistance(u.x, u.y, D.x, D.y) - 1;
-            int hpA0 = u.hp, hpD0 = D.hp;
-            CombatResult r = resolveBattle(i, tgt, mode);
-            applyCombatResult(gMission, r, gCombatRules);
-            queueCombat(i, tgt, hpA0, hpD0, u.hp, D.hp, r, mode);
-            std::cout << "[AI] " << gTypes[u.type].name << " -> " << gTypes[D.type].name
-                      << "  dmg " << r.dmgToDef << "/" << r.dmgToAtk
-                      << "  hp " << r.newHpDef << "/" << r.newHpAtk << "\n";
-        }
-        u.acted = true;
+static int nearestPlayerTarget(const Mission& m, int slot) {
+    const Unit& u = m.units[slot];
+    int best = -1, bestD = 1 << 20;
+    for (int j = 0; j < (int)m.units.size(); ++j) {
+        const Unit& p = m.units[j];
+        if (p.hp <= 0 || p.owner != 0 || p.carried) continue;
+        int d = std::abs(p.x - u.x) + std::abs(p.y - u.y);
+        if (d < bestD) { bestD = d; best = j; }
     }
+    return best;
+}
+
+// Best destination cell from the precomputed reachable map, using the same
+// scoring as the original simple AI: close in / hold firing range.
+static int aiDestination(const Mission& m, int slot, int targetSlot,
+                         const std::vector<int>& dist) {
+    const Unit& u = m.units[slot];
+    const Unit& target = m.units[targetSlot];
+    bool targetAir = gTypes[target.type].moveClass == 4;
+    int range = targetAir ? gTypes[u.type].ctrAir : gTypes[u.type].ctrGround;
+    int bestCell = -1, bestScore = 1 << 20;
+    for (int y = 0; y < m.h; ++y)
+        for (int x = 0; x < m.w; ++x) {
+            int idx = y * m.w + x;
+            if (dist[idx] >= (1 << 29)) continue;
+            if (unitAt(m, x, y) >= 0 && !(x == u.x && y == u.y)) continue;
+            int d = hexDistance(x, y, target.x, target.y);
+            int s;
+            if (range >= 2) {
+                if (d < 2) s = 100 + (2 - d);
+                else if (d > range) s = d - range;
+                else s = std::abs(d - range) / 4;
+            } else {
+                s = d;
+            }
+            if (s < bestScore) { bestScore = s; bestCell = idx; }
+        }
+    return bestCell;
+}
+
+// Reconstruct the travelled cells from the Dijkstra map (target -> source).
+static std::vector<std::pair<int, int>> movementPath(const Mission& m, int slot,
+                                                     const std::vector<int>& dist,
+                                                     int tx, int ty) {
+    std::vector<std::pair<int, int>> rev;
+    const Unit& u = m.units[slot];
+    const UnitType& t = gTypes[u.type];
+    int cx = tx, cy = ty, guard = 0;
+    while ((cx != u.x || cy != u.y) && guard++ < 512) {
+        rev.push_back({cx, cy});
+        int cur = dist[cy * m.w + cx];
+        int cost = moveCost(m, cx, cy, t.moveClass);
+        int nx2 = -1, ny2 = -1;
+        for (int d = 0; d < 6; ++d) {
+            int nx, ny;
+            hexNeighbor(cx, cy, d, nx, ny);
+            if (!inBounds(m, nx, ny)) continue;
+            if (dist[ny * m.w + nx] + cost == cur) { nx2 = nx; ny2 = ny; break; }
+        }
+        if (nx2 < 0) break;
+        cx = nx2;
+        cy = ny2;
+    }
+    std::reverse(rev.begin(), rev.end());
+    return rev;
 }
 
 // ------------------------------------------------------------------ hex map
@@ -616,14 +626,26 @@ static void drawUnitSprite(const Mission& m, const Unit& u, Texture2D playerTex,
 }
 
 // ------------------------------------------------------------------ combat screen
+// One combatant as shown on screen.  Sides are explicit: the view always puts
+// team 0 (player) on the left and team 1 (computer) on the right, no matter who
+// initiated the attack.  Everything the renderer needs is precomputed here.
+struct CombatSide {
+    int unit = -1;          // mission unit slot
+    int team = 0;           // 0 player, 1 computer
+    int terrain = 0;
+    int panel = 0;          // background panel index
+    int hp0 = 0, hp1 = 0;   // formations before / after
+    int atkPct = 0, defPct = 0;
+    int support = 0, expPct = 0, xpGain = 0, damage = 0;
+};
+
 struct CombatView {
     bool active = false;
-    int atk = -1, def = -1;
-    int hpA0 = 0, hpD0 = 0, hpA1 = 0, hpD1 = 0;
-    int mode = 0;
-    int panelA = 0, panelB = 0;
-    CombatResult r;
-    float t = 0;   // animation clock (ride-in / fire / explosions)
+    bool ranged = false;
+    CombatSide left;        // always the player
+    CombatSide right;       // always the computer
+    CombatResult r;         // shared simulation info (surround, terrain ...)
+    float t = 0;            // animation clock (ride-in / fire / explosions)
 };
 static std::deque<CombatView> gCombatQueue;
 static CombatView gCv;
@@ -634,9 +656,7 @@ static int terrainRemap(int t) {
 }
 
 // Mirrors FUN_00415790: the two panels are drawn with param4 = 8 (first) and 0
-// (second), and param2/param3 order differs per panel:
-//   first  = FUN(0x180, atkTerrain, defTerrain, 8)
-//   second = FUN(0x190, defTerrain, atkTerrain, 0)
+// (second), each using its own terrain first and the opponent's second.
 // Direct tables index [remap[p2]*16 + remap[p3] + param4];
 // indirect tables index [remap[p2]*2 + (param4>>3)].
 static int combatPanelFor(int terrainA, int terrainB, bool indirect, bool first) {
@@ -656,19 +676,54 @@ static int combatPanelFor(int terrainA, int terrainB, bool indirect, bool first)
     return idx;
 }
 
+static CombatSide makeCombatSide(int slot, int hp0, int hp1,
+                                 const CombatResult& r, bool isAttacker) {
+    CombatSide s;
+    s.unit = slot;
+    s.team = gMission.units[slot].owner;
+    s.terrain = terrainAt(gMission, gMission.units[slot].x, gMission.units[slot].y);
+    s.hp0 = hp0;
+    s.hp1 = hp1;
+    s.atkPct = isAttacker ? r.atkStrength : r.ctrStrength;
+    s.defPct = isAttacker ? r.ctrDefense : r.defStrength;
+    s.support = isAttacker ? r.supportAtk : r.supportDef;
+    s.expPct = isAttacker ? r.expPctA : r.expPctD;
+    s.xpGain = isAttacker ? r.xpToAtk : r.xpToDef;
+    s.damage = isAttacker ? r.dmgToDef : r.dmgToAtk;
+    return s;
+}
+
+// The renderer only receives explicit screen sides.  Each side carries its
+// unit, team and terrain; the background panel is derived from that side's
+// terrain (own terrain first, opponent second).
+static CombatView buildCombatView(const CombatSide& left, const CombatSide& right,
+                                  const CombatResult& r, bool ranged) {
+    CombatView v;
+    v.r = r;
+    v.ranged = ranged;
+    v.left = left;
+    v.right = right;
+    v.left.panel = combatPanelFor(v.left.terrain, v.right.terrain, ranged, true);
+    v.right.panel = combatPanelFor(v.right.terrain, v.left.terrain, ranged, false);
+    return v;
+}
+
+// Normal attack flow: turn an attacker/defender exchange into a view whose
+// sides are fixed by team.  Player (team 0) is always left, computer (team 1)
+// always right, even when the computer initiated the attack.
+static CombatView buildCombatViewFromExchange(int atk, int def,
+                                              int hpA0, int hpD0, int hpA1, int hpD1,
+                                              const CombatResult& r, int mode) {
+    CombatSide attacker = makeCombatSide(atk, hpA0, hpA1, r, true);
+    CombatSide defender = makeCombatSide(def, hpD0, hpD1, r, false);
+    const CombatSide& left = (attacker.team == 0) ? attacker : defender;
+    const CombatSide& right = (attacker.team == 0) ? defender : attacker;
+    return buildCombatView(left, right, r, mode > 0);
+}
+
 static void queueCombat(int atk, int def, int hpA0, int hpD0, int hpA1, int hpD1,
                         const CombatResult& r, int mode) {
-    CombatView v;
-    v.atk = atk;
-    v.def = def;
-    v.hpA0 = hpA0; v.hpD0 = hpD0; v.hpA1 = hpA1; v.hpD1 = hpD1;
-    v.r = r;
-    v.mode = mode;
-    int ta = terrainAt(gMission, gMission.units[atk].x, gMission.units[atk].y);
-    int td = terrainAt(gMission, gMission.units[def].x, gMission.units[def].y);
-    v.panelA = combatPanelFor(ta, td, mode > 0, true);
-    v.panelB = combatPanelFor(td, ta, mode > 0, false);
-    gCombatQueue.push_back(v);
+    gCombatQueue.push_back(buildCombatViewFromExchange(atk, def, hpA0, hpD0, hpA1, hpD1, r, mode));
 }
 
 static void startNextCombat() {
@@ -972,7 +1027,7 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
     float playW = std::min(W * 0.80f, H * 1.066667f);  // 512/480 of the screen height
     float playX = (W - playW) * 0.5f;
     float topH  = H * 0.20f;      // 96 / 480
-    bool ranged = v.mode > 0;
+    bool ranged = v.ranged;
     float gap = ranged ? playW * 0.05f : 0.0f;
 
     // Adjacent attacks must fill the whole combat view: make the panels square
@@ -987,20 +1042,20 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
     float axPanel = playX + (playW - (2.0f * panW + gap)) * 0.5f;
     float dxPanel = axPanel + panW + gap;
 
-    const Unit& A = gMission.units[v.atk];
-    const Unit& D = gMission.units[v.def];
-    const UnitType& TA = gTypes[A.type];
-    const UnitType& TD = gTypes[D.type];
+    const Unit& L = gMission.units[v.left.unit];
+    const Unit& R = gMission.units[v.right.unit];
+    const UnitType& TL = gTypes[L.type];
+    const UnitType& TR = gTypes[R.type];
     const CombatResult& r = v.r;
 
     // ----- top: names + HP (initial, then the post-combat count)
     DrawRectangle((int)playX, 0, (int)playW, (int)topH, NAVY);
     int nameSize = (int)(topH * 0.30f);
-    uiText(TA.name.c_str(), (int)(playX + playW * 0.03f), (int)(topH * 0.30f), nameSize, TXT);
+    uiText(TL.name.c_str(), (int)(playX + playW * 0.03f), (int)(topH * 0.30f), nameSize, TXT);
     float nfs = uiFontPixels(nameSize);
-    float rw = gUiFontReady ? MeasureTextEx(gUiFont, TD.name.c_str(), nfs, uiSpacing(nameSize)).x
-                            : (float)MeasureText(TD.name.c_str(), nameSize * 2);
-    uiText(TD.name.c_str(), (int)(playX + playW * 0.97f - rw), (int)(topH * 0.30f),
+    float rw = gUiFontReady ? MeasureTextEx(gUiFont, TR.name.c_str(), nfs, uiSpacing(nameSize)).x
+                            : (float)MeasureText(TR.name.c_str(), nameSize * 2);
+    uiText(TR.name.c_str(), (int)(playX + playW * 0.97f - rw), (int)(topH * 0.30f),
            nameSize, TXT);
     auto hpBox = [&](float fx, int val) {
         float s = topH * 0.46f;
@@ -1028,13 +1083,17 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
     // Shooting is 1.2x slower than the original 0.35 s window.
     float fireT = 2.15f, fireDur = 0.42f;
     float impactT = fireT + fireDur + 0.10f;
-    int nA0 = std::clamp(v.hpA0 + 1, 0, 8);   // initial vehicles
-    int nD0 = std::clamp(v.hpD0 + 1, 0, 8);
-    int nA1 = (v.hpA1 > 0) ? std::clamp(v.hpA1 + 1, 0, 8) : 0;  // survivors
-    int nD1 = (v.hpD1 > 0) ? std::clamp(v.hpD1 + 1, 0, 8) : 0;
+    int hpL0 = v.left.hp0;
+    int hpR0 = v.right.hp0;
+    int hpL1 = v.left.hp1;
+    int hpR1 = v.right.hp1;
+    int nL0 = std::clamp(hpL0 + 1, 0, 8);   // initial vehicles, left side
+    int nR0 = std::clamp(hpR0 + 1, 0, 8);
+    int nL1 = (hpL1 > 0) ? std::clamp(hpL1 + 1, 0, 8) : 0;  // survivors
+    int nR1 = (hpR1 > 0) ? std::clamp(hpR1 + 1, 0, 8) : 0;
     bool impact = t > impactT;
-    hpBox(0.28f, impact ? nA1 : nA0);
-    hpBox(0.62f, impact ? nD1 : nD0);
+    hpBox(0.28f, impact ? nL1 : nL0);
+    hpBox(0.62f, impact ? nR1 : nR0);
 
     // ----- middle: terrain close-ups + ride-in + simultaneous fire
     static const float FORM[8][2] = {
@@ -1053,13 +1112,14 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
         DrawTexturePro(tex, {0, 0, (float)tex.width, (float)tex.height},
                        {x, panY, w, panH}, {0, 0}, 0, WHITE);
     };
+    // v.left / v.right already carry their fixed-side background panel.
     if (ranged) {
-        drawPanel(v.panelA, axPanel, panW);
-        drawPanel(v.panelB, dxPanel, panW);
+        drawPanel(v.left.panel, axPanel, panW);
+        drawPanel(v.right.panel, dxPanel, panW);
     } else {
         // 1px overlap hides the floating-point seam between the two panels
-        drawPanel(v.panelA, axPanel, panW + 1.0f);
-        drawPanel(v.panelB, dxPanel, panW);
+        drawPanel(v.left.panel, axPanel, panW + 1.0f);
+        drawPanel(v.right.panel, dxPanel, panW);
     }
 
     Color flashA = (t > impactT && t < impactT + 0.50f) ? Color{255, 150, 150, 255} : WHITE;
@@ -1102,8 +1162,8 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
         }
     };
 
-    drawArmy(axPanel, impact ? nA1 : nA0, A.type, false, recoilA, flashA);
-    drawArmy(dxPanel, impact ? nD1 : nD0, D.type, true, recoilD, flashD);
+    drawArmy(axPanel, impact ? nL1 : nL0, L.type, false, recoilA, flashA);
+    drawArmy(dxPanel, impact ? nR1 : nR0, R.type, true, recoilD, flashD);
 
     // ----- simultaneous fire: every surviving shot aims at a killed vehicle
     // slot when possible, otherwise at a deterministic scatter point.
@@ -1115,25 +1175,25 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
         return panelPoint(side == 0 ? dxPanel : axPanel, rx, ry);
     };
 
-    Vector2 fromA[8], toA[8], fromD[8], toD[8];
-    int killedD = std::max(0, nD0 - nD1);   // defender vehicles lost
-    int killedA = std::max(0, nA0 - nA1);   // attacker vehicles lost
-    for (int i = 0; i < nA0; ++i) {
-        fromA[i] = panelPoint(axPanel, FORM[i][0], FORM[i][1]);
-        if (i < killedD) {
-            int slot = nD1 + i;
-            toA[i] = panelPoint(dxPanel, 1.0f - FORM[slot][0], FORM[slot][1]);
+    Vector2 fromL[8], toL[8], fromR[8], toR[8];
+    int killedR = std::max(0, nR0 - nR1);   // right-side (enemy) vehicles lost
+    int killedL = std::max(0, nL0 - nL1);   // left-side (player) vehicles lost
+    for (int i = 0; i < nL0; ++i) {
+        fromL[i] = panelPoint(axPanel, FORM[i][0], FORM[i][1]);
+        if (i < killedR) {
+            int slot = nR1 + i;
+            toL[i] = panelPoint(dxPanel, 1.0f - FORM[slot][0], FORM[slot][1]);
         } else {
-            toA[i] = scatter(0, i);
+            toL[i] = scatter(0, i);
         }
     }
-    for (int i = 0; i < nD0; ++i) {
-        fromD[i] = panelPoint(dxPanel, 1.0f - FORM[i][0], FORM[i][1]);
-        if (i < killedA) {
-            int slot = nA1 + i;
-            toD[i] = panelPoint(axPanel, FORM[slot][0], FORM[slot][1]);
+    for (int i = 0; i < nR0; ++i) {
+        fromR[i] = panelPoint(dxPanel, 1.0f - FORM[i][0], FORM[i][1]);
+        if (i < killedL) {
+            int slot = nL1 + i;
+            toR[i] = panelPoint(axPanel, FORM[slot][0], FORM[slot][1]);
         } else {
-            toD[i] = scatter(1, i);
+            toR[i] = scatter(1, i);
         }
     }
 
@@ -1155,19 +1215,19 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
                 }
             }
         };
-        fire(fromA, toA, nA0, recoilA);
-        fire(fromD, toD, nD0, recoilD);
+        fire(fromL, toL, nL0, recoilA);
+        fire(fromR, toR, nR0, recoilD);
     }
 
     if (t > impactT && t < impactT + 0.85f) {
         float e = (t - impactT) * 7.0f;
-        for (int i = 0; i < nA0; ++i) {
+        for (int i = 0; i < nL0; ++i) {
             float alpha = 1.0f - std::clamp((t - impactT - i * 0.02f) / 0.85f, 0.0f, 1.0f);
-            drawExplosion(toA[i].x, toA[i].y, us * 0.70f, e + i * 0.35f, alpha);
+            drawExplosion(toL[i].x, toL[i].y, us * 0.70f, e + i * 0.35f, alpha);
         }
-        for (int i = 0; i < nD0; ++i) {
+        for (int i = 0; i < nR0; ++i) {
             float alpha = 1.0f - std::clamp((t - impactT - i * 0.02f) / 0.85f, 0.0f, 1.0f);
-            drawExplosion(toD[i].x, toD[i].y, us * 0.70f, e + i * 0.35f, alpha);
+            drawExplosion(toR[i].x, toR[i].y, us * 0.70f, e + i * 0.35f, alpha);
         }
     }
 
@@ -1189,24 +1249,28 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
     float colR = playX + playW * 0.69f;
     float y0 = botY + std::max(botH * 0.07f, (botH - (rfs + 3.0f * lh)) * 0.5f);
 
-    line(colL, y0, "ATTACKER", BORDER);
+    // Column stats come straight from the fixed-side data.
+    const CombatSide& SL = v.left;
+    const CombatSide& SR = v.right;
+
+    line(colL, y0, "PLAYER", BORDER);
     line(colC, y0, "SIMULATION", BORDER);
-    line(colR, y0, "DEFENDER", BORDER);
+    line(colR, y0, "ENEMY", BORDER);
     y0 += lh;
 
-    line(colL, y0, TextFormat("ATK %d DEF %d", r.atkStrength, r.ctrDefense), TXT);
+    line(colL, y0, TextFormat("ATK %d DEF %d", SL.atkPct, SL.defPct), TXT);
     line(colC, y0, TextFormat("SURROUND %d%%", r.surroundPct),
          r.surroundPct ? kRed : DIM);
-    line(colR, y0, TextFormat("ATK %d DEF %d", r.ctrStrength, r.defStrength), TXT);
+    line(colR, y0, TextFormat("ATK %d DEF %d", SR.atkPct, SR.defPct), TXT);
 
-    line(colL, y0 + lh, TextFormat("SUP+%d EXP+%d%%", r.supportAtk, r.expPctA), DIM);
+    line(colL, y0 + lh, TextFormat("SUP+%d EXP+%d%%", SL.support, SL.expPct), DIM);
     line(colC, y0 + lh, TextFormat("T%d/%d DEF%d>%d",
          r.terrainDefA, r.terrainDefD, r.defBeforeSurround, r.defAfterSurround), DIM);
-    line(colR, y0 + lh, TextFormat("SUP+%d EXP+%d%%", r.supportDef, r.expPctD), DIM);
+    line(colR, y0 + lh, TextFormat("SUP+%d EXP+%d%%", SR.support, SR.expPct), DIM);
 
-    line(colL, y0 + lh * 2, TextFormat("HP %d>%d XP+%d", v.hpA0, r.newHpAtk, r.xpToAtk), TXT);
-    line(colC, y0 + lh * 2, TextFormat("DMG %d/%d", r.dmgToDef, r.dmgToAtk), TXT);
-    line(colR, y0 + lh * 2, TextFormat("HP %d>%d XP+%d", v.hpD0, r.newHpDef, r.xpToDef), TXT);
+    line(colL, y0 + lh * 2, TextFormat("HP %d>%d XP+%d", SL.hp0, SL.hp1, SL.xpGain), TXT);
+    line(colC, y0 + lh * 2, TextFormat("DMG %d/%d", SL.damage, SR.damage), TXT);
+    line(colR, y0 + lh * 2, TextFormat("HP %d>%d XP+%d", SR.hp0, SR.hp1, SR.xpGain), TXT);
 }
 
 static std::string resolveAssets(int argc, char** argv) {
@@ -1328,7 +1392,29 @@ int main(int argc, char** argv) {
     if (argc > 3 && std::string(argv[3]) == "--demo") {
         for (int t = 0; t < 3; ++t) {
             for (auto& u : gMission.units) u.acted = (u.owner == 0);
-            aiTurn();
+            for (;;) {
+                int slot = -1;
+                for (int i = 0; i < (int)gMission.units.size(); ++i) {
+                    const Unit& u = gMission.units[i];
+                    if (u.owner == 1 && u.hp > 0 && !u.acted && !u.carried) { slot = i; break; }
+                }
+                if (slot < 0) break;
+                Unit& u = gMission.units[slot];
+                int tgt = nearestPlayerTarget(gMission, slot);
+                if (tgt < 0) { u.acted = true; continue; }
+                std::vector<int> dist = reachable(gMission, slot);
+                int cell = aiDestination(gMission, slot, tgt, dist);
+                if (cell >= 0) { u.x = cell % gMission.w; u.y = cell / gMission.w; }
+                auto targets = attackable(gMission, slot);
+                if (!targets.empty()) {
+                    int t2 = targets.front();
+                    Unit& D = gMission.units[t2];
+                    int mode = hexDistance(u.x, u.y, D.x, D.y) - 1;
+                    CombatResult r = resolveBattle(slot, t2, mode);
+                    applyCombatResult(gMission, r, gCombatRules);
+                }
+                u.acted = true;
+            }
         }
         return 0;
     }
@@ -1486,22 +1572,18 @@ int main(int argc, char** argv) {
             }
         }
         if (a >= 0 && d >= 0) {
-            gCv.active = true;
-            gCv.atk = a; gCv.def = d;
-            gCv.hpA0 = gMission.units[a].hp;
-            gCv.hpD0 = gMission.units[d].hp;
-            gCv.mode = shotMode;
+            if (argc > 7 && std::string(argv[7]) == "enemy") std::swap(a, d);
             CombatRng shotRng;
             shotRng.seed(0xC0FFEE);
-            gCv.r = resolveCombat(gMission, gTypes, gTerrain, gCombatRules,
-                                  a, d, gCv.mode, shotRng);
-            gCv.hpA1 = gCv.r.newHpAtk;
-            gCv.hpD1 = gCv.r.newHpDef;
-            int ta = terrainAt(gMission, gMission.units[a].x, gMission.units[a].y);
-            int td = terrainAt(gMission, gMission.units[d].x, gMission.units[d].y);
-            gCv.panelA = combatPanelFor(ta, td, gCv.mode > 0, true);
-            gCv.panelB = combatPanelFor(td, ta, gCv.mode > 0, false);
+            CombatResult r = resolveCombat(gMission, gTypes, gTerrain, gCombatRules,
+                                           a, d, shotMode, shotRng);
+            gCv = buildCombatViewFromExchange(a, d, gMission.units[a].hp, gMission.units[d].hp,
+                                              r.newHpAtk, r.newHpDef, r, shotMode);
+            gCv.active = true;
             gCv.t = (argc > 5) ? (float)std::atof(argv[5]) : 2.70f;
+            std::cout << "combat panels L=" << gCv.left.panel << " (terrain "
+                      << gCv.left.terrain << ") R=" << gCv.right.panel
+                      << " (terrain " << gCv.right.terrain << ")\n";
             for (int k = 0; k < 6; ++k) {
                 BeginDrawing();
                 drawCombatScreen(gCv, playerTex, enemyTex);
@@ -1559,6 +1641,17 @@ int main(int argc, char** argv) {
     std::string notice;
     float noticeT = 0.0f;
 
+    // Animated enemy turn: one unit at a time, stepped along its move path.
+    bool aiActive = false;
+    float aiWait = 0.0f;
+    int aiSlot = -1;
+    std::vector<std::pair<int, int>> aiPath;
+    int aiPathIdx = 0;
+    bool aiAnimating = false;
+    int aiAnimSlot = -1;
+    float aiAnimT = 0.0f, aiAnimDur = 0.13f;
+    float aiFromX = 0, aiFromY = 0, aiToX = 0, aiToY = 0;
+
     struct Fx { float t; float x, y; int dmg; bool onDefender; };
     std::vector<Fx> fx;
     InitAudioDevice();
@@ -1571,6 +1664,16 @@ int main(int argc, char** argv) {
         showReach = false;
         reach.clear();
         targets.clear();
+    };
+
+    auto resetAiTurn = [&]() {
+        aiActive = false;
+        aiWait = 0.0f;
+        aiSlot = -1;
+        aiPath.clear();
+        aiPathIdx = 0;
+        aiAnimating = false;
+        aiAnimSlot = -1;
     };
 
     auto selectUnit = [&](int slot) {
@@ -1723,6 +1826,89 @@ int main(int argc, char** argv) {
         say(gTypes[c.type].name + " loaded onto " + gTypes[t.type].name);
         if (!t.acted) selectUnit(transSlot);
         else resetSelection();
+        return true;
+    };
+
+    auto aiStartWaypoint = [&]() -> bool {
+        if (aiSlot < 0 || aiPathIdx >= (int)aiPath.size()) return false;
+        Unit& u = gMission.units[aiSlot];
+        float hx, hy;
+        hexCenter(aiPath[aiPathIdx].first, aiPath[aiPathIdx].second, hx, hy);
+        float usz = gHexSize * 1.75f;
+        aiFromX = (u.px >= 0) ? u.px : hx - usz / 2;
+        aiFromY = (u.py >= 0) ? u.py : hy - usz / 2;
+        aiToX = hx - usz / 2;
+        aiToY = hy - usz / 2;
+        aiAnimT = 0.0f;
+        aiAnimating = true;
+        aiAnimSlot = aiSlot;
+        ++aiPathIdx;
+        return true;
+    };
+
+    auto aiFinishAction = [&]() {
+        if (aiSlot >= 0 && aiSlot < (int)gMission.units.size()) {
+            Unit& u = gMission.units[aiSlot];
+            auto atkTargets = attackable(gMission, aiSlot);
+            if (!atkTargets.empty()) {
+                int tgt = atkTargets.front();
+                Unit& D = gMission.units[tgt];
+                int mode = hexDistance(u.x, u.y, D.x, D.y) - 1;
+                int hpA0 = u.hp, hpD0 = D.hp;
+                CombatResult r = resolveBattle(aiSlot, tgt, mode);
+                applyCombatResult(gMission, r, gCombatRules);
+                queueCombat(aiSlot, tgt, hpA0, hpD0, u.hp, D.hp, r, mode);
+                std::cout << "[AI] " << gTypes[u.type].name << " -> " << gTypes[D.type].name
+                          << "  dmg " << r.dmgToDef << "/" << r.dmgToAtk
+                          << "  hp " << r.newHpDef << "/" << r.newHpAtk << "\n";
+                startNextCombat();
+            }
+            u.acted = true;
+        }
+        aiSlot = -1;
+        aiAnimSlot = -1;
+        aiAnimating = false;
+        aiPath.clear();
+        aiPathIdx = 0;
+        aiWait = 0.30f;
+    };
+
+    auto aiBeginAction = [&]() -> bool {
+        int slot = -1;
+        for (int i = 0; i < (int)gMission.units.size(); ++i) {
+            const Unit& u = gMission.units[i];
+            if (u.owner == 1 && u.hp > 0 && !u.acted && !u.carried) { slot = i; break; }
+        }
+        if (slot < 0) return false;
+        Unit& u = gMission.units[slot];
+        int tgt = nearestPlayerTarget(gMission, slot);
+        if (tgt < 0) {
+            u.acted = true;
+            aiWait = 0.15f;
+            return true;
+        }
+        std::vector<int> dist = reachable(gMission, slot);
+        int cell = aiDestination(gMission, slot, tgt, dist);
+        aiSlot = slot;
+        aiPath.clear();
+        aiPathIdx = 0;
+        aiAnimating = false;
+        aiAnimSlot = -1;
+        if (cell >= 0) {
+            int tx = cell % gMission.w, ty = cell / gMission.w;
+            aiPath = movementPath(gMission, slot, dist, tx, ty);
+            float usz = gHexSize * 1.75f;
+            if (u.px < 0) {
+                float hx, hy;
+                hexCenter(u.x, u.y, hx, hy);
+                u.px = hx - usz / 2;
+                u.py = hy - usz / 2;
+            }
+            u.x = tx;
+            u.y = ty;
+        }
+        if (!aiPath.empty()) aiStartWaypoint();
+        else aiWait = 0.18f;      // no move: brief pause, then resolve attack
         return true;
     };
 
@@ -1957,14 +2143,21 @@ int main(int argc, char** argv) {
         int mx = 0, my = 0;
         bool inMap = pixelToHex(mouse.x, mouse.y, gMission.w, gMission.h, mx, my);
 
-        if (IsKeyPressed(KEY_SPACE)) {
+        if (IsKeyPressed(KEY_SPACE) && !aiActive) {
             if (selected >= 0) {
                 resetSelection();          // SPACE cancels a selection first
             } else if (currentPlayer == 0) {
                 currentPlayer = 1;
                 for (auto& u : gMission.units) u.acted = (u.owner == 0);
-                aiTurn();
-                startNextCombat();
+                // Start the animated enemy turn; units act one at a time.
+                aiActive = true;
+                aiWait = 0.45f;
+                aiSlot = -1;
+                aiPath.clear();
+                aiPathIdx = 0;
+                aiAnimating = false;
+                aiAnimSlot = -1;
+                resetSelection();
             } else {
                 currentPlayer = 0;
                 for (auto& u : gMission.units) u.acted = (u.owner == 1);
@@ -1974,6 +2167,7 @@ int main(int argc, char** argv) {
             loadMission(missionPath);
             resetSelection();
             resetActionModes();
+            resetAiTurn();
             gCombatQueue.clear();
             gCv.active = false;
             currentPlayer = 0;
@@ -1985,6 +2179,7 @@ int main(int argc, char** argv) {
             missionPath = campaign[campaignIdx];
             resetSelection();
             resetActionModes();
+            resetAiTurn();
             fx.clear();
             gCombatQueue.clear();
             gCv.active = false;
@@ -1996,6 +2191,7 @@ int main(int argc, char** argv) {
             missionPath = campaign[campaignIdx];
             resetSelection();
             resetActionModes();
+            resetAiTurn();
             fx.clear();
             gCombatQueue.clear();
             gCv.active = false;
@@ -2004,7 +2200,7 @@ int main(int argc, char** argv) {
         if (IsKeyPressed(KEY_ESCAPE))
             resetSelection();
 
-        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+        if (!aiActive && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
             int hit = inMap ? unitAt(gMission, mx, my) : -1;
             if (selected < 0) {
                 if (hit >= 0 && gMission.units[hit].owner == currentPlayer &&
@@ -2055,7 +2251,7 @@ int main(int argc, char** argv) {
                     startNextCombat();
                     sel.acted = true;
                     resetSelection();
-                } else if (inMap && hit < 0 &&
+                } else if (inMap && hit < 0 && !sel.acted &&
                            reach[my * gMission.w + mx] <= gTypes[sel.type].movePts) {
                     float ox, oy, nx2, ny2;
                     hexCenter(sel.x, sel.y, ox, oy);
@@ -2063,6 +2259,7 @@ int main(int argc, char** argv) {
                     sel.facing = std::atan2(ny2 - oy, nx2 - ox) * 57.29578f - 90.0f;
                     sel.x = mx;
                     sel.y = my;
+                    sel.acted = true;          // movement consumes the unit's turn
                     if (IsSoundValid(sndMove)) PlaySound(sndMove);
                     // after moving, allow an immediate attack
                     targets = attackable(gMission, selected);
@@ -2075,21 +2272,59 @@ int main(int argc, char** argv) {
         }
 
         // U opens the adjacent unload-target selection for the chosen transport.
-        if (IsKeyPressed(KEY_U) && selected >= 0) {
+        if (!aiActive && IsKeyPressed(KEY_U) && selected >= 0) {
             startUnload(selected);
         }
 
         syncCargo(gMission);
 
-        // smooth movement + effect timers
         float dt = GetFrameTime();
+
+        // ----- animated enemy turn: one unit at a time, hex by hex
+        if (aiActive && currentPlayer == 1 && !gCv.active && gCombatQueue.empty()) {
+            if (aiAnimating) {
+                aiAnimT += dt;
+                float k = std::clamp(aiAnimT / aiAnimDur, 0.0f, 1.0f);
+                float e = k * k * (3.0f - 2.0f * k);
+                if (aiSlot >= 0 && aiSlot < (int)gMission.units.size()) {
+                    Unit& u = gMission.units[aiSlot];
+                    u.px = aiFromX + (aiToX - aiFromX) * e;
+                    u.py = aiFromY + (aiToY - aiFromY) * e;
+                }
+                if (k >= 1.0f) {
+                    if (aiSlot >= 0 && aiSlot < (int)gMission.units.size()) {
+                        Unit& u = gMission.units[aiSlot];
+                        u.px = aiToX;
+                        u.py = aiToY;
+                    }
+                    aiAnimating = false;
+                    aiAnimSlot = -1;
+                    if (aiPathIdx < (int)aiPath.size()) aiStartWaypoint();
+                    else aiWait = 0.12f;
+                }
+            } else if (aiWait > 0.0f) {
+                aiWait -= dt;
+            } else if (aiSlot >= 0) {
+                aiFinishAction();
+            } else if (!aiBeginAction()) {
+                // Enemy turn finished: hand control back to the player.
+                aiActive = false;
+                currentPlayer = 0;
+                for (auto& u : gMission.units) u.acted = (u.owner == 1);
+                resetSelection();
+            }
+        }
+
+        // smooth movement + effect timers
         float usz = gHexSize * 1.75f;
         for (int ui = 0; ui < (int)gMission.units.size(); ++ui) {
             Unit& u = gMission.units[ui];
             float hx, hy;
             hexCenter(u.x, u.y, hx, hy);
             float tx = hx - usz / 2, ty = hy - usz / 2;
-            if (ui == unloadAnimSlot && unloadAnimT < unloadAnimDur) {
+            if (aiAnimating && ui == aiAnimSlot) {
+                // driven by the enemy-turn animation above
+            } else if (ui == unloadAnimSlot && unloadAnimT < unloadAnimDur) {
                 unloadAnimT += dt;
                 float k = std::clamp(unloadAnimT / unloadAnimDur, 0.0f, 1.0f);
                 float e = k * k * (3.0f - 2.0f * k);   // smoothstep

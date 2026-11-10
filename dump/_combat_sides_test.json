@@ -1,0 +1,16 @@
+{
+  "name": "combat_sides_test",
+  "width": 6,
+  "height": 4,
+  "background": "",
+  "terrain": [
+    [0, 0, 0, 0, 0, 0],
+    [0, 2, 9, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0]
+  ],
+  "units": [
+    {"type": 4, "owner": 0, "x": 1, "y": 1, "hp": 7, "rank": 0},
+    {"type": 6, "owner": 1, "x": 2, "y": 1, "hp": 7, "rank": 0}
+  ]
+}

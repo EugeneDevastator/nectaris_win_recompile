@@ -15,7 +15,10 @@ os.makedirs(OUT, exist_ok=True)
 exe = open(os.path.join(ROOT, 'game', 'Nec.exe'), 'rb').read()
 ib = 0x400000
 secs = [(0x1000, 0x27400, 0x400, 0x27400), (0x2a000, 0x6c064, 0x27c00, 0x56200)]
-pal = open(os.path.join(ROOT, 'dump', 'battle_sprites', 'palette.bin'), 'rb').read()
+PALFILE = os.environ.get('PAL', os.path.join(ROOT, 'dump', 'battle_sprites', 'palette.bin'))
+BANK = int(os.environ.get('BANK', '9'))
+TAG = os.environ.get('TAG', 'map')
+pal = open(PALFILE, 'rb').read()
 PAL = [(pal[4 + i * 4], pal[5 + i * 4], pal[6 + i * 4]) for i in range(256)]
 units = json.load(open(os.path.join(ROOT, 'assets', 'data', 'units.json'), encoding='utf-8'))['units']
 names = {u['id']: u['name'] for u in units}
@@ -125,7 +128,7 @@ for t in range(23):
                 continue  # scaled variant, not the full unit
             cimg = Image.new('RGBA', (64, 64), (0, 0, 0, 0))
             for j in range(4):
-                cimg.alpha_composite(unpack(data[j * 128:(j + 1) * 128]), ((j % 2) * 32, (j // 2) * 32))
+                cimg.alpha_composite(unpack(data[j * 128:(j + 1) * 128], BANK), ((j % 2) * 32, (j // 2) * 32))
             # units are stored cut in half horizontally; rotate each half 180
             top = cimg.crop((0, 0, cimg.width, cimg.height // 2)).rotate(180)
             bot = cimg.crop((0, cimg.height // 2, cimg.width, cimg.height)).rotate(180)
@@ -139,7 +142,7 @@ for t in range(23):
         if not bb:
             continue
         cimg = block_frame.crop(bb)
-        fn = 'unit_%02d_frame_%02d.png' % (t, made)
+        fn = 'unit_%02d_frame_%02d_%s.png' % (t, made, TAG)
         cimg.save(os.path.join(OUT, fn))
         all_frames.append((t, fn, cimg.copy()))
         made += 1
@@ -158,5 +161,5 @@ if all_frames:
         y = (i // cols) * cell + 18
         sheet.paste(big, (x, y), big)
         d.text((x, y - 13), '%d %s' % (t, names.get(t, '?')[:6]), fill=(10, 10, 10))
-    sheet.save(os.path.join(OUT, 'unit_frames_atlas.png'))
-    print('total frames', len(all_frames), 'atlas', os.path.join(OUT, 'unit_frames_atlas.png'))
+    sheet.save(os.path.join(OUT, 'unit_frames_atlas_%s.png' % TAG))
+    print('total frames', len(all_frames), 'atlas', os.path.join(OUT, 'unit_frames_atlas_%s.png' % TAG))

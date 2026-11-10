@@ -214,12 +214,24 @@ for i in range(2000):
             open(os.path.join(d, 'tilebank.bin'), 'wb').write(dm.read_abs(h, tb, 0x80000))
         frame('09_combat_%s.png' % hh)
         print('CAPTURED', hh, flush=True)
-        # scan all memory for the first combat chunk signature
-        nz = [i for i, v in enumerate(block) if v]
-        if nz:
-            sig = block[nz[0]:nz[0] + 64]
-            hits = scan_memory(h, sig)
-            print('memory hits', [(hex(b), hex(o), s) for b, o, s, l in hits], flush=True)
+        # save palette now and again once units have materialised
+        open(os.path.join(d, 'palette_at_change.bin'), 'wb').write(dm.read(h, base, 0x480f20, 4 + 256 * 4))
+        time.sleep(2.5)
+        try:
+            pal2 = dm.read(h, base, 0x480f20, 4 + 256 * 4)
+            open(os.path.join(OUT, 'palette_stable.bin'), 'wb').write(pal2)
+            pal = pal2
+            fb = dm.read_abs(h, u32(0x480f18), 704 * 544)
+            rgb = bytearray(768)
+            for i in range(256):
+                rgb[i * 3] = pal[4 + i * 4]
+                rgb[i * 3 + 1] = pal[5 + i * 4]
+                rgb[i * 3 + 2] = pal[6 + i * 4]
+            im = Image.frombytes('P', (704, 544), fb).transpose(Image.FLIP_TOP_BOTTOM).crop((32, 32, 672, 512))
+            im.putpalette(bytes(rgb))
+            im.convert('RGB').save(os.path.join(OUT, '10_stable.png'))
+        except OSError:
+            pass
         captured = True
         break
     time.sleep(0.01)

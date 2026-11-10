@@ -99,7 +99,69 @@ not the stretched map sprites.
   / `attacker_grid_b10.png` show the composed S-61 in blue/green.
 - `dump/combat_chassis_contact.png` shows the exported units.
 
-## Offline decoder DONE (Nov 9)
+## Combat backgrounds + VFX palette (Nov 9)
+- Backgrounds: the 24 terrain close-ups are 16x16 tilemaps (256x256) at the
+  pointer table `0x431148`, drawn from the **live combat tile bank**
+  (`dump/tilebank_battle.bin`) with the combat palette.  **Per-tile palette
+  bank = `1 + ((entry >> 12) & 1)`** (bit 12, not bit 11).  Bank 2 turns
+  palette index `0x18` into the dark pad/road grey (123,123,123) and `0x1C`
+  into the lighter front-face grey (156,156,156); forcing bank 1 made 0x18
+  bright (156) and punched holes when it was wrongly keyed as transparency.
+  Only palette index 0 (sky/empty) is transparent.  Verified byte-exact
+  against live combat frame `dump/combat_full/frames/f005.png` (panel 19 = left
+  half, panel 6 = right half, diff 0).
+  `tools/export_combat_backgrounds.py` writes `panel_00..23` as RGBA to
+  `assets/art/combat_backgrounds/` (canonical), `combat_terrain/`,
+  `combat_terrain_raw/`, `dump/panels_live/`, and the release/port mirrors.
+  `combat_backgrounds/gallery.png` shows them over a checkerboard.
+- VFX: resource 23 (64 x 32x32 halves = 32 x 64x32 frames, spritebank slots
+  320..383). During firing the game loads a dedicated **fire ramp into palette
+  bank 13** (captured live as `dump/attack2/palette_explosion_02.bin`):
+  `1=white 2=yellow 3=gold 4=orange 5..7=grey`; index 0 = transparent.
+  `tools/capture_explosion_palette.py` polls the palette during a forced attack
+  and saves snapshots; `palette_explosion_02.bin` is the explosion frame.
+  `tools/export_combat_vfx.py` writes:
+  - `vfx_atlas.png` + `vfx_atlas.json` (16x2 grid at 2x = 2048x128, same layout as `vfx_sheet_x2`; 32px source cells)
+  - `vfx_atlas_1x.png` + `vfx_atlas_1x.json` (same layout at 1x = 1024x64)
+  - `vfx_half_00..63.png` (32x32 halves)
+  - `vfx_pair_00..31.png` (assembled 64x32 frames)
+  - `vfx_sheet.png`, `vfx_contact.png`
+  - `vfx_00..15.png` (legacy 64x64 2x2 sheets for the port)
+  - `effect_192..199.png` (named single effects)
+  All mirrored to release/port build `assets/art/combat_effects/`.
+
+## Combat sprites decoded (Nov 9, earlier)
+- Correction: the `count` field in a command is `(cmd>>5)+1` and runs **1..8**, not 1..4.
+  It is a chunk-run length (each chunk 128 bytes), so it copies that many 16x16
+  chunks to consecutive sprite slots. There is **no pre-drawn scaled art** in the
+  resource streams; the combat simulation scales the 64x64 frames at draw time.
+- `tools/export_scaled_atlas.py` builds
+  `assets/art/unit_frames/unit_frames_atlas_scaled_combat_blue.png`: one row per
+  unit, columns 16/32/64/128 px, nearest-neighbour, combat-blue palette.
+  Exact in-game zoom steps would need the original draw-time scaler ported.
+
+## Release strips (Nov 9)
+- `tools/export_unit_strips.py` builds one horizontal strip per unit from the
+  combat-blue frames and writes it to:
+  `release/assets/units/unit_XX/combat_frames.png` +
+  `port/build/assets/units/unit_XX/combat_frames.png`, with `combat_frames.json`
+  giving frame x/y/w/h and the palette tag.
+- Combat-blue palette only, per user request.
+
+- The live **combat palette differs from the world-map palette** in 187 entries
+  (`dump/attack2/palette_stable.bin`, captured a few seconds into a combat).
+  Banks: combat 9/10 = blue, 11/12 = green; map bank 10 = green, 11 = red etc.
+- `tools/unit_frames.py` supports `PAL`, `BANK`, `TAG` env vars.
+- Exported three full atlases (110 frames, all 23 units):
+  - `unit_frames_atlas_map.png` (world-map palette, bank 9)
+  - `unit_frames_atlas_combat_blue.png` (live combat palette, bank 9)
+  - `unit_frames_atlas_combat_green.png` (live combat palette, bank 11)
+  - individual frames: `unit_XX_frame_NN_<tag>.png`
+- The count 1-3 commands are scaled variants using a bitplane scaler
+  (`FUN_0040d590` expands 4bpp to 4 bitplanes; `FUN_00416bf0`/`FUN_00416d20` draw them).
+  These can be reproduced by scaling the full frames; exact pre-drawn variants need a
+  port of that bitplane scaler.
+
 - Corrected LZSS verified against the game (`tools/lz_reference.py`).
 - Script format + chunk unpack implemented in `tools/unit_frames.py`:
   - directory index = 26 + unit_type

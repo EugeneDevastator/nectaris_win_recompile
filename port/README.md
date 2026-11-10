@@ -40,14 +40,14 @@ Controls:
 | input | action |
 |---|---|
 | LMB on own unit | select, or switch selection if one is already active |
-| LMB on blue cell | move |
+| LMB on blue cell | move (a unit can move once per turn) |
 | LMB on adjacent enemy | attack |
 | LMB on a factory hex | view its stored units (any owner; arrows/LMB select, ESC close) |
 | SPACE in an owned factory | deploy the selected stored unit |
 | LMB on a deployment hex | place the deployed unit; blue = into a friendly transport |
 | LMB own unit -> friendly transport | load it (transport must be in shift range) |
 | LMB the same unit again | deselect |
-| SPACE | deselect if a unit is selected, otherwise end turn |
+| SPACE | deselect if a unit is selected, otherwise end turn (the computer turn then animates) |
 | U | choose a target hex for the selected transport's cargo (animates out) |
 | RMB drag | pan the map |
 | ESC | deselect |
