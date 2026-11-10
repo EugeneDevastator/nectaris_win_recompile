@@ -95,9 +95,17 @@ static const Color kRed = RED;
 static const Color kGreen = GREEN;
 
 // ------------------------------------------------------------------ hex
+// Original movement table (0x42b248): cost = table[terrain][movement_class].
+//  - movement class 4+ (air) ignores terrain and always costs 1
+//  - cost bit 0x80 = impassable
+//  - cost 0x7f = consumes the unit's whole movement allowance (and may only be
+//    entered with full movement remaining, matching the original flood fill)
+static constexpr int kMoveAll = 0x7f;
+static constexpr int kMoveImpassable = 0x80;
+
 static inline int moveCost(const Mission& m, int x, int y, int moveClass) {
-    int c = gTerrain[terrainAt(m, x, y)].cost[std::clamp(moveClass, 0, 3)];
-    return c;
+    if (moveClass >= 4) return 1;                 // aircraft: ignore terrain
+    return gTerrain[terrainAt(m, x, y)].cost[std::clamp(moveClass, 0, 3)];
 }
 
 // ------------------------------------------------------------------ load
@@ -399,10 +407,18 @@ static std::vector<int> reachable(const Mission& m, int slot) {
             hexNeighbor(x, y, d, nx, ny);
             if (!inBounds(m, nx, ny)) continue;
             int mc = moveCost(m, nx, ny, t.moveClass);
-            if (mc >= 0x7f) continue;
+            if (mc & kMoveImpassable) continue;
             int ni = unitAt(m, nx, ny);
             if (ni >= 0 && ni != slot) continue;   // blocked
-            int nc = c + mc;
+            int nc;
+            if (mc == kMoveAll) {
+                // Original: entering "all movement" terrain is only possible
+                // when the unit has its full allowance left; it then ends.
+                if (c != 0 || t.movePts <= 0) continue;
+                nc = t.movePts;
+            } else {
+                nc = c + mc;
+            }
             if (nc <= t.movePts && nc < dist[ny * m.w + nx]) {
                 dist[ny * m.w + nx] = nc;
                 pq.push({nc, ny * m.w + nx});
@@ -445,7 +461,8 @@ static bool inShiftRange(const Mission& m, int cargoSlot, int transSlot) {
     const Unit& t = m.units[transSlot];
     const UnitType& ct = gTypes[c.type];
     int enter = moveCost(m, t.x, t.y, ct.moveClass);
-    if (enter >= 0x7f) return false;
+    if (enter & kMoveImpassable) return false;
+    if (enter == kMoveAll) enter = ct.movePts;
     std::vector<int> dist = reachable(m, cargoSlot);
     for (int d = 0; d < 6; ++d) {
         int nx, ny;
@@ -540,6 +557,8 @@ static std::vector<std::pair<int, int>> movementPath(const Mission& m, int slot,
         rev.push_back({cx, cy});
         int cur = dist[cy * m.w + cx];
         int cost = moveCost(m, cx, cy, t.moveClass);
+        if (cost & kMoveImpassable) break;
+        if (cost == kMoveAll) cost = t.movePts;
         int nx2 = -1, ny2 = -1;
         for (int d = 0; d < 6; ++d) {
             int nx, ny;
@@ -721,6 +740,7 @@ struct CombatSide {
     int hp0 = 0, hp1 = 0;   // formations before / after
     int atkPct = 0, defPct = 0;
     int support = 0, expPct = 0, xpGain = 0, damage = 0;
+    int surroundPct = 0;
 };
 
 struct CombatView {
@@ -836,6 +856,7 @@ static CombatSide makeCombatSide(int slot, int hp0, int hp1,
     s.expPct = isAttacker ? r.expPctA : r.expPctD;
     s.xpGain = isAttacker ? r.xpToAtk : r.xpToDef;
     s.damage = isAttacker ? r.dmgToDef : r.dmgToAtk;
+    s.surroundPct = isAttacker ? r.surroundPctA : r.surroundPctD;
     return s;
 }
 
@@ -1177,11 +1198,18 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
     float gap = ranged ? playW * 0.05f : 0.0f;
 
     // Adjacent attacks must fill the whole combat view: make the panels square
-    // and size them from the width, leaving a minimum report bar below.
+    // and size them from the width, leaving a readable report bar below.
+    float basePx = (gUiFontReady && gUiFont.baseSize > 0) ? (float)gUiFont.baseSize : 16.0f;
+    int wantScale = 2;
+    float reportNeed = 4.0f * basePx * wantScale * 1.12f + 16.0f;
+    if (reportNeed > H * 0.34f) {
+        wantScale = 1;
+        reportNeed = 4.0f * basePx * 1.12f + 16.0f;
+    }
     float panH = playW * 0.50f;
     float panY = topH;
-    float minReport = H * 0.14f;
-    if (panY + panH + minReport > H) panH = std::max(H * 0.28f, H - panY - minReport);
+    float minReport = std::max(H * 0.14f, reportNeed);
+    if (panY + panH + minReport > H) panH = std::max(H * 0.24f, H - panY - minReport);
     float botY = panY + panH;
     float botH = H - botY;
     float panW = ranged ? (playW - gap) * 0.5f : playW * 0.5f;
@@ -1407,13 +1435,47 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
         impact(toR, nR0, killedL, L.type, v.right.damage, 0);
     }
 
-    // ----- bottom: persistent simulation report (4 lines, integer-scaled)
+    // ----- bottom: persistent simulation report (integer-scaled original font)
     DrawRectangle((int)playX, (int)botY, (int)playW, (int)botH, NAVY);
-    // Use the 2x font only when the report columns actually fit; otherwise the
-    // 1x native font keeps the three columns from overlapping.
-    int rscale = (botH >= 150.0f && playW >= 1050.0f) ? 2 : 1;
-    float rfs = (float)gUiFont.baseSize * rscale;   // 32 px or 16 px
-    float lh = rfs * 1.18f;
+
+    const CombatSide& SL = v.left;
+    const CombatSide& SR = v.right;
+    char l1[64], l2[64], l3[64], l4[64];
+    char r1[64], r2[64], r3[64], r4[64];
+    char m1[64], m2[64], m3[64], m4[64];
+    std::snprintf(l1, sizeof(l1), "ATK%d DEF%d", SL.atkPct, SL.defPct);
+    std::snprintf(l2, sizeof(l2), "SURR%d SUP%d", SL.surroundPct, SL.support);
+    std::snprintf(l3, sizeof(l3), "EXP%d%% XP+%d", SL.expPct, SL.xpGain);
+    std::snprintf(l4, sizeof(l4), "HP %d>%d", SL.hp0, SL.hp1);
+    std::snprintf(r1, sizeof(r1), "ATK%d DEF%d", SR.atkPct, SR.defPct);
+    std::snprintf(r2, sizeof(r2), "SURR%d SUP%d", SR.surroundPct, SR.support);
+    std::snprintf(r3, sizeof(r3), "EXP%d%% XP+%d", SR.expPct, SR.xpGain);
+    std::snprintf(r4, sizeof(r4), "HP %d>%d", SR.hp0, SR.hp1);
+    std::snprintf(m1, sizeof(m1), "SIMULATION");
+    std::snprintf(m2, sizeof(m2), "SURR %d/%d", SL.surroundPct, SR.surroundPct);
+    std::snprintf(m3, sizeof(m3), "DMG %d/%d", SL.damage, SR.damage);
+    std::snprintf(m4, sizeof(m4), "TER %d/%d", r.terrainDefA, r.terrainDefD);
+
+    float colW = playW * 0.30f;
+    auto widest = [&](int scale) {
+        float fs = basePx * scale;
+        float sp = std::max(1.0f, (float)scale);
+        float w = 0.0f;
+        for (const char* s : {l1, l2, l3, l4, r1, r2, r3, r4, m1, m2, m3, m4})
+            w = std::max(w, gUiFontReady ? MeasureTextEx(gUiFont, s, fs, sp).x
+                                         : (float)MeasureText(s, (int)fs));
+        return w;
+    };
+    int rscale = 1;
+    for (int s = wantScale; s >= 1; --s) {
+        float lh = basePx * s * 1.12f;
+        if (4.0f * lh + 10.0f <= botH && widest(s) <= colW) {
+            rscale = s;
+            break;
+        }
+    }
+    float rfs = basePx * rscale;
+    float lh = rfs * 1.12f;
     float rsp = std::max(1.0f, (float)rscale);
     auto line = [&](float x, float y, const char* s, Color c) {
         if (gUiFontReady) DrawTextEx(gUiFont, s, {x, y}, rfs, rsp, c);
@@ -1421,32 +1483,29 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
     };
 
     float colL = playX + playW * 0.02f;
-    float colC = playX + playW * 0.37f;
-    float colR = playX + playW * 0.69f;
-    float y0 = botY + std::max(botH * 0.07f, (botH - (rfs + 3.0f * lh)) * 0.5f);
-
-    // Column stats come straight from the fixed-side data.
-    const CombatSide& SL = v.left;
-    const CombatSide& SR = v.right;
+    float colC = playX + playW * 0.36f;
+    float colR = playX + playW * 0.68f;
+    float y0 = botY + std::max(6.0f, (botH - 4.0f * lh) * 0.35f);
 
     line(colL, y0, "PLAYER", BORDER);
     line(colC, y0, "SIMULATION", BORDER);
     line(colR, y0, "ENEMY", BORDER);
     y0 += lh;
 
-    line(colL, y0, TextFormat("ATK %d DEF %d", SL.atkPct, SL.defPct), TXT);
-    line(colC, y0, TextFormat("SURROUND %d%%", r.surroundPct),
-         r.surroundPct ? kRed : DIM);
-    line(colR, y0, TextFormat("ATK %d DEF %d", SR.atkPct, SR.defPct), TXT);
+    line(colL, y0, l1, TXT);
+    line(colR, y0, r1, TXT);
 
-    line(colL, y0 + lh, TextFormat("SUP+%d EXP+%d%%", SL.support, SL.expPct), DIM);
-    line(colC, y0 + lh, TextFormat("T%d/%d DEF%d>%d",
-         r.terrainDefA, r.terrainDefD, r.defBeforeSurround, r.defAfterSurround), DIM);
-    line(colR, y0 + lh, TextFormat("SUP+%d EXP+%d%%", SR.support, SR.expPct), DIM);
+    line(colL, y0 + lh, l2, SL.surroundPct ? kRed : DIM);
+    line(colC, y0 + lh, m2, (SL.surroundPct || SR.surroundPct) ? kRed : DIM);
+    line(colR, y0 + lh, r2, SR.surroundPct ? kRed : DIM);
 
-    line(colL, y0 + lh * 2, TextFormat("HP %d>%d XP+%d", SL.hp0, SL.hp1, SL.xpGain), TXT);
-    line(colC, y0 + lh * 2, TextFormat("DMG %d/%d", SL.damage, SR.damage), TXT);
-    line(colR, y0 + lh * 2, TextFormat("HP %d>%d XP+%d", SR.hp0, SR.hp1, SR.xpGain), TXT);
+    line(colL, y0 + lh * 2, l3, DIM);
+    line(colC, y0 + lh * 2, m3, TXT);
+    line(colR, y0 + lh * 2, r3, DIM);
+
+    line(colL, y0 + lh * 3, l4, TXT);
+    line(colC, y0 + lh * 3, m4, DIM);
+    line(colR, y0 + lh * 3, r4, TXT);
 }
 
 static std::string resolveAssets(int argc, char** argv) {
@@ -1562,6 +1621,28 @@ int main(int argc, char** argv) {
             }
         }
         gMission = saved;
+        return 0;
+    }
+
+    if (argc > 3 && std::string(argv[3]) == "--reach") {
+        int slot = (argc > 4) ? std::atoi(argv[4]) : 0;
+        if (slot < 0 || slot >= (int)gMission.units.size()) {
+            std::cout << "bad slot\n";
+            return 1;
+        }
+        const Unit& u = gMission.units[slot];
+        auto dist = reachable(gMission, slot);
+        std::cout << "reach " << gTypes[u.type].name << " slot " << slot
+                  << " class " << gTypes[u.type].moveClass
+                  << " mp " << gTypes[u.type].movePts << "\n";
+        for (int y = 0; y < gMission.h; ++y) {
+            for (int x = 0; x < gMission.w; ++x) {
+                int d = dist[y * gMission.w + x];
+                if (d >= (1 << 29)) std::cout << " ##";
+                else std::cout << TextFormat("%3d", d);
+            }
+            std::cout << "\n";
+        }
         return 0;
     }
 
@@ -1919,12 +2000,12 @@ int main(int argc, char** argv) {
                 continue;                 // occupied; only empty transports
             }
             bool ok;
-            if (ut.airborne()) {
+            if (ut.airborne() || ut.moveClass == 4) {
                 ok = true;                // aircraft ignore terrain
             } else {
                 int terr = terrainAt(gMission, nx, ny);
                 ok = terr != 0 && terr != 4 &&
-                     moveCost(gMission, nx, ny, ut.moveClass) < 0x7f;
+                     (moveCost(gMission, nx, ny, ut.moveClass) & kMoveImpassable) == 0;
             }
             if (ok) deployCells.push_back({nx, ny, -1});
         }

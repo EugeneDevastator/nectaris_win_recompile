@@ -165,6 +165,24 @@ CombatResult resolveCombat(const Mission& m,
         }
     }
     out.surrounded = surrounded;
+    out.surroundedD = surrounded;
+    out.surroundPctD = surrounded ? 50 : 0;
+
+    // Symmetric informational check for the attacker (all six attacker
+    // neighbours inside the defender's ZOC).  Does not change the maths, but
+    // the combat UI shows it for both sides.
+    bool surroundedA = true;
+    for (int d = 0; d < 6; ++d) {
+        int nx, ny;
+        hexNeighbor(A.x, A.y, d, nx, ny);
+        if (!inBounds(m, nx, ny) ||
+            !inAttackerZoc(m, D.owner, nx, ny, defSlot)) {
+            surroundedA = false;
+            break;
+        }
+    }
+    out.surroundedA = surroundedA;
+    out.surroundPctA = surroundedA ? 50 : 0;
 
     // ----- attack / defence strengths
     int atkStrength = out.baseAtk + supA;

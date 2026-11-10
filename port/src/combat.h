@@ -64,8 +64,12 @@ struct CombatResult {
     int atkSlot = 0, defSlot = 0;
     int distance = 1;
     bool ranged = false;          // mode != 0 (indirect)
-    bool surrounded = false;      // all six defender neighbours in attacker ZOC
-    int surroundPct = 0;          // 0 or 50 (display)
+    bool surrounded = false;      // defender surrounded by attacker ZOC
+    int surroundPct = 0;          // 0 or 50 (display, defender)
+    bool surroundedA = false;     // attacker surrounded by defender ZOC
+    int surroundPctA = 0;         // 0 or 50 (display, attacker)
+    bool surroundedD = false;     // same as `surrounded` (explicit side)
+    int surroundPctD = 0;
 
     int hpA = 0, hpD = 0;         // HP before the fight
     int hA = 0, hD = 0;           // original `hp + 1` working values

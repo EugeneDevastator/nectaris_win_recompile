@@ -147,6 +147,12 @@ port/build/nectaris.exe assets dump/_validation_mission.json --resolvetest 4 6 0
 
 * `terrain` is `height` rows of `width` values (0..15). Each value indexes
   `assets/data/terrain.json` for defense and move cost.
+  Movement follows the original table `0x42b248`: cost is
+  `move_cost[terrain][unit movement class]`, with classes `0 tracked`,
+  `1 wheeled`, `2 bike`, `3 infantry`, `4 air` (air ignores terrain and costs
+  1). Cost bit `0x80` is impassable; cost `0x7f` consumes the unit's whole
+  movement allowance and is only enterable with full movement left. Regenerate
+  with `python tools/export_terrain_rules.py`.
 * `units[].owner`: `0` = player, `1` = enemy.
 * `units[].type`: index into `assets/data/units.json` (0..23).
 * `units[].hp`: 0..7 (7 = full).
