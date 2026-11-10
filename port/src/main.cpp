@@ -28,6 +28,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <map>
 #include <queue>
 #include <string>
 #include <vector>
@@ -58,6 +59,26 @@ static Texture2D gUnitSprite[24];
 static Texture2D gUnitSpriteFlip[24];
 static Texture2D gUnitMapTex[24], gUnitMapFlipTex[24];
 static Texture2D gVfx[16];
+static Texture2D gVfxHalf[64];
+static Texture2D gVfxQuad[16];
+
+// Combat VFX config (assets/data/combat_vfx.json).  Frames refer to resource-23
+// half frames; quads are groups of four consecutive halves assembled 2x2.
+struct CombatVfxClass {
+    std::vector<int> death;
+    float scale = 1.0f;
+};
+struct CombatUnitVfx {
+    std::string cls;
+    std::vector<int> projectile[2];   // optional per-unit override, 0=left 1=right
+    std::vector<int> muzzle[2];
+    std::vector<int> death;
+    float scale = -1.0f;
+};
+static std::map<std::string, CombatVfxClass> gVfxClasses;
+static CombatUnitVfx gUnitVfx[24];
+static std::vector<int> gVfxProjectile[2], gVfxMuzzle[2], gVfxHit, gVfxMiss;
+static float gVfxDeathStep = 0.09f;
 static Texture2D gBackdrop = {0};
 static bool gBackdropDirty = true;
 static Font gUiFont = {0};
@@ -158,6 +179,69 @@ static void loadData() {
         gRemap = ct.value("terrain_remap", std::vector<int>{});
         gPanelTable = ct.value("panel_table", std::vector<int>{});
         gPanelIndirect = ct.value("panel_indirect", std::vector<int>{});
+    }
+
+    // ----- combat VFX defaults (used if combat_vfx.json is missing) -----
+    gVfxProjectile[0] = {4};
+    gVfxProjectile[1] = {18};
+    gVfxMuzzle[0] = {14, 15, 16, 23};
+    gVfxMuzzle[1] = {17, 19, 21, 22};
+    gVfxHit = {25};
+    gVfxMiss = {27};
+    gVfxDeathStep = 0.09f;
+    gVfxClasses.clear();
+    gVfxClasses["air"] = {{32, 36}, 0.90f};
+    gVfxClasses["infantry"] = {{32, 36, 44}, 0.85f};
+    gVfxClasses["bike"] = {{32, 36, 44}, 0.90f};
+    gVfxClasses["vehicle"] = {{32, 36, 44, 48, 52, 56}, 1.00f};
+    gVfxClasses["artillery"] = {{32, 36, 44, 48, 52, 56}, 1.00f};
+    gVfxClasses["heavy"] = {{32, 36, 44, 48, 52, 56}, 1.15f};
+    for (int i = 0; i < 24; ++i) gUnitVfx[i] = CombatUnitVfx{};
+
+    std::ifstream vf(gAssetDir + "data/combat_vfx.json");
+    if (vf) {
+        json vj = json::parse(vf);
+        auto ints = [](const json& a) {
+            std::vector<int> out;
+            if (a.is_array()) for (auto& x : a) out.push_back(x.get<int>());
+            return out;
+        };
+        if (vj.contains("frames")) {
+            const json& f = vj["frames"];
+            if (f.contains("projectile_left")) gVfxProjectile[0] = ints(f["projectile_left"]);
+            if (f.contains("projectile_right")) gVfxProjectile[1] = ints(f["projectile_right"]);
+            if (f.contains("muzzle_left")) gVfxMuzzle[0] = ints(f["muzzle_left"]);
+            if (f.contains("muzzle_right")) gVfxMuzzle[1] = ints(f["muzzle_right"]);
+            if (f.contains("hit")) gVfxHit = ints(f["hit"]);
+            if (f.contains("miss")) gVfxMiss = ints(f["miss"]);
+            gVfxDeathStep = f.value("death_step_seconds", gVfxDeathStep);
+        }
+        if (vj.contains("classes")) {
+            for (auto it = vj["classes"].begin(); it != vj["classes"].end(); ++it) {
+                CombatVfxClass c;
+                c.death = ints(it.value().value("death", json::array()));
+                c.scale = it.value().value("scale", 1.0f);
+                gVfxClasses[it.key()] = c;
+            }
+        }
+        if (vj.contains("units")) {
+            for (auto it = vj["units"].begin(); it != vj["units"].end(); ++it) {
+                int t = std::atoi(it.key().c_str());
+                if (t < 0 || t >= 24) continue;
+                CombatUnitVfx& u = gUnitVfx[t];
+                u.cls = it.value().value("class", std::string());
+                if (it.value().contains("death")) u.death = ints(it.value()["death"]);
+                if (it.value().contains("scale")) u.scale = it.value().value("scale", -1.0f);
+                if (it.value().contains("projectile_left"))
+                    u.projectile[0] = ints(it.value()["projectile_left"]);
+                if (it.value().contains("projectile_right"))
+                    u.projectile[1] = ints(it.value()["projectile_right"]);
+                if (it.value().contains("muzzle_left"))
+                    u.muzzle[0] = ints(it.value()["muzzle_left"]);
+                if (it.value().contains("muzzle_right"))
+                    u.muzzle[1] = ints(it.value()["muzzle_right"]);
+            }
+        }
     }
 }
 
@@ -674,6 +758,68 @@ static int combatPanelFor(int terrainA, int terrainB, bool indirect, bool first)
     idx %= n;
     if (idx < 0) idx += n;
     return idx;
+}
+
+static const std::vector<int>& emptyVfx() {
+    static const std::vector<int> e;
+    return e;
+}
+
+static const CombatUnitVfx& unitVfx(int type) {
+    static const CombatUnitVfx empty;
+    return (type >= 0 && type < 24) ? gUnitVfx[type] : empty;
+}
+
+static const CombatVfxClass* vfxClassFor(int type) {
+    const CombatUnitVfx& u = unitVfx(type);
+    auto it = gVfxClasses.find(u.cls);
+    if (it != gVfxClasses.end()) return &it->second;
+    return nullptr;
+}
+
+static const std::vector<int>& vfxProjectileFor(int type, int side) {
+    const CombatUnitVfx& u = unitVfx(type);
+    if (!u.projectile[side & 1].empty()) return u.projectile[side & 1];
+    return gVfxProjectile[side & 1];
+}
+
+static const std::vector<int>& vfxMuzzleFor(int type, int side) {
+    const CombatUnitVfx& u = unitVfx(type);
+    if (!u.muzzle[side & 1].empty()) return u.muzzle[side & 1];
+    return gVfxMuzzle[side & 1];
+}
+
+static const std::vector<int>& vfxDeathFor(int type) {
+    const CombatUnitVfx& u = unitVfx(type);
+    if (!u.death.empty()) return u.death;
+    if (const CombatVfxClass* c = vfxClassFor(type)) return c->death;
+    return emptyVfx();
+}
+
+static float vfxScaleFor(int type) {
+    const CombatUnitVfx& u = unitVfx(type);
+    if (u.scale >= 0.0f) return u.scale;
+    if (const CombatVfxClass* c = vfxClassFor(type)) return c->scale;
+    return 1.0f;
+}
+
+static void drawVfxHalf(int frame, Vector2 center, float size, Color tint) {
+    if (frame < 0 || frame >= 64) return;
+    Texture2D& tex = gVfxHalf[frame];
+    if (!tex.id) return;
+    DrawTexturePro(tex, {0, 0, (float)tex.width, (float)tex.height},
+                   {center.x - size / 2, center.y - size / 2, size, size},
+                   {0, 0}, 0, tint);
+}
+
+static void drawVfxQuad(int startFrame, Vector2 center, float size, Color tint) {
+    int idx = startFrame / 4;
+    if (idx < 0 || idx >= 16) return;
+    Texture2D& tex = gVfxQuad[idx];
+    if (!tex.id) return;
+    DrawTexturePro(tex, {0, 0, (float)tex.width, (float)tex.height},
+                   {center.x - size / 2, center.y - size / 2, size, size},
+                   {0, 0}, 0, tint);
 }
 
 static CombatSide makeCombatSide(int slot, int hp0, int hp1,
@@ -1198,7 +1344,9 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
     }
 
     if (t > fireT && t < fireT + fireDur) {
-        auto fire = [&](Vector2* from, Vector2* to, int count, float nudge) {
+        auto fire = [&](Vector2* from, Vector2* to, int count, float nudge, int side, int type) {
+            const std::vector<int>& proj = vfxProjectileFor(type, side);
+            const std::vector<int>& muzz = vfxMuzzleFor(type, side);
             for (int i = 0; i < count; ++i) {
                 float st = fireT + i * 0.012f;
                 if (t < st) continue;
@@ -1207,28 +1355,56 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
                              from[i].y + (to[i].y - from[i].y) * k};
                 float ang = std::atan2(to[i].y - from[i].y,
                                        to[i].x - from[i].x) * 57.29578f;
-                drawProjectile(p.x, p.y, us * 0.85f, ang);
-                if (k < 0.22f) {
+                if (!proj.empty()) {
+                    int frame = proj[(int)((t - st) / 0.055f) % (int)proj.size()];
+                    drawVfxHalf(frame, p, us * 1.25f, WHITE);
+                } else {
+                    drawProjectile(p.x, p.y, us * 0.85f, ang);
+                }
+                if (k < 0.25f) {
                     Vector2 m = {from[i].x + nudge, from[i].y};
-                    if (gVfx[1].id) drawEffect(gVfx[1], m.x, m.y, us * 1.0f, 0.0f, WHITE);
-                    else DrawCircleV(m, us * 0.20f, Color{255, 220, 120, 255});
+                    if (!muzz.empty()) {
+                        int frame = muzz[(int)((t - st) / 0.03f) % (int)muzz.size()];
+                        drawVfxHalf(frame, m, us * 1.35f, WHITE);
+                    } else {
+                        DrawCircleV(m, us * 0.20f, Color{255, 220, 120, 255});
+                    }
                 }
             }
         };
-        fire(fromL, toL, nL0, recoilA);
-        fire(fromR, toR, nR0, recoilD);
+        fire(fromL, toL, nL0, recoilA, 0, L.type);
+        fire(fromR, toR, nR0, recoilD, 1, R.type);
     }
 
-    if (t > impactT && t < impactT + 0.85f) {
-        float e = (t - impactT) * 7.0f;
-        for (int i = 0; i < nL0; ++i) {
-            float alpha = 1.0f - std::clamp((t - impactT - i * 0.02f) / 0.85f, 0.0f, 1.0f);
-            drawExplosion(toL[i].x, toL[i].y, us * 0.70f, e + i * 0.35f, alpha);
-        }
-        for (int i = 0; i < nR0; ++i) {
-            float alpha = 1.0f - std::clamp((t - impactT - i * 0.02f) / 0.85f, 0.0f, 1.0f);
-            drawExplosion(toR[i].x, toR[i].y, us * 0.70f, e + i * 0.35f, alpha);
-        }
+    if (t > impactT && t < impactT + 1.10f) {
+        float dt = t - impactT;
+        auto impact = [&](Vector2* to, int count, int killed, int targetType,
+                          int damage, int targetSide) {
+            const std::vector<int>& death = vfxDeathFor(targetType);
+            const std::vector<int>& hit = gVfxHit;
+            const std::vector<int>& miss = gVfxMiss;
+            for (int i = 0; i < count; ++i) {
+                if (i < killed && !death.empty()) {
+                    int step = std::clamp((int)(dt / gVfxDeathStep), 0, (int)death.size() - 1);
+                    float fadeStart = (float)death.size() * gVfxDeathStep;
+                    float alpha = 1.0f - std::clamp((dt - fadeStart) / 0.35f, 0.0f, 1.0f);
+                    drawVfxQuad(death[step], to[i],
+                                us * 2.40f * vfxScaleFor(targetType),
+                                Fade(WHITE, alpha));
+                } else if (damage > 0 && !hit.empty()) {
+                    int frame = hit[(int)(dt / 0.10f) % (int)hit.size()];
+                    drawVfxHalf(frame, to[i], us * 1.55f, WHITE);
+                } else if (!miss.empty()) {
+                    int frame = miss[(int)(dt / 0.12f) % (int)miss.size()];
+                    drawVfxHalf(frame, to[i], us * 1.30f, WHITE);
+                } else {
+                    drawExplosion(to[i].x, to[i].y, us * 0.70f, dt * 7.0f, 1.0f);
+                }
+            }
+            (void)targetSide;
+        };
+        impact(toL, nL0, killedR, R.type, v.left.damage, 1);
+        impact(toR, nR0, killedL, L.type, v.right.damage, 0);
     }
 
     // ----- bottom: persistent simulation report (4 lines, integer-scaled)
@@ -1518,6 +1694,12 @@ int main(int argc, char** argv) {
     }
     for (int i = 0; i < 16; ++i) {
         gVfx[i] = LoadTexture((gAssetDir + TextFormat("art/combat_effects/vfx_%02d.png", i)).c_str());
+    }
+    for (int i = 0; i < 64; ++i) {
+        gVfxHalf[i] = LoadTexture((gAssetDir + TextFormat("art/combat_effects/vfx_half_%02d.png", i)).c_str());
+    }
+    for (int i = 0; i < 16; ++i) {
+        gVfxQuad[i] = LoadTexture((gAssetDir + TextFormat("art/combat_effects/vfx_quad_%02d.png", i * 4)).c_str());
     }
     gFxShell = LoadTexture((gAssetDir + "art/combat_effects/effect_195.png").c_str());
     gFxFlash = LoadTexture((gAssetDir + "art/combat_effects/effect_193.png").c_str());
@@ -2512,6 +2694,8 @@ int main(int argc, char** argv) {
         if (gUnitMapFlipTex[t].id) UnloadTexture(gUnitMapFlipTex[t]);
     }
     for (int i = 0; i < 16; ++i) if (gVfx[i].id) UnloadTexture(gVfx[i]);
+    for (int i = 0; i < 64; ++i) if (gVfxHalf[i].id) UnloadTexture(gVfxHalf[i]);
+    for (int i = 0; i < 16; ++i) if (gVfxQuad[i].id) UnloadTexture(gVfxQuad[i]);
     if (gUiFontReady) UnloadFont(gUiFont);
     CloseAudioDevice();
     CloseWindow();

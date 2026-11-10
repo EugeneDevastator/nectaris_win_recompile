@@ -45,6 +45,7 @@ dump/block_changes/
 dump/resources_lzss/
 dump/force_pair/
 dump/combat_full/
+dump/unit_vfx/
 
 # ------------------------------------------------------------------ existing local artifacts
 _bak/

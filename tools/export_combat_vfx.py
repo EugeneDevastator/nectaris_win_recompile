@@ -71,6 +71,15 @@ for k, im in enumerate(pairs):
     for d in OUTS:
         im.save(os.path.join(d, 'vfx_pair_%02d.png' % k))
 
+# 64x64 explosion cells: four consecutive 32x32 halves in row-major order
+# (TL, TR, BL, BR; verified against a live combat frame).
+for start in range(0, N, 4):
+    quad = Image.new('RGBA', (64, 64), (0, 0, 0, 0))
+    for j, dst in enumerate([(0, 0), (32, 0), (0, 32), (32, 32)]):
+        quad.alpha_composite(sprites[start + j], dst)
+    for d in OUTS:
+        quad.save(os.path.join(d, 'vfx_quad_%02d.png' % start))
+
 # legacy 64x64 2x2 sheets, four sprites each, same layout the port already uses
 for i in range(16):
     sheet2 = Image.new('RGBA', (64, 64), (0, 0, 0, 0))

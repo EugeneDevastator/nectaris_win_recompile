@@ -99,6 +99,28 @@ not the stretched map sprites.
   / `attacker_grid_b10.png` show the composed S-61 in blue/green.
 - `dump/combat_chassis_contact.png` shows the exported units.
 
+## Combat VFX tracing (Nov 10)
+- Captured the original combat sprite queue (`0x4836f0`) during forced attacks
+  per unit pair (`tools/capture_unit_vfx.py`, output `dump/unit_vfx/tXX_dYY/`).
+- Effect sprites live in resource 23 at sprite-bank slots 320..383 (and the
+  +0x200 page); the queue entry encodes x/y/flags/sprite. Effect frame = sprite
+  slot - 320 (or -0x200-320 for the second page).
+- **Projectiles are side-based**, not per unit type: left/player shots use frame
+  `4`, right/computer shots use frame `18`. Muzzle flashes: left `14,15,16,23`,
+  right `17,19,21,22`.
+- **Explosions/deaths differ by defender class** (quad = four consecutive
+  halves, 64x64):
+  - air: quads `32,36`
+  - infantry / bike: quads `32,36,44`
+  - vehicle / artillery / heavy: quads `32,36,44,48,52,56`
+  - small hit flash: half `25`; miss spark: half `27`.
+- Quad layout is row-major (TL,TR,BL,BR), verified against live frame f027.
+- Editable config: `assets/data/combat_vfx.json` (global side frames + classes +
+  per-unit overrides). The port loads it in `loadData()` and uses
+  `vfx_half_XX.png` / `vfx_quad_XX.png` in `drawCombatScreen`.
+- `tools/export_combat_vfx.py` now also exports the 64x64 `vfx_quad_XX.png`
+  cells.
+
 ## Combat backgrounds + VFX palette (Nov 9)
 - Backgrounds: the 24 terrain close-ups are 16x16 tilemaps (256x256) at the
   pointer table `0x431148`, drawn from the **live combat tile bank**

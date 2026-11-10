@@ -108,8 +108,10 @@ line-for-line port of the original:
 
 Combat constants (variance bands, support/surround divisors, HP bonus, XP
 awards) live in `assets/data/combat.json`; the unit/terrain tables are in
-`assets/data/units.json` and `assets/data/terrain.json`. Regenerate the combat
-config from the executable with:
+`assets/data/units.json` and `assets/data/terrain.json`. Projectile, muzzle,
+hit/miss and per-unit death animations are in `assets/data/combat_vfx.json`
+(frames refer to `assets/art/combat_effects/vfx_half_XX.png` and the assembled
+`vfx_quad_XX.png` cells). Regenerate the combat config from the executable with:
 
 ```powershell
 python tools/export_combat_config.py
