@@ -356,8 +356,10 @@ Every resolved attack switches to a battle screen modeled on the original:
 * **header groups**: team colour tab, then one group per side — unit name and
   formation box (the box is placed from the measured name width), a separator
   rule, then that side's support list (`ASUP` / `DSUP` + total, one icon and
-  `xN +value` per surrounding unit).  Both groups are mirrored around a centre
-  divider so long names and long lists never collide.
+  `xN +value` per **participating ally**, drawn in the side's own colour; the
+  row reads `none` when nothing contributes, e.g. for ranged fire).  Both
+  groups are mirrored around a centre divider so long names and long lists
+  never collide.
 * `SPACE` / click skips the animation to the result; a second press returns to
   the map.
 

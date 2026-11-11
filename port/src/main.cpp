@@ -1345,11 +1345,6 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
     auto supportRow = [&](const CombatSide& side, float x0, float maxX) {
         bool attacker = (side.unit == v.r.atkSlot);
         const auto& list = attacker ? v.r.supportAtkUnits : v.r.supportDefUnits;
-        // Support is determined by the units surrounding the OPPOSING unit:
-        // attacker support around the defender, defender support around the attacker.
-        int oppSlot = attacker ? v.r.defSlot : v.r.atkSlot;
-        if (oppSlot < 0 || oppSlot >= (int)gMission.units.size()) return;
-        const Unit& opp = gMission.units[oppSlot];
         // Readable integer-scaled original font sized to the free band between
         // the header rule and the bottom of the name bar.
         float freeH = topH - supportY - 2.0f;
@@ -1378,21 +1373,13 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
         rowText(x0, y, head, total > 0 ? BORDER : DIM);
         float x = x0 + rowWidth(head) + 10.0f;
         int row = 0, count = 0;
-        for (int d = 0; d < 6; ++d) {
-            int nx, ny;
-            hexNeighbor(opp.x, opp.y, d, nx, ny);
-            if (!inBounds(gMission, nx, ny)) continue;
-            int slot = unitAt(gMission, nx, ny);
-            if (slot < 0) continue;
-            if (slot == side.unit) continue;   // never list/count the supported unit itself
-            const Unit& N = gMission.units[slot];
-            int value = -1;
-            for (const SupportContribution& c : list)
-                if (c.slot == slot) { value = c.value; break; }
-            bool ally = (N.owner == side.team);
-            const char* txt = value >= 0
-                                  ? TextFormat("x%d +%d", N.hp + 1, value)
-                                  : TextFormat("x%d %s", N.hp + 1, ally ? "-" : "E");
+        // Allied contributors only, drawn in the side's own colour.  Ranged
+        // attacks have no support at all, so the row simply reads "none".
+        for (const SupportContribution& c : list) {
+            if (c.slot < 0 || c.slot >= (int)gMission.units.size()) continue;
+            const Unit& N = gMission.units[c.slot];
+            if (N.owner != side.team) continue;
+            const char* txt = TextFormat("x%d +%d", c.count, c.value);
             float tw = rowWidth(txt);
             float itemW = sz + 3 + tw + 8;
             if (x + itemW > maxX) {
@@ -1402,14 +1389,13 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
                 y += rowH;
             }
             Texture2D& tex = gUnitMapTex[N.type];
-            Color tint = ally ? ((side.team == 0) ? WHITE : Color{150, 255, 150, 255})
-                              : Color{255, 140, 140, 255};
+            Color tint = (side.team == 0) ? WHITE : Color{150, 255, 150, 255};
             if (tex.id) {
                 DrawTexturePro(tex, {0, 0, (float)tex.width, (float)tex.height},
                                {x, y, sz, sz}, {0, 0}, 0, tint);
             }
             x += sz + 3;
-            rowText(x, y, txt, value >= 0 ? BORDER : (ally ? DIM : Color{255, 150, 150, 255}));
+            rowText(x, y, txt, BORDER);
             x += tw + 8.0f;
             ++count;
         }
