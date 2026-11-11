@@ -1276,19 +1276,29 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
 
     // ----- top: names + HP (initial, then the post-combat count)
     DrawRectangle((int)playX, 0, (int)playW, (int)topH, NAVY);
-    int nameSize = (int)(topH * 0.30f);
-    uiText(TL.name.c_str(), (int)(playX + playW * 0.03f), (int)(topH * 0.30f), nameSize, TXT);
+    // Header layout: group 1 = name + HP box on each side, group 2 = support
+    // lists underneath, separated by a rule.  Every element is positioned from
+    // the measured name width so nothing overlaps when names get long.
+    const float nameSizeF = topH * 0.24f;
+    int nameSize = (int)nameSizeF;
+    const float nameY = topH * 0.13f;
     float nfs = uiFontPixels(nameSize);
+    float lw = gUiFontReady ? MeasureTextEx(gUiFont, TL.name.c_str(), nfs, uiSpacing(nameSize)).x
+                            : (float)MeasureText(TL.name.c_str(), nameSize * 2);
     float rw = gUiFontReady ? MeasureTextEx(gUiFont, TR.name.c_str(), nfs, uiSpacing(nameSize)).x
                             : (float)MeasureText(TR.name.c_str(), nameSize * 2);
-    uiText(TR.name.c_str(), (int)(playX + playW * 0.97f - rw), (int)(topH * 0.30f),
-           nameSize, TXT);
-    auto hpBox = [&](float fx, int val) {
-        float s = topH * 0.46f;
-        float x = playX + playW * fx;
-        float y = topH * 0.22f;
+    float nxL = playX + playW * 0.03f;
+    float nxR = playX + playW * 0.97f - rw;
+    uiText(TL.name.c_str(), (int)nxL, (int)nameY, nameSize, TXT);
+    uiText(TR.name.c_str(), (int)nxR, (int)nameY, nameSize, TXT);
+
+    const float hpS = topH * 0.32f;
+    const float hpY = topH * 0.07f;
+    auto hpBox = [&](float x, int val) {
+        float s = hpS;
+        float y = hpY;
         DrawRectangleRec({x, y, s, s}, PANEL);
-        DrawRectangleLinesEx({x, y, s, s}, std::max(2.0f, topH * 0.035f), BORDER);
+        DrawRectangleLinesEx({x, y, s, s}, std::max(2.0f, topH * 0.030f), BORDER);
         const char* txt = TextFormat("%d", val);
         float fs = s * 0.70f;
         if (gUiFontReady) {
@@ -1304,6 +1314,14 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
                      (int)fs, BORDER);
         }
     };
+    const float hpGap = playW * 0.018f;
+    float hpXL = std::min(nxL + lw + hpGap, playX + playW * 0.48f - hpS);
+    float hpXR = std::max(nxR - hpS - hpGap, playX + playW * 0.52f);
+    // Thin team colour tabs identify each half of the header.
+    DrawRectangle((int)playX, 0, (int)(playW * 0.5f), std::max(3, (int)(topH * 0.02f)),
+                  Color{70, 130, 230, 255});
+    DrawRectangle((int)(playX + playW * 0.5f), 0, (int)(playW * 0.5f),
+                  std::max(3, (int)(topH * 0.02f)), Color{70, 190, 100, 255});
 
     float t = v.t;
     // Shooting is 1.2x slower than the original 0.35 s window.
@@ -1318,8 +1336,14 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
     int nL1 = (hpL1 > 0) ? std::clamp(hpL1 + 1, 0, 8) : 0;  // survivors
     int nR1 = (hpR1 > 0) ? std::clamp(hpR1 + 1, 0, 8) : 0;
     bool impact = t > impactT;
-    hpBox(0.28f, impact ? nL1 : nL0);
-    hpBox(0.62f, impact ? nR1 : nR0);
+    hpBox(hpXL, impact ? nL1 : nL0);
+    hpBox(hpXR, impact ? nR1 : nR0);
+
+    // Header group separator between the name/HP row and the support lists.
+    float supportY = hpY + hpS + topH * 0.06f;
+    DrawLineEx({playX + playW * 0.02f, supportY - topH * 0.03f},
+               {playX + playW * 0.98f, supportY - topH * 0.03f}, 1.5f,
+               Color{255, 255, 255, 45});
 
     // ----- support contributor lists under the HP boxes
     auto smallText = [&](float x, float y, const char* s, Color c) {
@@ -1336,11 +1360,12 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
         int oppSlot = attacker ? v.r.defSlot : v.r.atkSlot;
         if (oppSlot < 0 || oppSlot >= (int)gMission.units.size()) return;
         const Unit& opp = gMission.units[oppSlot];
-        // Readable integer-scaled original font, sized from the header height so
-        // both list rows always stay inside the name bar.
+        // Readable integer-scaled original font sized to the free band between
+        // the header rule and the bottom of the name bar.
+        float freeH = topH - supportY - 2.0f;
         int scale = 1;
         if (gUiFontReady && gUiFont.baseSize > 0) {
-            scale = (int)(topH * 0.10f / (float)gUiFont.baseSize);
+            scale = (int)(std::min(topH * 0.10f, freeH / 4.6f) / (float)gUiFont.baseSize);
             if (scale < 1) scale = 1;
             if (scale > 3) scale = 3;
         }
@@ -1356,7 +1381,7 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
         };
         int total = 0;
         for (const SupportContribution& c : list) total += c.value;
-        float y = topH * 0.64f;
+        float y = supportY;
         const float rowH = fs * 1.55f;
         const float sz = fs * 1.40f;
         const char* head = TextFormat("%s +%d", attacker ? "ASUP" : "DSUP", total);
@@ -1400,8 +1425,12 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
         }
         if (!count) rowText(x, y, "none", DIM);
     };
-    supportRow(v.left, playX + playW * 0.03f, playX + playW * 0.48f);
-    supportRow(v.right, playX + playW * 0.52f, playX + playW * 0.97f);
+    supportRow(v.left, playX + playW * 0.03f, playX + playW * 0.47f);
+    supportRow(v.right, playX + playW * 0.53f, playX + playW * 0.97f);
+    // Centre divider keeps the two support groups visually separate.
+    DrawLineEx({playX + playW * 0.50f, hpY},
+               {playX + playW * 0.50f, topH - 2.0f}, 1.5f,
+               Color{255, 255, 255, 35});
 
     // ----- middle: terrain close-ups + ride-in + simultaneous fire
     static const float FORM[8][2] = {
@@ -1761,6 +1790,8 @@ int main(int argc, char** argv) {
     bool unitshot = (argc > 3 && std::string(argv[3]) == "--unitshot");
     bool backdropshot = (argc > 3 && std::string(argv[3]) == "--backdropshot");
     bool factoryshot = (argc > 3 && std::string(argv[3]) == "--factoryshot");
+    bool inspectionshot = (argc > 3 && std::string(argv[3]) == "--inspectshot");
+    if (inspectionshot) shotMode = true;   // reuse the hidden-window shot path
     std::string shotPath = (argc > 4) ? argv[4] : "port_shot.png";
     bool selftest = (argc > 3 && std::string(argv[3]) == "--selftest");
 
@@ -1771,6 +1802,18 @@ int main(int argc, char** argv) {
         return 1;
     }
     gCombatRng.seed((uint32_t)std::time(nullptr));
+
+    // --inspectshot: open the first enemy unit in the side panel for a still.
+    int shotInspect = -1;
+    if (inspectionshot) {
+        for (int i = 0; i < (int)gMission.units.size(); ++i) {
+            if (gMission.units[i].hp > 0 && !gMission.units[i].carried &&
+                gMission.units[i].owner == 1) {
+                shotInspect = i;
+                break;
+            }
+        }
+    }
 
     auto campaign = listCampaign(gAssetDir + "maps");
     int campaignIdx = 0;
@@ -2053,7 +2096,9 @@ int main(int argc, char** argv) {
             gCv.t = (argc > 5) ? (float)std::atof(argv[5]) : 2.70f;
             std::cout << "combat panels L=" << gCv.left.panel << " (terrain "
                       << gCv.left.terrain << ") R=" << gCv.right.panel
-                      << " (terrain " << gCv.right.terrain << ")\n";
+                      << " (terrain " << gCv.right.terrain << ")"
+                      << " screen " << GetScreenWidth() << "x" << GetScreenHeight()
+                      << " render " << GetRenderWidth() << "x" << GetRenderHeight() << "\n";
             for (int k = 0; k < 6; ++k) {
                 BeginDrawing();
                 drawCombatScreen(gCv, playerTex, enemyTex);
@@ -2085,6 +2130,7 @@ int main(int argc, char** argv) {
     }
 
     int selected = -1;
+    int inspect = shotInspect;  // enemy (or busy) unit opened for information only
     int currentPlayer = 0;
     bool showReach = false;
     bool debug = false;
@@ -2131,6 +2177,7 @@ int main(int argc, char** argv) {
 
     auto resetSelection = [&]() {
         selected = -1;
+        inspect = -1;
         showReach = false;
         reach.clear();
         targets.clear();
@@ -2148,6 +2195,7 @@ int main(int argc, char** argv) {
 
     auto selectUnit = [&](int slot) {
         selected = slot;
+        inspect = -1;
         reach = reachable(gMission, slot);
         targets = attackable(gMission, slot);
         showReach = true;
@@ -2680,7 +2728,13 @@ int main(int argc, char** argv) {
                     !gMission.units[hit].acted && !gMission.units[hit].carried) {
                     selectUnit(hit);
                     if (IsSoundValid(sndSelect)) PlaySound(sndSelect);
+                } else if (hit >= 0) {
+                    // Enemy unit (or a friendly unit that already acted): show
+                    // its information without allowing any order.
+                    inspect = (inspect == hit) ? -1 : hit;
+                    if (IsSoundValid(sndSelect)) PlaySound(sndSelect);
                 } else if (inMap) {
+                    inspect = -1;
                     int fi = factoryIndexAt(gMission, mx, my);
                     if (fi >= 0) openFactory(fi);
                 }
@@ -2733,10 +2787,14 @@ int main(int argc, char** argv) {
                     sel.x = mx;
                     sel.y = my;
                     sel.acted = true;          // movement consumes the unit's turn
+                    inspect = -1;
                     if (IsSoundValid(sndMove)) PlaySound(sndMove);
                     // after moving, allow an immediate attack
                     targets = attackable(gMission, selected);
                     showReach = false;
+                } else if (hit >= 0) {
+                    // Unit that is not a legal target: inspect it instead.
+                    inspect = (inspect == hit) ? -1 : hit;
                 } else if (inMap) {
                     int fi = factoryIndexAt(gMission, mx, my);
                     if (fi >= 0) openFactory(fi);
@@ -2890,6 +2948,17 @@ int main(int argc, char** argv) {
             hexCenter(u.x, u.y, cx, cy);
             DrawPolyLinesEx({cx, cy}, 6, gHexSize, 0, 3.5f, YELLOW);
         }
+        if (inspect >= 0) {
+            if (inspect >= (int)gMission.units.size() ||
+                gMission.units[inspect].hp <= 0 || gMission.units[inspect].carried) {
+                inspect = -1;
+            } else {
+                const Unit& u = gMission.units[inspect];
+                float cx, cy;
+                hexCenter(u.x, u.y, cx, cy);
+                DrawPolyLinesEx({cx, cy}, 6, gHexSize, 0, 2.5f, SKYBLUE);
+            }
+        }
 
         // side panel
         int px = mapW + 16;
@@ -2918,14 +2987,23 @@ int main(int argc, char** argv) {
             uiText(TextFormat("Campaign %d/%d  [N] next  [B] prev", campaignIdx + 1,
                                 (int)campaign.size()), px, 240, 8, GRAY);
 
-        if (selected >= 0) {
-            const Unit& u = gMission.units[selected];
+        int infoSlot = (selected >= 0) ? selected : inspect;
+        if (infoSlot >= 0 && infoSlot < (int)gMission.units.size() &&
+            gMission.units[infoSlot].hp > 0 && !gMission.units[infoSlot].carried) {
+            const Unit& u = gMission.units[infoSlot];
             const UnitType& t = gTypes[u.type];
+            bool mine = (u.owner == currentPlayer);
             uiText(TextFormat("%s  HP %d  MOV %d", t.name.c_str(), u.hp, t.movePts), px, 290,
-                     18, YELLOW);
+                     18, mine ? YELLOW : kRed);
             uiText(TextFormat("ATK G/A %d/%d  DEF %d", t.atkGround, t.atkAir, t.def), px, 330,
                      16, LIGHTGRAY);
-            if (u.cargo >= 0) {
+            if (!mine) {
+                // Enemy inspection: read-only, no orders are offered.
+                uiText(TextFormat("%s UNIT  %s", u.owner == 0 ? "PLAYER" : "ENEMY",
+                                  u.acted ? "acted" : "ready"),
+                       px, 366, 14, u.acted ? GRAY : kGreen);
+                uiText("Info only - LMB another unit", px, 398, 12, GRAY);
+            } else if (u.cargo >= 0) {
                 const Unit& c = gMission.units[u.cargo];
                 uiText(TextFormat("Cargo: %s  HP %d", gTypes[c.type].name.c_str(), c.hp),
                        px, 370, 16, SKYBLUE);

@@ -40,6 +40,7 @@ Controls:
 | input | action |
 |---|---|
 | LMB on own unit | select, or switch selection if one is already active |
+| LMB on an enemy unit | inspect it in the side panel (info only, no orders; click again to close) |
 | LMB on blue cell | move (a unit can move once per turn) |
 | LMB on adjacent enemy | attack |
 | LMB on a factory hex | view its stored units (any owner; arrows/LMB select, ESC close) |
@@ -93,6 +94,12 @@ Combat screenshot (seconds = animation phase: `1.2` ride-in, `2.4` projectiles,
 ```powershell
 port/build/nectaris.exe assets assets/maps/all_units_test.json --combatshot direct.png 2.4 0
 port/build/nectaris.exe assets assets/maps/all_units_test.json --combatshot ranged.png 2.4 1
+```
+
+Map screenshot with an enemy unit opened for inspection (info-only side panel):
+
+```powershell
+port/build/nectaris.exe assets assets/maps/campaign_01_revolt.json --inspectshot inspect.png
 ```
 
 ## Combat simulation
@@ -344,6 +351,11 @@ Every resolved attack switches to a battle screen modeled on the original:
     attacker, and both variance multipliers;
   * **defender**: counter attack / defence, support, experience, HP before →
     after, XP gained.
+* **header groups**: team colour tab, then one group per side — unit name and
+  formation box (the box is placed from the measured name width), a separator
+  rule, then that side's support list (`ASUP` / `DSUP` + total, one icon and
+  `xN +value` per surrounding unit).  Both groups are mirrored around a centre
+  divider so long names and long lists never collide.
 * `SPACE` / click skips the animation to the result; a second press returns to
   the map.
 
