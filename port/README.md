@@ -43,6 +43,7 @@ Controls:
 | LMB on an enemy unit | inspect it in the side panel (info only, no orders; click again to close) |
 | LMB on blue cell | move (a unit can move once per turn) |
 | LMB on adjacent enemy | attack |
+| LMB hover over a valid target | preview which allies (orange) and which enemy allies (red) would add support fire; the target gets a white ring, your unit stays yellow |
 | LMB on a factory hex | view its stored units (any owner; arrows/LMB select, ESC close) |
 | SPACE in an owned factory | deploy the selected stored unit |
 | LMB on a deployment hex | place the deployed unit; blue = into a friendly transport |
@@ -100,6 +101,12 @@ Map screenshot with an enemy unit opened for inspection (info-only side panel):
 
 ```powershell
 port/build/nectaris.exe assets assets/maps/campaign_01_revolt.json --inspectshot inspect.png
+```
+
+Map screenshot with an attack preview (selected unit + hovered target + support roles):
+
+```powershell
+port/build/nectaris.exe assets assets/maps/campaign_01_revolt.json --previewshot preview.png
 ```
 
 ## Combat simulation
@@ -343,7 +350,9 @@ Every resolved attack switches to a battle screen modeled on the original:
   initialCount-1`) are targeted exactly, so their explosions land on the right
   coordinates; all remaining shots scatter deterministically across the
   opposing panel. Shooting is 0.42 s long (1.2× the old 0.35 s); HP boxes drop
-  to the surviving vehicle count at impact.
+  to the surviving vehicle count at impact. A side that cannot return fire
+  (ranged attack, artillery or a 0-attack unit) does not fire at all — the
+  original sets the counter strength to 0 for indirect attacks.
 * **persistent report (no disappearing numbers)**: the bottom bar stays visible
   during and after the animation and shows the simulation inputs and resolve:
   * **attacker**: attack / own defence, support bonus, experience bonus,

@@ -1591,6 +1591,13 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
     }
 
     if (t > fireT && t < fireT + fireDur) {
+        // Only a side that can actually shoot fires.  Indirect attacks never
+        // provoke a counter (original sets the counter strength to 0 in that
+        // branch), so the defender stays silent against artillery.
+        const bool attackerIsLeft = (v.left.unit == v.r.atkSlot);
+        const bool counterFires = (v.r.ctrStrength > 0 || v.r.rawDmgToAtk > 0);
+        const bool leftFires = attackerIsLeft || counterFires;
+        const bool rightFires = !attackerIsLeft || counterFires;
         auto fire = [&](Vector2* from, Vector2* to, int count, float nudge, int side, int type) {
             const std::vector<int>& proj = vfxProjectileFor(type, side);
             const std::vector<int>& muzz = vfxMuzzleFor(type, side);
@@ -1619,11 +1626,15 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
                 }
             }
         };
-        fire(fromL, toL, nL0, recoilA, 0, L.type);
-        fire(fromR, toR, nR0, recoilD, 1, R.type);
+        if (leftFires) fire(fromL, toL, nL0, recoilA, 0, L.type);
+        if (rightFires) fire(fromR, toR, nR0, recoilD, 1, R.type);
     }
 
     if (t > impactT && t < impactT + 1.10f) {
+        const bool attackerIsLeft = (v.left.unit == v.r.atkSlot);
+        const bool counterFires = (v.r.ctrStrength > 0 || v.r.rawDmgToAtk > 0);
+        const bool leftFires = attackerIsLeft || counterFires;
+        const bool rightFires = !attackerIsLeft || counterFires;
         float dt = t - impactT;
         auto impact = [&](Vector2* to, int count, int killed, int targetType,
                           int damage, int targetSide) {
@@ -1650,8 +1661,8 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
             }
             (void)targetSide;
         };
-        impact(toL, nL0, killedR, R.type, v.left.damage, 1);
-        impact(toR, nR0, killedL, L.type, v.right.damage, 0);
+        if (leftFires) impact(toL, nL0, killedR, R.type, v.left.damage, 1);
+        if (rightFires) impact(toR, nR0, killedL, L.type, v.right.damage, 0);
     }
 
     // ----- bottom: persistent simulation report (integer-scaled original font)
@@ -1780,7 +1791,8 @@ int main(int argc, char** argv) {
     bool backdropshot = (argc > 3 && std::string(argv[3]) == "--backdropshot");
     bool factoryshot = (argc > 3 && std::string(argv[3]) == "--factoryshot");
     bool inspectionshot = (argc > 3 && std::string(argv[3]) == "--inspectshot");
-    if (inspectionshot) shotMode = true;   // reuse the hidden-window shot path
+    bool previewshot = (argc > 3 && std::string(argv[3]) == "--previewshot");
+    if (inspectionshot || previewshot) shotMode = true;   // reuse the hidden-window shot path
     std::string shotPath = (argc > 4) ? argv[4] : "port_shot.png";
     bool selftest = (argc > 3 && std::string(argv[3]) == "--selftest");
 
@@ -1800,6 +1812,23 @@ int main(int argc, char** argv) {
                 gMission.units[i].owner == 1) {
                 shotInspect = i;
                 break;
+            }
+        }
+    }
+    // --previewshot: select a unit with an adjacent target and hover that
+    // target, so the support-role highlight can be captured.
+    int shotSelect = -1, shotHover = -1;
+    if (previewshot) {
+        for (int i = 0; i < (int)gMission.units.size() && shotSelect < 0; ++i) {
+            const Unit& u = gMission.units[i];
+            if (u.hp <= 0 || u.carried || u.owner != 0) continue;
+            for (int t : attackableTargets(gMission, gTypes, i)) {
+                if (hexDistance(u.x, u.y, gMission.units[t].x,
+                                gMission.units[t].y) == 1) {
+                    shotSelect = i;
+                    shotHover = t;
+                    break;
+                }
             }
         }
     }
@@ -2118,7 +2147,7 @@ int main(int argc, char** argv) {
         return f ? 0 : 1;
     }
 
-    int selected = -1;
+    int selected = shotSelect;
     int inspect = shotInspect;  // enemy (or busy) unit opened for information only
     int currentPlayer = 0;
     bool showReach = false;
@@ -2143,6 +2172,7 @@ int main(int argc, char** argv) {
     float boardSX = 0, boardSY = 0, boardTX = 0, boardTY = 0;
     std::vector<int> reach;
     std::vector<int> targets;
+    if (shotSelect >= 0) targets = attackable(gMission, shotSelect);
     std::string notice;
     float noticeT = 0.0f;
 
@@ -2651,6 +2681,11 @@ int main(int argc, char** argv) {
         }
         int mx = 0, my = 0;
         bool inMap = pixelToHex(mouse.x, mouse.y, gMission.w, gMission.h, mx, my);
+        if (shotHover >= 0 && shotHover < (int)gMission.units.size()) {
+            mx = gMission.units[shotHover].x;
+            my = gMission.units[shotHover].y;
+            inMap = true;
+        }
 
         if (IsKeyPressed(KEY_SPACE) && !aiActive) {
             if (selected >= 0) {
@@ -2936,6 +2971,46 @@ int main(int argc, char** argv) {
             float cx, cy;
             hexCenter(u.x, u.y, cx, cy);
             DrawPolyLinesEx({cx, cy}, 6, gHexSize, 0, 3.5f, YELLOW);
+        }
+        // Attack preview: hovering a valid target marks the units that would
+        // join the exchange as support (direct attacks only).
+        {
+            int hoverSlot = inMap ? unitAt(gMission, mx, my) : -1;
+            if (selected >= 0 && hoverSlot >= 0 &&
+                std::find(targets.begin(), targets.end(), hoverSlot) != targets.end()) {
+                const Unit& A = gMission.units[selected];
+                const Unit& D = gMission.units[hoverSlot];
+                if (hexDistance(A.x, A.y, D.x, D.y) == 1) {
+                    float cx, cy;
+                    hexCenter(D.x, D.y, cx, cy);
+                    DrawPolyLinesEx({cx, cy}, 6, gHexSize, 0, 4.0f, WHITE);
+                    // allies of the attacker next to the defender = attack support
+                    for (int d = 0; d < 6; ++d) {
+                        int nx, ny;
+                        hexNeighbor(D.x, D.y, d, nx, ny);
+                        if (!inBounds(gMission, nx, ny)) continue;
+                        int s = unitAt(gMission, nx, ny);
+                        if (s < 0 || s == selected || s == hoverSlot) continue;
+                        if (gMission.units[s].owner != A.owner) continue;
+                        float hx, hy;
+                        hexCenter(nx, ny, hx, hy);
+                        DrawPolyLinesEx({hx, hy}, 6, gHexSize - 1, 0, 3.0f,
+                                        Color{255, 190, 60, 255});                    }
+                    // allies of the defender next to the attacker = defence support
+                    for (int d = 0; d < 6; ++d) {
+                        int nx, ny;
+                        hexNeighbor(A.x, A.y, d, nx, ny);
+                        if (!inBounds(gMission, nx, ny)) continue;
+                        int s = unitAt(gMission, nx, ny);
+                        if (s < 0 || s == hoverSlot || s == selected) continue;
+                        if (gMission.units[s].owner != D.owner) continue;
+                        float hx, hy;
+                        hexCenter(nx, ny, hx, hy);
+                        DrawPolyLinesEx({hx, hy}, 6, gHexSize - 1, 0, 3.0f,
+                                        Color{235, 70, 70, 255});
+                    }
+                }
+            }
         }
         if (inspect >= 0) {
             if (inspect >= (int)gMission.units.size() ||

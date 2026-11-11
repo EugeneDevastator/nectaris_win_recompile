@@ -190,6 +190,19 @@ else:
 * `>0` = indirect: only units with `counter_ground/air >= 2` attack, at rings
   `2..range`; the defender does **not** counter.
 
+Confirmed in the executable (`FUN_0041b810`, `0x41b890`..`0x41b8f7`): when the
+third argument (indirect flag) is non-zero, the counter slot `0x481e50` is
+unconditionally written `0`; in direct mode it is only written when the
+defender's counter range is exactly `1`.  Consequences:
+
+* no unit — mine, infantry, tank or artillery — can retaliate against a ranged
+  attack;
+* mines (M-77, attack 0, `movement 0`) defend normally with their defence and
+  terrain but never shoot back at all;
+* artillery (range >= 2, e.g. MB-4) can neither attack an adjacent unit nor
+  counter, so artillery never trades fire even when attacked up close;
+* an Atlas/artillery attacked by another artillery at range has no return fire.
+
 `counter_ground/air` is the range: SG-4 = 5, MR-22 = 4, SS-80 = 6, MM107 = 5
 vs air.  The original target highlighter has an extra gate
 `DAT_00495c42 != 0 || (ability & 0x14) == 0x14`; runtime probes show
