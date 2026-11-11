@@ -132,9 +132,13 @@ CombatResult resolveCombat(const Mission& m,
             if (s < 0 || s == atkSlot) continue;
             const Unit& N = m.units[s];
             if (N.owner != A.owner || N.acted) continue;
-            supA += attackValue(m, types, s, defSlot) * (N.hp + 1);
+            int raw = attackValue(m, types, s, defSlot) * (N.hp + 1);
+            supA += raw;
+            out.supportAtkUnits.push_back({s, N.hp + 1, raw, 0});
         }
         supA /= (out.hA * supportDiv);
+        for (auto& c : out.supportAtkUnits)
+            c.value = c.raw / (out.hA * supportDiv);
 
         // enemy units adjacent to the attacker add defensive support
         for (int d = 0; d < 6; ++d) {
@@ -145,10 +149,14 @@ CombatResult resolveCombat(const Mission& m,
             if (s < 0 || s == defSlot) continue;
             const Unit& N = m.units[s];
             if (N.owner != D.owner || N.acted) continue;
-            supD += types[N.type].def * (N.hp + 1);
+            int raw = types[N.type].def * (N.hp + 1);
+            supD += raw;
+            out.supportDefUnits.push_back({s, N.hp + 1, raw, 0});
         }
         // Note: the original divides *both* support sums by (attacker HP+1).
         supD /= (out.hA * supportDiv);
+        for (auto& c : out.supportDefUnits)
+            c.value = c.raw / (out.hA * supportDiv);
     }
     out.supportAtk = supA;
     out.supportDef = supD;

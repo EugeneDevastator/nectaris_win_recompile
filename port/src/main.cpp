@@ -798,6 +798,16 @@ static int terrainRemap(int t) {
 // (second), each using its own terrain first and the opponent's second.
 // Direct tables index [remap[p2]*16 + remap[p3] + param4];
 // indirect tables index [remap[p2]*2 + (param4>>3)].
+// Display helper: does `owner` project ZOC onto (x,y)?  Matches the combat
+// surround rule (idle, living units; all unit types).
+static bool zocCellFor(const Mission& m, int owner, int x, int y) {
+    for (const Unit& u : m.units) {
+        if (u.hp <= 0 || u.owner != owner || u.acted || u.carried) continue;
+        if (hexDistance(u.x, u.y, x, y) <= 1) return true;
+    }
+    return false;
+}
+
 static int combatPanelFor(int terrainA, int terrainB, bool indirect, bool first) {
     int a = terrainRemap(terrainA), b = terrainRemap(terrainB);
     int idx = 0;
@@ -1304,6 +1314,55 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
     hpBox(0.28f, impact ? nL1 : nL0);
     hpBox(0.62f, impact ? nR1 : nR0);
 
+    // ----- support contributor lists under the HP boxes
+    auto smallText = [&](float x, float y, const char* s, Color c) {
+        if (gUiFontReady)
+            DrawTextEx(gUiFont, s, {x, y}, (float)gUiFont.baseSize, 1.0f, c);
+        else
+            DrawText(s, (int)x, (int)y, 16, c);
+    };
+    auto supportRow = [&](const CombatSide& side, float x0, float maxX) {
+        const auto& list = (side.unit == v.r.atkSlot) ? v.r.supportAtkUnits
+                                                      : v.r.supportDefUnits;
+        bool attacker = (side.unit == v.r.atkSlot);
+        float y = topH * 0.70f;
+        const float rowH = gUiFontReady ? (float)gUiFont.baseSize * 1.05f : 17.0f;
+        smallText(x0, y, attacker ? "ASUP" : "DSUP", DIM);
+        float x = x0 + (gUiFontReady ? 4.6f * gUiFont.baseSize : 46.0f);
+        if (list.empty()) {
+            smallText(x, y, "0", DIM);
+            return;
+        }
+        Color tint = (side.team == 0) ? WHITE : Color{150, 255, 150, 255};
+        int row = 0;
+        for (const SupportContribution& c : list) {
+            if (c.slot < 0 || c.slot >= (int)gMission.units.size()) continue;
+            int type = gMission.units[c.slot].type;
+            Texture2D& tex = gUnitMapTex[type];
+            const float sz = 18.0f;
+            const char* txt = TextFormat("x%d +%d", c.count, c.value);
+            float tw = gUiFontReady ? MeasureTextEx(gUiFont, txt,
+                                                   (float)gUiFont.baseSize, 1.0f).x
+                                    : (float)MeasureText(txt, 16);
+            float itemW = sz + 2 + tw + 8;
+            if (x + itemW > maxX) {
+                if (row >= 1) break;
+                row = 1;
+                x = x0 + (gUiFontReady ? 4.6f * gUiFont.baseSize : 46.0f);
+                y += rowH;
+            }
+            if (tex.id) {
+                DrawTexturePro(tex, {0, 0, (float)tex.width, (float)tex.height},
+                               {x, y - 2, sz, sz}, {0, 0}, 0, tint);
+            }
+            x += sz + 2;
+            smallText(x, y, txt, TXT);
+            x += tw + 8.0f;
+        }
+    };
+    supportRow(v.left, playX + playW * 0.03f, playX + playW * 0.48f);
+    supportRow(v.right, playX + playW * 0.52f, playX + playW * 0.97f);
+
     // ----- middle: terrain close-ups + ride-in + simultaneous fire
     static const float FORM[8][2] = {
         {0.40f, 0.37f}, {0.23f, 0.34f}, {0.40f, 0.53f}, {0.19f, 0.47f},
@@ -1373,6 +1432,68 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
 
     drawArmy(axPanel, impact ? nL1 : nL0, L.type, false, recoilA, flashA);
     drawArmy(dxPanel, impact ? nR1 : nR0, R.type, true, recoilD, flashD);
+
+    // ----- surrounding hex diagrams (support + enemy ZOC) for both units
+    auto hexStatus = [&](const CombatSide& side, float boxX) {
+        bool attacker = (side.unit == v.r.atkSlot);
+        int enemyOwner = 1 - side.team;
+        const auto& oppSup = attacker ? v.r.supportDefUnits : v.r.supportAtkUnits;
+        bool surrounded = attacker ? v.r.surroundedA : v.r.surroundedD;
+        float r = std::max(6.5f, panW * 0.030f);
+        float bw = 5.4f * r + 10.0f;
+        float bh = 5.4f * r + 6.0f;
+        float bx = boxX, by = panY + 6.0f;
+        DrawRectangleRounded({bx, by, bw, bh}, 0.12f, 6, Color{0, 0, 0, 160});
+        if (surrounded) DrawRectangleLinesEx({bx, by, bw, bh}, 2.0f, kRed);
+        smallText(bx + 4, by + 2, attacker ? "ATK" : "DEF", BORDER);
+        if (surrounded) smallText(bx + 4, by + bh - 16, "SURR", kRed);
+        Vector2 center = {bx + bw * 0.5f, by + bh * 0.56f};
+        const float d = 1.72f * r;
+        for (int k = 0; k < 6; ++k) {
+            int nx, ny;
+            hexNeighbor(side.unit >= 0 ? gMission.units[side.unit].x : 0,
+                        side.unit >= 0 ? gMission.units[side.unit].y : 0, k, nx, ny);
+            bool z = zocCellFor(gMission, enemyOwner, nx, ny);
+            bool sup = false;
+            for (const SupportContribution& c : oppSup) {
+                if (c.slot < 0 || c.slot >= (int)gMission.units.size()) continue;
+                if (gMission.units[c.slot].x == nx && gMission.units[c.slot].y == ny) {
+                    sup = true;
+                    break;
+                }
+            }
+            float a = (-90.0f + 60.0f * k) * 3.14159265f / 180.0f;
+            Vector2 p = {center.x + std::cos(a) * d, center.y + std::sin(a) * d};
+            Color fill = sup ? Color{255, 190, 60, 200}
+                             : (z ? Color{190, 50, 50, 170} : Color{45, 48, 60, 160});
+            DrawPoly(p, 6, r * 0.92f, 0, fill);
+            DrawPolyLinesEx(p, 6, r * 0.92f, 0, 1.0f,
+                            z ? Color{255, 80, 80, 255} : Color{120, 120, 130, 220});
+        }
+        DrawPoly(center, 6, r * 0.98f, 0,
+                 side.team == 0 ? Color{60, 120, 220, 220} : Color{60, 180, 90, 220});
+        DrawPolyLinesEx(center, 6, r * 0.98f, 0, 1.5f, WHITE);
+        if (side.unit >= 0) {
+            int type = gMission.units[side.unit].type;
+            Texture2D& icon = gUnitMapTex[type];
+            if (icon.id) {
+                float s = r * 1.8f;
+                DrawTexturePro(icon, {0, 0, (float)icon.width, (float)icon.height},
+                               {center.x - s / 2, center.y - s / 2, s, s}, {0, 0}, 0,
+                               side.team == 0 ? WHITE : Color{150, 255, 150, 255});
+            }
+        }
+    };
+    {
+        float r = std::max(6.5f, panW * 0.030f);
+        float bw = 5.4f * r + 10.0f;
+        hexStatus(v.left, axPanel + panW - bw - 8.0f);
+        hexStatus(v.right, dxPanel + 8.0f);
+        float by = panY + 6.0f;
+        float bh = 5.4f * r + 6.0f;
+        smallText(axPanel + panW - bw - 8.0f, by + bh + 2.0f,
+                  "orange SUP  red ZOC", DIM);
+    }
 
     // ----- simultaneous fire: every surviving shot aims at a killed vehicle
     // slot when possible, otherwise at a deterministic scatter point.
@@ -1877,6 +1998,10 @@ int main(int argc, char** argv) {
                                            a, d, shotMode, shotRng);
             gCv = buildCombatViewFromExchange(a, d, gMission.units[a].hp, gMission.units[d].hp,
                                               r.newHpAtk, r.newHpDef, r, shotMode);
+            std::cout << "supportA " << r.supportAtk << " (" << r.supportAtkUnits.size()
+                      << " units) supportD " << r.supportDef << " ("
+                      << r.supportDefUnits.size() << " units) surroundD " << r.surroundPctD
+                      << " surroundA " << r.surroundPctA << "\n";
             gCv.active = true;
             gCv.t = (argc > 5) ? (float)std::atof(argv[5]) : 2.70f;
             std::cout << "combat panels L=" << gCv.left.panel << " (terrain "

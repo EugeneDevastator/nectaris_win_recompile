@@ -111,7 +111,10 @@ awards) live in `assets/data/combat.json`; the unit/terrain tables are in
 `assets/data/units.json` and `assets/data/terrain.json`. Projectile, muzzle,
 hit/miss and per-unit death animations are in `assets/data/combat_vfx.json`
 (frames refer to `assets/art/combat_effects/vfx_half_XX.png` and the assembled
-`vfx_quad_XX.png` cells). Regenerate the combat config from the executable with:
+`vfx_quad_XX.png` cells). The combat screen draws per-side support contributor
+lists (icon, remaining count, contributed points) and a surrounding-hex
+diagram for each unit (orange = contributing enemy support, red = enemy ZOC).
+Regenerate the combat config from the executable with:
 
 ```powershell
 python tools/export_combat_config.py

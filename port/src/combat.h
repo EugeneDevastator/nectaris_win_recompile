@@ -59,6 +59,14 @@ struct CombatRules {
     int rankDivisor = 4;         // rank = xp / rankDivisor
 };
 
+// One adjacent unit that contributed support fire/defence.
+struct SupportContribution {
+    int slot = 0;     // mission unit slot
+    int count = 0;    // remaining vehicles (hp + 1)
+    int raw = 0;      // attack/defence value * count
+    int value = 0;    // amount added after the support divisor
+};
+
 struct CombatResult {
     // core inputs / intermediate strengths
     int atkSlot = 0, defSlot = 0;
@@ -78,6 +86,8 @@ struct CombatResult {
     int baseCtr = 0;              // counter base (0 when the defender cannot)
     int supportAtk = 0;           // attacker support fire
     int supportDef = 0;           // defender support
+    std::vector<SupportContribution> supportAtkUnits;  // contributors to supportAtk
+    std::vector<SupportContribution> supportDefUnits;  // contributors to supportDef
     int unitDefA = 0, unitDefD = 0;   // raw unit defence
     int terrainDefA = 0;          // effective terrain defence % (0 for air)
     int terrainDefD = 0;
