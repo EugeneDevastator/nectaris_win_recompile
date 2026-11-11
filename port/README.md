@@ -112,9 +112,11 @@ awards) live in `assets/data/combat.json`; the unit/terrain tables are in
 hit/miss and per-unit death animations are in `assets/data/combat_vfx.json`
 (frames refer to `assets/art/combat_effects/vfx_half_XX.png` and the assembled
 `vfx_quad_XX.png` cells). The combat screen draws per-side support contributor
-lists (icon, remaining count, contributed points) and a surrounding-hex
-diagram for each unit (orange = contributing enemy support, red = enemy ZOC).
-Regenerate the combat config from the executable with:
+lists (icon, remaining count, contributed points), cumulative own+support
+attack/defence totals, and a surrounding-hex diagram: orange marks contributing
+enemy support units; red marks enemy ZOC coverage for the defender's surround
+check (attacker ZOC is not part of the combat formula). Regenerate the combat
+config from the executable with:
 
 ```powershell
 python tools/export_combat_config.py

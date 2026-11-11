@@ -774,6 +774,7 @@ struct CombatSide {
     int panel = 0;          // background panel index
     int hp0 = 0, hp1 = 0;   // formations before / after
     int atkPct = 0, defPct = 0;
+    int atkDisplay = 0, defDisplay = 0;   // cumulative own + support totals
     int support = 0, expPct = 0, xpGain = 0, damage = 0;
     int surroundPct = 0;
 };
@@ -897,6 +898,8 @@ static CombatSide makeCombatSide(int slot, int hp0, int hp1,
     s.hp1 = hp1;
     s.atkPct = isAttacker ? r.atkStrength : r.ctrStrength;
     s.defPct = isAttacker ? r.ctrDefense : r.defStrength;
+    s.atkDisplay = isAttacker ? r.dispAtkA : r.dispAtkD;
+    s.defDisplay = isAttacker ? r.dispDefA : r.dispDefD;
     s.support = isAttacker ? r.supportAtk : r.supportDef;
     s.expPct = isAttacker ? r.expPctA : r.expPctD;
     s.xpGain = isAttacker ? r.xpToAtk : r.xpToDef;
@@ -1246,10 +1249,10 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
     // and size them from the width, leaving a readable report bar below.
     float basePx = (gUiFontReady && gUiFont.baseSize > 0) ? (float)gUiFont.baseSize : 16.0f;
     int wantScale = 2;
-    float reportNeed = 4.0f * basePx * wantScale * 1.12f + 16.0f;
+    float reportNeed = 5.0f * basePx * wantScale * 1.12f + 16.0f;
     if (reportNeed > H * 0.34f) {
         wantScale = 1;
-        reportNeed = 4.0f * basePx * 1.12f + 16.0f;
+        reportNeed = 5.0f * basePx * 1.12f + 16.0f;
     }
     float panH = playW * 0.50f;
     float panY = topH;
@@ -1436,9 +1439,10 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
     // ----- surrounding hex diagrams (support + enemy ZOC) for both units
     auto hexStatus = [&](const CombatSide& side, float boxX) {
         bool attacker = (side.unit == v.r.atkSlot);
+        bool showZoc = !attacker;   // only the defender's ZOC coverage affects combat
         int enemyOwner = 1 - side.team;
         const auto& oppSup = attacker ? v.r.supportDefUnits : v.r.supportAtkUnits;
-        bool surrounded = attacker ? v.r.surroundedA : v.r.surroundedD;
+        bool surrounded = showZoc && (attacker ? v.r.surroundedA : v.r.surroundedD);
         float r = std::max(6.5f, panW * 0.030f);
         float bw = 5.4f * r + 10.0f;
         float bh = 5.4f * r + 6.0f;
@@ -1453,7 +1457,7 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
             int nx, ny;
             hexNeighbor(side.unit >= 0 ? gMission.units[side.unit].x : 0,
                         side.unit >= 0 ? gMission.units[side.unit].y : 0, k, nx, ny);
-            bool z = zocCellFor(gMission, enemyOwner, nx, ny);
+            bool z = showZoc && zocCellFor(gMission, enemyOwner, nx, ny);
             bool sup = false;
             for (const SupportContribution& c : oppSup) {
                 if (c.slot < 0 || c.slot >= (int)gMission.units.size()) continue;
@@ -1492,7 +1496,7 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
         float by = panY + 6.0f;
         float bh = 5.4f * r + 6.0f;
         smallText(axPanel + panW - bw - 8.0f, by + bh + 2.0f,
-                  "orange SUP  red ZOC", DIM);
+                  "orange SUP  red ZOC=surround", DIM);
     }
 
     // ----- simultaneous fire: every surviving shot aims at a killed vehicle
@@ -1598,26 +1602,27 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
     const CombatSide& SR = v.right;
     char l1[64], l2[64], l3[64], l4[64];
     char r1[64], r2[64], r3[64], r4[64];
-    char m1[64], m2[64], m3[64], m4[64];
-    std::snprintf(l1, sizeof(l1), "ATK%d DEF%d", SL.atkPct, SL.defPct);
-    std::snprintf(l2, sizeof(l2), "SURR%d SUP%d", SL.surroundPct, SL.support);
-    std::snprintf(l3, sizeof(l3), "EXP%d%% XP+%d", SL.expPct, SL.xpGain);
-    std::snprintf(l4, sizeof(l4), "HP %d>%d", SL.hp0, SL.hp1);
-    std::snprintf(r1, sizeof(r1), "ATK%d DEF%d", SR.atkPct, SR.defPct);
-    std::snprintf(r2, sizeof(r2), "SURR%d SUP%d", SR.surroundPct, SR.support);
-    std::snprintf(r3, sizeof(r3), "EXP%d%% XP+%d", SR.expPct, SR.xpGain);
-    std::snprintf(r4, sizeof(r4), "HP %d>%d", SR.hp0, SR.hp1);
+    char m1[64], m2[64], m3[64], m4[64], m5[64];
+    std::snprintf(l1, sizeof(l1), "ATK %d", SL.atkDisplay);
+    std::snprintf(l2, sizeof(l2), "DEF %d", SL.defDisplay);
+    std::snprintf(l3, sizeof(l3), "SURR%d SUP%d", SL.surroundPct, SL.support);
+    std::snprintf(l4, sizeof(l4), "HP %d>%d XP+%d", SL.hp0, SL.hp1, SL.xpGain);
+    std::snprintf(r1, sizeof(r1), "ATK %d", SR.atkDisplay);
+    std::snprintf(r2, sizeof(r2), "DEF %d", SR.defDisplay);
+    std::snprintf(r3, sizeof(r3), "SURR%d SUP%d", SR.surroundPct, SR.support);
+    std::snprintf(r4, sizeof(r4), "HP %d>%d XP+%d", SR.hp0, SR.hp1, SR.xpGain);
     std::snprintf(m1, sizeof(m1), "SIMULATION");
-    std::snprintf(m2, sizeof(m2), "SURR %d/%d", SL.surroundPct, SR.surroundPct);
-    std::snprintf(m3, sizeof(m3), "DMG %d/%d", SL.damage, SR.damage);
+    std::snprintf(m2, sizeof(m2), "DMG %d/%d", SL.damage, SR.damage);
+    std::snprintf(m3, sizeof(m3), "SURR %d/%d", SL.surroundPct, SR.surroundPct);
     std::snprintf(m4, sizeof(m4), "TER %d/%d", r.terrainDefA, r.terrainDefD);
+    std::snprintf(m5, sizeof(m5), "MODE %s", v.ranged ? "RANGED" : "DIRECT");
 
     float colW = playW * 0.30f;
     auto widest = [&](int scale) {
         float fs = basePx * scale;
         float sp = std::max(1.0f, (float)scale);
         float w = 0.0f;
-        for (const char* s : {l1, l2, l3, l4, r1, r2, r3, r4, m1, m2, m3, m4})
+        for (const char* s : {l1, l2, l3, l4, r1, r2, r3, r4, m1, m2, m3, m4, m5})
             w = std::max(w, gUiFontReady ? MeasureTextEx(gUiFont, s, fs, sp).x
                                          : (float)MeasureText(s, (int)fs));
         return w;
@@ -1625,7 +1630,7 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
     int rscale = 1;
     for (int s = wantScale; s >= 1; --s) {
         float lh = basePx * s * 1.12f;
-        if (4.0f * lh + 10.0f <= botH && widest(s) <= colW) {
+        if (5.0f * lh + 10.0f <= botH && widest(s) <= colW) {
             rscale = s;
             break;
         }
@@ -1641,7 +1646,7 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
     float colL = playX + playW * 0.02f;
     float colC = playX + playW * 0.36f;
     float colR = playX + playW * 0.68f;
-    float y0 = botY + std::max(6.0f, (botH - 4.0f * lh) * 0.35f);
+    float y0 = botY + std::max(6.0f, (botH - 5.0f * lh) * 0.35f);
 
     line(colL, y0, "PLAYER", BORDER);
     line(colC, y0, "SIMULATION", BORDER);
@@ -1649,19 +1654,20 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
     y0 += lh;
 
     line(colL, y0, l1, TXT);
+    line(colC, y0, m2, TXT);
     line(colR, y0, r1, TXT);
 
-    line(colL, y0 + lh, l2, SL.surroundPct ? kRed : DIM);
-    line(colC, y0 + lh, m2, (SL.surroundPct || SR.surroundPct) ? kRed : DIM);
-    line(colR, y0 + lh, r2, SR.surroundPct ? kRed : DIM);
+    line(colL, y0 + lh, l2, TXT);
+    line(colC, y0 + lh, m3, (SL.surroundPct || SR.surroundPct) ? kRed : DIM);
+    line(colR, y0 + lh, r2, TXT);
 
-    line(colL, y0 + lh * 2, l3, DIM);
-    line(colC, y0 + lh * 2, m3, TXT);
-    line(colR, y0 + lh * 2, r3, DIM);
+    line(colL, y0 + lh * 2, l3, SL.surroundPct ? kRed : DIM);
+    line(colC, y0 + lh * 2, m4, DIM);
+    line(colR, y0 + lh * 2, r3, SR.surroundPct ? kRed : DIM);
 
-    line(colL, y0 + lh * 3, l4, TXT);
-    line(colC, y0 + lh * 3, m4, DIM);
-    line(colR, y0 + lh * 3, r4, TXT);
+    line(colL, y0 + lh * 3, l4, DIM);
+    line(colC, y0 + lh * 3, m5, DIM);
+    line(colR, y0 + lh * 3, r4, DIM);
 }
 
 static std::string resolveAssets(int argc, char** argv) {

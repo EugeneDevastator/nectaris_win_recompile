@@ -201,6 +201,14 @@ CombatResult resolveCombat(const Mission& m,
     const int surroundDiv = (rules.surroundDivisor > 0) ? rules.surroundDivisor : 1;
     if (surrounded) defStrength /= surroundDiv;
     out.defAfterSurround = defStrength;
+    {
+        int ctrDisp = out.baseCtr;
+        if (surrounded) ctrDisp /= surroundDiv;
+        out.dispAtkA = (out.baseAtk + supA) * out.hA;
+        out.dispDefA = (defA + terA) * out.hA;
+        out.dispAtkD = ctrDisp * out.hD;
+        out.dispDefD = defStrength * out.hD;
+    }
     if (atkStrength > 100) atkStrength = 100;
     if (defStrength > 100) defStrength = 100;
     out.atkStrength = atkStrength;

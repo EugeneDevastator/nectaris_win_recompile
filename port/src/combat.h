@@ -98,6 +98,9 @@ struct CombatResult {
     int defStrength = 0;          // clamped defence %
     int ctrStrength = 0;          // clamped counter attack %
     int ctrDefense = 0;           // `defence[A] + terrain[A]` clamped
+    // Cumulative own + support values shown in the report (original UI style:
+    // per-formation totals before the 100% clamp, e.g. 70 * 8 = 560).
+    int dispAtkA = 0, dispDefA = 0, dispAtkD = 0, dispDefD = 0;
 
     int rankA = 0, rankD = 0;     // HP-multiplier tiers (0..7)
 
