@@ -326,6 +326,12 @@ port/build/nectaris.exe assets assets/maps/all_units_test.json --unitshot units.
 
 Other art:
 
+* `assets/art/map_tiles/` — the original **map tile bank** (16x16 tiles,
+  palette-keyed): `bank_sheet.png` shows all 2048 tiles with ids,
+  `used_sheet.png` the 824 used by the map layout, `tile_XXXX_bN.png` one PNG
+  per used tile/bank, `background.png` the layout composited at 8 px steps.
+  Regenerate with `python tools/export_map_tiles.py` (source dumps:
+  `dump/tilebank.bin`, `dump/tilemap.bin`, `dump/palette_bgr.bin`).
 * `assets/art/combat_effects/vfx_sheet.png` — 16 combat VFX frames
   (`vfx_00..15.png`), extracted from battle-bank tiles 832–896. These drive the
   muzzle flash, projectile and explosions in the battle scene.
