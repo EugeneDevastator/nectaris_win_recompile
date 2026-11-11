@@ -157,13 +157,14 @@ else:                                     # indirect / ranged
 defA = defense[type[A]]; defD = defense[type[D]]
 terA = isAir(type[A]) ? 0 : terrain_def[terrain[A]]
 terD = isAir(type[D]) ? 0 : terrain_def[terrain[D]]
+defAeff = defA * (100 + terA) / 100       # terrain is a percentage bonus
+defDeff = defD * (100 + terD) / 100
 
-# support fire: only during a direct exchange.  A support unit must be idle
-# (x-state bits 0xE0 == 0 and y bit 0x40 == 0 in the original).
-supportA = sum(atkVs(N, D) * (hp[N] + 1)) for idle friendly N adjacent to D
+# support: idle allies adjacent to the supported unit; 50% of their power.
+supportA = sum(atkVs(N, D) * (hp[N] + 1)) for idle friendly N adjacent to A
 supportA /= hA * 2
-supportD = sum(defense[type[N]] * (hp[N] + 1)) for idle enemy N adjacent to A
-supportD /= hA * 2                        # note: attacker HP, not defender
+supportD = sum(defense[type[N]] * (hp[N] + 1)) for idle friendly N adjacent to D
+supportD /= hD * 2
 
 # surround (FUN_00423a80 + FUN_0041bd40): the current player's ZOC bit 0x40 is
 # set on the occupied cell and on every adjacent cell of an idle friendly unit.
@@ -171,13 +172,13 @@ supportD /= hA * 2                        # note: attacker HP, not defender
 surrounded = all 6 neighbours of D are in the attacker's ZOC
 
 atkStrength = min(100, baseA + supportA)
-defStrength = min(100, (defD + terD + supportD) / (surrounded ? 2 : 1))
+defStrength = min(100, (defDeff + supportD) / (surrounded ? 2 : 1))
 
 dmgToD = hA * (hp_mult[rank[A]] * (((100 - defStrength) * atkStrength) / 100) / 100)
 
 if mode == 0:
     ctrBase = min(100, baseD / (surrounded ? 2 : 1))
-    ctrDef  = min(100, defA + terA)
+    ctrDef  = min(100, defAeff)
     dmgToA = hD * (hp_mult[rank[D]] * (((100 - ctrDef) * ctrBase) / 100) / 100)
 else:
     dmgToA = 0

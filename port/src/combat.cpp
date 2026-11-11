@@ -116,31 +116,19 @@ CombatResult resolveCombat(const Mission& m,
     const int defD = TD.def;
     const int terA = TA.airborne() ? 0 : terrain[terrainAt(m, A.x, A.y)].def;
     const int terD = TD.airborne() ? 0 : terrain[terrainAt(m, D.x, D.y)].def;
+    // Terrain is displayed (and applied) as a percentage bonus.
+    const int defAeff = defA * (100 + terA) / 100;
+    const int defDeff = defD * (100 + terD) / 100;
     out.terrainDefA = terA;
     out.terrainDefD = terD;
 
     // ----- support fire (only during a direct exchange)
+    // Attacking side: idle allies adjacent to the ATTACKER add 50% of their
+    // attack value.  Defending side: idle allies adjacent to the DEFENDER add
+    // 50% of their defence value.
     int supA = 0, supD = 0;
     const int supportDiv = (rules.supportDivisor > 0) ? rules.supportDivisor : 1;
     if (mode == 0) {
-        // friendly units adjacent to the defender add attack power
-        for (int d = 0; d < 6; ++d) {
-            int nx, ny;
-            hexNeighbor(D.x, D.y, d, nx, ny);
-            if (!inBounds(m, nx, ny)) continue;
-            int s = unitAt(m, nx, ny);
-            if (s < 0 || s == atkSlot) continue;
-            const Unit& N = m.units[s];
-            if (N.owner != A.owner || N.acted) continue;
-            int raw = attackValue(m, types, s, defSlot) * (N.hp + 1);
-            supA += raw;
-            out.supportAtkUnits.push_back({s, N.hp + 1, raw, 0});
-        }
-        supA /= (out.hA * supportDiv);
-        for (auto& c : out.supportAtkUnits)
-            c.value = c.raw / (out.hA * supportDiv);
-
-        // enemy units adjacent to the attacker add defensive support
         for (int d = 0; d < 6; ++d) {
             int nx, ny;
             hexNeighbor(A.x, A.y, d, nx, ny);
@@ -148,15 +136,28 @@ CombatResult resolveCombat(const Mission& m,
             int s = unitAt(m, nx, ny);
             if (s < 0 || s == defSlot) continue;
             const Unit& N = m.units[s];
+            if (N.owner != A.owner || N.acted) continue;
+            int raw = attackValue(m, types, s, defSlot) * (N.hp + 1);
+            supA += raw;
+            out.supportAtkUnits.push_back({s, N.hp + 1, raw,
+                                           raw / supportDiv});
+        }
+        supA /= (out.hA * supportDiv);
+
+        for (int d = 0; d < 6; ++d) {
+            int nx, ny;
+            hexNeighbor(D.x, D.y, d, nx, ny);
+            if (!inBounds(m, nx, ny)) continue;
+            int s = unitAt(m, nx, ny);
+            if (s < 0 || s == atkSlot) continue;
+            const Unit& N = m.units[s];
             if (N.owner != D.owner || N.acted) continue;
             int raw = types[N.type].def * (N.hp + 1);
             supD += raw;
-            out.supportDefUnits.push_back({s, N.hp + 1, raw, 0});
+            out.supportDefUnits.push_back({s, N.hp + 1, raw,
+                                           raw / supportDiv});
         }
-        // Note: the original divides *both* support sums by (attacker HP+1).
-        supD /= (out.hA * supportDiv);
-        for (auto& c : out.supportDefUnits)
-            c.value = c.raw / (out.hA * supportDiv);
+        supD /= (out.hD * supportDiv);
     }
     out.supportAtk = supA;
     out.supportDef = supD;
@@ -194,7 +195,7 @@ CombatResult resolveCombat(const Mission& m,
 
     // ----- attack / defence strengths
     int atkStrength = out.baseAtk + supA;
-    int defStrength = defD + terD + supD;
+    int defStrength = defDeff + supD;
     out.unitDefA = defA;
     out.unitDefD = defD;
     out.defBeforeSurround = defStrength;
@@ -204,10 +205,14 @@ CombatResult resolveCombat(const Mission& m,
     {
         int ctrDisp = out.baseCtr;
         if (surrounded) ctrDisp /= surroundDiv;
-        out.dispAtkA = (out.baseAtk + supA) * out.hA;
-        out.dispDefA = (defA + terA) * out.hA;
+        int supARaw = 0, supDRaw = 0;
+        for (const auto& c : out.supportAtkUnits) supARaw += c.raw;
+        for (const auto& c : out.supportDefUnits) supDRaw += c.raw;
+        out.dispAtkA = out.baseAtk * out.hA + supARaw / supportDiv;
+        out.dispDefA = defAeff * out.hA;
         out.dispAtkD = ctrDisp * out.hD;
-        out.dispDefD = defStrength * out.hD;
+        out.dispDefD = defDeff * out.hD + supDRaw / supportDiv;
+        if (surrounded) out.dispDefD /= surroundDiv;
     }
     if (atkStrength > 100) atkStrength = 100;
     if (defStrength > 100) defStrength = 100;
@@ -226,7 +231,7 @@ CombatResult resolveCombat(const Mission& m,
         out.rankD = rankOf(D);
         int ctrBase = out.baseCtr;
         if (surrounded) ctrBase /= surroundDiv;  // surround also halves counter fire
-        int ctrDef = defA + terA;
+        int ctrDef = defAeff;
         if (ctrBase > 100) ctrBase = 100;
         if (ctrDef > 100) ctrDef = 100;
         out.ctrStrength = ctrBase;
@@ -239,7 +244,7 @@ CombatResult resolveCombat(const Mission& m,
         out.rankD = rankOf(D);
         out.expPctD = hpMultAt(rules, out.rankD) - 100;
         out.ctrStrength = 0;
-        int ctrDef = defA + terA;
+        int ctrDef = defAeff;
         if (ctrDef > 100) ctrDef = 100;
         out.ctrDefense = ctrDef;
         out.rawDmgToAtk = 0;

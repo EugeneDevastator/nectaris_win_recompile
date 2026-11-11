@@ -900,7 +900,11 @@ static CombatSide makeCombatSide(int slot, int hp0, int hp1,
     s.defPct = isAttacker ? r.ctrDefense : r.defStrength;
     s.atkDisplay = isAttacker ? r.dispAtkA : r.dispAtkD;
     s.defDisplay = isAttacker ? r.dispDefA : r.dispDefD;
-    s.support = isAttacker ? r.supportAtk : r.supportDef;
+    s.support = 0;
+    {
+        const auto& list = isAttacker ? r.supportAtkUnits : r.supportDefUnits;
+        for (const auto& c : list) s.support += c.value;
+    }
     s.expPct = isAttacker ? r.expPctA : r.expPctD;
     s.xpGain = isAttacker ? r.xpToAtk : r.xpToDef;
     s.damage = isAttacker ? r.dmgToDef : r.dmgToAtk;
@@ -1441,7 +1445,7 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
         bool attacker = (side.unit == v.r.atkSlot);
         bool showZoc = !attacker;   // only the defender's ZOC coverage affects combat
         int enemyOwner = 1 - side.team;
-        const auto& oppSup = attacker ? v.r.supportDefUnits : v.r.supportAtkUnits;
+        const auto& sideSup = attacker ? v.r.supportAtkUnits : v.r.supportDefUnits;
         bool surrounded = showZoc && (attacker ? v.r.surroundedA : v.r.surroundedD);
         float r = std::max(6.5f, panW * 0.030f);
         float bw = 5.4f * r + 10.0f;
@@ -1453,26 +1457,29 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
         if (surrounded) smallText(bx + 4, by + bh - 16, "SURR", kRed);
         Vector2 center = {bx + bw * 0.5f, by + bh * 0.56f};
         const float d = 1.72f * r;
+        Color teamCol = side.team == 0 ? Color{60, 120, 220, 220}
+                                      : Color{60, 180, 90, 220};
         for (int k = 0; k < 6; ++k) {
             int nx, ny;
             hexNeighbor(side.unit >= 0 ? gMission.units[side.unit].x : 0,
                         side.unit >= 0 ? gMission.units[side.unit].y : 0, k, nx, ny);
             bool z = showZoc && zocCellFor(gMission, enemyOwner, nx, ny);
+            int occ = unitAt(gMission, nx, ny);
+            bool friendly = occ >= 0 && gMission.units[occ].owner == side.team;
+            bool enemy = occ >= 0 && gMission.units[occ].owner != side.team;
             bool sup = false;
-            for (const SupportContribution& c : oppSup) {
-                if (c.slot < 0 || c.slot >= (int)gMission.units.size()) continue;
-                if (gMission.units[c.slot].x == nx && gMission.units[c.slot].y == ny) {
-                    sup = true;
-                    break;
-                }
-            }
+            for (const SupportContribution& c : sideSup)
+                if (occ >= 0 && c.slot == occ) { sup = true; break; }
             float a = (-90.0f + 60.0f * k) * 3.14159265f / 180.0f;
             Vector2 p = {center.x + std::cos(a) * d, center.y + std::sin(a) * d};
-            Color fill = sup ? Color{255, 190, 60, 200}
-                             : (z ? Color{190, 50, 50, 170} : Color{45, 48, 60, 160});
+            Color fill = friendly ? teamCol
+                         : enemy ? Color{190, 55, 55, 210}
+                         : (z ? Color{90, 30, 30, 160} : Color{45, 48, 60, 160});
             DrawPoly(p, 6, r * 0.92f, 0, fill);
-            DrawPolyLinesEx(p, 6, r * 0.92f, 0, 1.0f,
-                            z ? Color{255, 80, 80, 255} : Color{120, 120, 130, 220});
+            Color outline = sup ? Color{255, 190, 60, 255}
+                            : z ? Color{255, 80, 80, 255}
+                            : Color{120, 120, 130, 220};
+            DrawPolyLinesEx(p, 6, r * 0.92f, 0, sup ? 2.0f : 1.0f, outline);
         }
         DrawPoly(center, 6, r * 0.98f, 0,
                  side.team == 0 ? Color{60, 120, 220, 220} : Color{60, 180, 90, 220});
@@ -1496,7 +1503,7 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
         float by = panY + 6.0f;
         float bh = 5.4f * r + 6.0f;
         smallText(axPanel + panW - bw - 8.0f, by + bh + 2.0f,
-                  "orange SUP  red ZOC=surround", DIM);
+                  "orange=SUP  red outline=ZOC", DIM);
     }
 
     // ----- simultaneous fire: every surviving shot aims at a killed vehicle
