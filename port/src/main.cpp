@@ -2704,7 +2704,11 @@ int main(int argc, char** argv) {
             Vector2 d = GetMouseDelta();
             gPanX += d.x;
             gPanY += d.y;
-            float lx = gMapPixelW * 0.5f, ly = gMapPixelH * 0.5f;
+            // Allow a little empty space around the map so its edges can be
+            // inspected comfortably (about 1.5 hexes of padding per side).
+            const float padX = gStepX * 1.5f;
+            const float padY = gStepY * 1.5f;
+            float lx = gMapPixelW * 0.5f + padX, ly = gMapPixelH * 0.5f + padY;
             gPanX = std::clamp(gPanX, -lx, lx);
             gPanY = std::clamp(gPanY, -ly, ly);
         }
