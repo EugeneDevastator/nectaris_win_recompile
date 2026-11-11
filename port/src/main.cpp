@@ -799,16 +799,6 @@ static int terrainRemap(int t) {
 // (second), each using its own terrain first and the opponent's second.
 // Direct tables index [remap[p2]*16 + remap[p3] + param4];
 // indirect tables index [remap[p2]*2 + (param4>>3)].
-// Display helper: does `owner` project ZOC onto (x,y)?  Matches the combat
-// surround rule (idle, living units; all unit types).
-static bool zocCellFor(const Mission& m, int owner, int x, int y) {
-    for (const Unit& u : m.units) {
-        if (u.hp <= 0 || u.owner != owner || u.carried) continue;
-        if (hexDistance(u.x, u.y, x, y) <= 1) return true;
-    }
-    return false;
-}
-
 static int combatPanelFor(int terrainA, int terrainB, bool indirect, bool first) {
     int a = terrainRemap(terrainA), b = terrainRemap(terrainB);
     int idx = 0;
@@ -1502,52 +1492,48 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
     drawArmy(axPanel, impact ? nL1 : nL0, L.type, false, recoilA, flashA);
     drawArmy(dxPanel, impact ? nR1 : nR0, R.type, true, recoilD, flashD);
 
-    // ----- surrounding hex diagrams (support + enemy ZOC) for both units
+    // ----- surrounding hex diagrams (own unit): allied/enemy cells, plus a
+    // strip of this side's participating supporters so the allied support is
+    // always shown on the allied side (even if they stand next to the enemy).
     auto hexStatus = [&](const CombatSide& side, float boxX) {
         bool attacker = (side.unit == v.r.atkSlot);
-        // Both ZOCs matter: attacker allies in the defender's ZOC support the
-        // attack, defender allies in the attacker's ZOC support the defence.
-        bool showZoc = true;
-        int enemyOwner = 1 - side.team;
         bool surrounded = !attacker && v.r.surroundedD;
+        const auto& list = attacker ? v.r.supportAtkUnits : v.r.supportDefUnits;
         float r = std::max(6.5f, panW * 0.030f);
         float bw = 5.4f * r + 10.0f;
-        float bh = 5.4f * r + 6.0f;
+        float bh = 30.0f + 5.28f * r;
         float bx = boxX, by = panY + 6.0f;
-        DrawRectangleRounded({bx, by, bw, bh}, 0.12f, 6, Color{0, 0, 0, 160});
+        DrawRectangleRounded({bx, by, bw, bh}, 0.12f, 6, Color{0, 0, 0, 170});
         if (surrounded) DrawRectangleLinesEx({bx, by, bw, bh}, 2.0f, kRed);
         smallText(bx + 4, by + 2, attacker ? "ATK" : "DEF", BORDER);
-        if (surrounded) smallText(bx + 4, by + bh - 16, "SURR", kRed);
-        Vector2 center = {bx + bw * 0.5f, by + bh * 0.56f};
+        if (surrounded) smallText(bx + bw - 26.0f, by + 2, "SURR", kRed);
+        Vector2 center = {bx + bw * 0.5f, by + 12.0f + 2.64f * r};
         const float d = 1.72f * r;
         Color teamCol = side.team == 0 ? Color{60, 120, 220, 220}
                                       : Color{60, 180, 90, 220};
-        bool anySup = false, anyZoc = false;
         for (int k = 0; k < 6; ++k) {
             int nx, ny;
             hexNeighbor(side.unit >= 0 ? gMission.units[side.unit].x : 0,
                         side.unit >= 0 ? gMission.units[side.unit].y : 0, k, nx, ny);
-            bool z = showZoc && zocCellFor(gMission, enemyOwner, nx, ny);
             int occ = unitAt(gMission, nx, ny);
             bool friendly = occ >= 0 && gMission.units[occ].owner == side.team;
-            bool enemy = occ >= 0 && gMission.units[occ].owner != side.team;
-            // An ally inside the enemy ZOC can engage, so it contributes to
-            // this side's value (that is exactly the support list rule).
-            bool sup = friendly && z;
-            if (sup) anySup = true;
-            if (z) anyZoc = true;            float a = (-90.0f + 60.0f * k) * 3.14159265f / 180.0f;
+            bool enemy = occ >= 0 && !friendly;
+            // Participating units only: membership of this side's support list.
+            bool sup = false;
+            for (const SupportContribution& c : list)
+                if (occ >= 0 && c.slot == occ) { sup = true; break; }
+            float a = (-90.0f + 60.0f * k) * 3.14159265f / 180.0f;
             Vector2 p = {center.x + std::cos(a) * d, center.y + std::sin(a) * d};
-            Color fill = friendly ? teamCol
-                         : enemy ? Color{190, 55, 55, 210}
-                         : (z ? Color{90, 30, 30, 160} : Color{45, 48, 60, 160});
+            Color fill = sup ? Color{255, 170, 40, 235}
+                        : friendly ? teamCol
+                        : enemy ? Color{190, 55, 55, 210}
+                        : Color{45, 48, 60, 170};
             DrawPoly(p, 6, r * 0.92f, 0, fill);
-            Color outline = sup ? Color{255, 190, 60, 255}
-                            : z ? Color{255, 80, 80, 255}
-                            : Color{120, 120, 130, 220};
-            DrawPolyLinesEx(p, 6, r * 0.92f, 0, sup ? 2.0f : 1.0f, outline);
+            DrawPolyLinesEx(p, 6, r * 0.92f, 0, sup ? 2.2f : 1.0f,
+                            sup ? Color{255, 230, 150, 255}
+                                : Color{120, 120, 130, 220});
         }
-        DrawPoly(center, 6, r * 0.98f, 0,
-                 side.team == 0 ? Color{60, 120, 220, 220} : Color{60, 180, 90, 220});
+        DrawPoly(center, 6, r * 0.98f, 0, teamCol);
         DrawPolyLinesEx(center, 6, r * 0.98f, 0, 1.5f, WHITE);
         if (side.unit >= 0) {
             int type = gMission.units[side.unit].type;
@@ -1559,9 +1545,26 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
                                side.team == 0 ? WHITE : Color{150, 255, 150, 255});
             }
         }
-        // Counts are reported by the coloured list rows below the name bar.
-        (void)anySup;
-        (void)anyZoc;
+        // Allied support strip: one icon per participating unit.
+        int shown = 0;
+        const float isz = 13.0f, igap = 3.0f;
+        float iy = by + bh - isz - 2.0f;
+        for (const SupportContribution& c : list) {
+            if (shown >= 4) break;
+            if (c.slot < 0 || c.slot >= (int)gMission.units.size()) continue;
+            const Unit& su = gMission.units[c.slot];
+            float ix = bx + 4.0f + shown * (isz + igap);
+            DrawRectangleLinesEx({ix - 1.0f, iy - 1.0f, isz + 2.0f, isz + 2.0f},
+                                 1.0f, Color{255, 190, 60, 255});
+            Texture2D& tex = gUnitMapTex[su.type];
+            if (tex.id) {
+                DrawTexturePro(tex, {0, 0, (float)tex.width, (float)tex.height},
+                               {ix, iy, isz, isz}, {0, 0}, 0,
+                               side.team == 0 ? WHITE : Color{150, 255, 150, 255});
+            }
+            ++shown;
+        }
+        if (shown == 0) smallText(bx + 4, iy + 2, "no support", DIM);
     };    {
         float r = std::max(6.5f, panW * 0.030f);
         float bw = 5.4f * r + 10.0f;

@@ -120,10 +120,12 @@ hit/miss and per-unit death animations are in `assets/data/combat_vfx.json`
 (frames refer to `assets/art/combat_effects/vfx_half_XX.png` and the assembled
 `vfx_quad_XX.png` cells). The combat screen draws per-side support contributor
 lists (icon, remaining count, contributed points), cumulative own+support
-attack/defence totals, and a surrounding-hex diagram: blue/green = allied cell,
-red = enemy cell, orange outline = that unit contributes support fire
-(attacker allies in the defender's ZOC, defender allies in the attacker's ZOC),
-and red outline = defender-side ZOC coverage for the surround check. Regenerate
+attack/defence totals, and one surrounding-hex diagram per side centred on that
+side's own unit: blue/green = allied cell, red = enemy cell, orange = an allied
+unit that is actually contributing, red frame + `SURR` = defender surrounded.
+A strip of framed icons under the ring shows that side's participating
+supporters, so allied support is always displayed on the allied side even when
+those units stand next to the enemy. Regenerate
 the combat config from the executable with:
 
 ```powershell
