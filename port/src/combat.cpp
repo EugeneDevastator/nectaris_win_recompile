@@ -59,7 +59,7 @@ int attackValue(const Mission& m, const std::vector<UnitType>& types,
 bool inAttackerZoc(const Mission& m, int owner, int cx, int cy, int atkSlot) {
     for (int i = 0; i < (int)m.units.size(); ++i) {
         const Unit& u = m.units[i];
-        if (u.hp <= 0 || u.owner != owner || u.acted || u.carried) continue;
+        if (u.hp <= 0 || u.owner != owner || u.carried) continue;
         if (hexDistance(u.x, u.y, cx, cy) <= 1) return true;
     }
     (void)atkSlot;
@@ -136,7 +136,7 @@ CombatResult resolveCombat(const Mission& m,
             int s = unitAt(m, nx, ny);
             if (s < 0 || s == atkSlot || s == defSlot) continue;
             const Unit& N = m.units[s];
-            if (N.owner != A.owner || N.acted) continue;
+            if (N.owner != A.owner) continue;
             int raw = attackValue(m, types, s, defSlot) * (N.hp + 1);
             supA += raw;
             out.supportAtkUnits.push_back({s, N.hp + 1, raw,
@@ -151,7 +151,7 @@ CombatResult resolveCombat(const Mission& m,
             int s = unitAt(m, nx, ny);
             if (s < 0 || s == defSlot || s == atkSlot) continue;
             const Unit& N = m.units[s];
-            if (N.owner != D.owner || N.acted) continue;
+            if (N.owner != D.owner) continue;
             int raw = types[N.type].def * (N.hp + 1);
             supD += raw;
             out.supportDefUnits.push_back({s, N.hp + 1, raw,

@@ -803,7 +803,7 @@ static int terrainRemap(int t) {
 // surround rule (idle, living units; all unit types).
 static bool zocCellFor(const Mission& m, int owner, int x, int y) {
     for (const Unit& u : m.units) {
-        if (u.hp <= 0 || u.owner != owner || u.acted || u.carried) continue;
+        if (u.hp <= 0 || u.owner != owner || u.carried) continue;
         if (hexDistance(u.x, u.y, x, y) <= 1) return true;
     }
     return false;
@@ -1329,43 +1329,76 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
             DrawText(s, (int)x, (int)y, 16, c);
     };
     auto supportRow = [&](const CombatSide& side, float x0, float maxX) {
-        const auto& list = (side.unit == v.r.atkSlot) ? v.r.supportAtkUnits
-                                                      : v.r.supportDefUnits;
         bool attacker = (side.unit == v.r.atkSlot);
-        float y = topH * 0.70f;
-        const float rowH = gUiFontReady ? (float)gUiFont.baseSize * 1.05f : 17.0f;
-        smallText(x0, y, attacker ? "ASUP" : "DSUP", DIM);
-        float x = x0 + (gUiFontReady ? 4.6f * gUiFont.baseSize : 46.0f);
-        if (list.empty()) {
-            smallText(x, y, "0", DIM);
-            return;
+        const auto& list = attacker ? v.r.supportAtkUnits : v.r.supportDefUnits;
+        // Support is determined by the units surrounding the OPPOSING unit:
+        // attacker support around the defender, defender support around the attacker.
+        int oppSlot = attacker ? v.r.defSlot : v.r.atkSlot;
+        if (oppSlot < 0 || oppSlot >= (int)gMission.units.size()) return;
+        const Unit& opp = gMission.units[oppSlot];
+        // Readable integer-scaled original font, sized from the header height so
+        // both list rows always stay inside the name bar.
+        int scale = 1;
+        if (gUiFontReady && gUiFont.baseSize > 0) {
+            scale = (int)(topH * 0.10f / (float)gUiFont.baseSize);
+            if (scale < 1) scale = 1;
+            if (scale > 3) scale = 3;
         }
-        Color tint = (side.team == 0) ? WHITE : Color{150, 255, 150, 255};
-        int row = 0;
-        for (const SupportContribution& c : list) {
-            if (c.slot < 0 || c.slot >= (int)gMission.units.size()) continue;
-            int type = gMission.units[c.slot].type;
-            Texture2D& tex = gUnitMapTex[type];
-            const float sz = 18.0f;
-            const char* txt = TextFormat("x%d +%d", c.count, c.value);
-            float tw = gUiFontReady ? MeasureTextEx(gUiFont, txt,
-                                                   (float)gUiFont.baseSize, 1.0f).x
-                                    : (float)MeasureText(txt, 16);
-            float itemW = sz + 2 + tw + 8;
+        float fs = gUiFontReady ? (float)gUiFont.baseSize * scale : 16.0f;
+        float sp = gUiFontReady ? (float)scale : 1.0f;
+        auto rowText = [&](float x, float y, const char* s, Color c) {
+            if (gUiFontReady) DrawTextEx(gUiFont, s, {x, y}, fs, sp, c);
+            else DrawText(s, (int)x, (int)y, 16, c);
+        };
+        auto rowWidth = [&](const char* s) {
+            return gUiFontReady ? MeasureTextEx(gUiFont, s, fs, sp).x
+                                : (float)MeasureText(s, 16);
+        };
+        int total = 0;
+        for (const SupportContribution& c : list) total += c.value;
+        float y = topH * 0.64f;
+        const float rowH = fs * 1.55f;
+        const float sz = fs * 1.40f;
+        const char* head = TextFormat("%s +%d", attacker ? "ASUP" : "DSUP", total);
+        rowText(x0, y, head, total > 0 ? BORDER : DIM);
+        float x = x0 + rowWidth(head) + 10.0f;
+        int row = 0, count = 0;
+        for (int d = 0; d < 6; ++d) {
+            int nx, ny;
+            hexNeighbor(opp.x, opp.y, d, nx, ny);
+            if (!inBounds(gMission, nx, ny)) continue;
+            int slot = unitAt(gMission, nx, ny);
+            if (slot < 0) continue;
+            if (slot == side.unit) continue;   // never list/count the supported unit itself
+            const Unit& N = gMission.units[slot];
+            int value = -1;
+            for (const SupportContribution& c : list)
+                if (c.slot == slot) { value = c.value; break; }
+            bool ally = (N.owner == side.team);
+            const char* txt = value >= 0
+                                  ? TextFormat("x%d +%d", N.hp + 1, value)
+                                  : TextFormat("x%d %s", N.hp + 1, ally ? "-" : "E");
+            float tw = rowWidth(txt);
+            float itemW = sz + 3 + tw + 8;
             if (x + itemW > maxX) {
                 if (row >= 1) break;
                 row = 1;
-                x = x0 + (gUiFontReady ? 4.6f * gUiFont.baseSize : 46.0f);
+                x = x0;
                 y += rowH;
             }
+            Texture2D& tex = gUnitMapTex[N.type];
+            Color tint = ally ? ((side.team == 0) ? WHITE : Color{150, 255, 150, 255})
+                              : Color{255, 140, 140, 255};
             if (tex.id) {
                 DrawTexturePro(tex, {0, 0, (float)tex.width, (float)tex.height},
-                               {x, y - 2, sz, sz}, {0, 0}, 0, tint);
+                               {x, y, sz, sz}, {0, 0}, 0, tint);
             }
-            x += sz + 2;
-            smallText(x, y, txt, TXT);
+            x += sz + 3;
+            rowText(x, y, txt, value >= 0 ? BORDER : (ally ? DIM : Color{255, 150, 150, 255}));
             x += tw + 8.0f;
+            ++count;
         }
+        if (!count) rowText(x, y, "none", DIM);
     };
     supportRow(v.left, playX + playW * 0.03f, playX + playW * 0.48f);
     supportRow(v.right, playX + playW * 0.52f, playX + playW * 0.97f);
@@ -1443,10 +1476,11 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
     // ----- surrounding hex diagrams (support + enemy ZOC) for both units
     auto hexStatus = [&](const CombatSide& side, float boxX) {
         bool attacker = (side.unit == v.r.atkSlot);
-        bool showZoc = !attacker;   // only the defender's ZOC coverage affects combat
+        // Both ZOCs matter: attacker allies in the defender's ZOC support the
+        // attack, defender allies in the attacker's ZOC support the defence.
+        bool showZoc = true;
         int enemyOwner = 1 - side.team;
-        const auto& oppSup = attacker ? v.r.supportDefUnits : v.r.supportAtkUnits;
-        bool surrounded = showZoc && (attacker ? v.r.surroundedA : v.r.surroundedD);
+        bool surrounded = !attacker && v.r.surroundedD;
         float r = std::max(6.5f, panW * 0.030f);
         float bw = 5.4f * r + 10.0f;
         float bh = 5.4f * r + 6.0f;
@@ -1459,6 +1493,7 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
         const float d = 1.72f * r;
         Color teamCol = side.team == 0 ? Color{60, 120, 220, 220}
                                       : Color{60, 180, 90, 220};
+        bool anySup = false, anyZoc = false;
         for (int k = 0; k < 6; ++k) {
             int nx, ny;
             hexNeighbor(side.unit >= 0 ? gMission.units[side.unit].x : 0,
@@ -1467,10 +1502,11 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
             int occ = unitAt(gMission, nx, ny);
             bool friendly = occ >= 0 && gMission.units[occ].owner == side.team;
             bool enemy = occ >= 0 && gMission.units[occ].owner != side.team;
-            bool sup = false;
-            for (const SupportContribution& c : oppSup)
-                if (occ >= 0 && c.slot == occ) { sup = true; break; }
-            float a = (-90.0f + 60.0f * k) * 3.14159265f / 180.0f;
+            // An ally inside the enemy ZOC can engage, so it contributes to
+            // this side's value (that is exactly the support list rule).
+            bool sup = friendly && z;
+            if (sup) anySup = true;
+            if (z) anyZoc = true;            float a = (-90.0f + 60.0f * k) * 3.14159265f / 180.0f;
             Vector2 p = {center.x + std::cos(a) * d, center.y + std::sin(a) * d};
             Color fill = friendly ? teamCol
                          : enemy ? Color{190, 55, 55, 210}
@@ -1494,16 +1530,14 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
                                side.team == 0 ? WHITE : Color{150, 255, 150, 255});
             }
         }
-    };
-    {
+        // Counts are reported by the coloured list rows below the name bar.
+        (void)anySup;
+        (void)anyZoc;
+    };    {
         float r = std::max(6.5f, panW * 0.030f);
         float bw = 5.4f * r + 10.0f;
         hexStatus(v.left, axPanel + panW - bw - 8.0f);
         hexStatus(v.right, dxPanel + 8.0f);
-        float by = panY + 6.0f;
-        float bh = 5.4f * r + 6.0f;
-        smallText(axPanel + panW - bw - 8.0f, by + bh + 2.0f,
-                  "orange=SUP  red outline=ZOC", DIM);
     }
 
     // ----- simultaneous fire: every surviving shot aims at a killed vehicle
