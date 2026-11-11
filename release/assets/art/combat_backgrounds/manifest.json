@@ -1,0 +1,12 @@
+{
+ "source": "Nec.exe tilemaps @0x431148 + live combat tilebank",
+ "palette": "dump/attack2/palette_stable.bin (combat sim)",
+ "tilebank": "dump/tilebank_battle.bin",
+ "transparent_index": 0,
+ "palette_bank": "1 + ((entry >> 12) & 1)",
+ "panels": 24,
+ "size": [
+  256,
+  256
+ ]
+}

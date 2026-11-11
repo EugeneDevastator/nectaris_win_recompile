@@ -1,0 +1,46 @@
+{
+  "note": "Combat VFX per unit. Frame numbers are resource-23 half frames (0..63); death lists are 64x64 quad frames (start index of four consecutive halves). Projectiles/muzzles are side-based in the original: left player shots use frame 4 / muzzle 14,15,16,23; right computer shots use frame 18 / muzzle 17,19,21,22.",
+  "frames": {
+    "projectile_left": [4],
+    "projectile_right": [18],
+    "muzzle_left": [14, 15, 16, 23],
+    "muzzle_right": [17, 19, 21, 22],
+    "hit": [25],
+    "miss": [27],
+    "death_step_seconds": 0.09
+  },
+  "classes": {
+    "air":       {"death": [32, 36],                   "scale": 0.90},
+    "infantry":  {"death": [32, 36, 44],               "scale": 0.85},
+    "bike":      {"death": [32, 36, 44],               "scale": 0.90},
+    "vehicle":   {"death": [32, 36, 44, 48, 52, 56],   "scale": 1.00},
+    "artillery": {"death": [32, 36, 44, 48, 52, 56],   "scale": 1.00},
+    "heavy":     {"death": [32, 36, 44, 48, 52, 56],   "scale": 1.15}
+  },
+  "units": {
+    "0":  {"name": "M-77",   "class": "vehicle"},
+    "1":  {"name": "FX-1",   "class": "air"},
+    "2":  {"name": "AX-87",  "class": "air"},
+    "3":  {"name": "EF-88",  "class": "air"},
+    "4":  {"name": "T-79",   "class": "vehicle"},
+    "5":  {"name": "PT-6",   "class": "vehicle"},
+    "6":  {"name": "S-61",   "class": "vehicle"},
+    "7":  {"name": "GS-81",  "class": "vehicle"},
+    "8":  {"name": "GT-86",  "class": "vehicle"},
+    "9":  {"name": "HMB-2",  "class": "heavy"},
+    "10": {"name": "TT-1",   "class": "vehicle"},
+    "11": {"name": "SG-4",   "class": "artillery"},
+    "12": {"name": "MR-22",  "class": "artillery"},
+    "13": {"name": "MB-5",   "class": "artillery"},
+    "14": {"name": "MB-4",   "class": "artillery"},
+    "15": {"name": "AAG-4",  "class": "vehicle"},
+    "16": {"name": "MM107",  "class": "vehicle"},
+    "17": {"name": "SS-80",  "class": "heavy"},
+    "18": {"name": "GX-77",  "class": "infantry"},
+    "19": {"name": "GX-87",  "class": "infantry"},
+    "20": {"name": "CBX-1",  "class": "bike"},
+    "21": {"name": "NC-1",   "class": "vehicle"},
+    "22": {"name": "C-61",   "class": "air"},
+    "23": {"name": "unused", "class": "vehicle"}
+  }
+}

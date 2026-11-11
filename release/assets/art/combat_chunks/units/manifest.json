@@ -1,0 +1,538 @@
+[
+ {
+  "index": 0,
+  "slot": 128,
+  "source": "dump\\attack2\\capture_877269c4\\block.bin",
+  "file": "unit_000_e91eba60.png",
+  "w": 14,
+  "h": 20
+ },
+ {
+  "index": 1,
+  "slot": 128,
+  "source": "dump\\forced_attacks\\type_00_5407c672\\block.bin",
+  "file": "unit_001_275d6f05.png",
+  "w": 38,
+  "h": 30
+ },
+ {
+  "index": 2,
+  "slot": 128,
+  "source": "dump\\forced_attacks\\type_20_b6c9c049\\block.bin",
+  "file": "unit_002_39747a93.png",
+  "w": 24,
+  "h": 30
+ },
+ {
+  "index": 3,
+  "slot": 128,
+  "source": "dump\\type_captures\\type_01_3e111379\\block.bin",
+  "file": "unit_003_27983d00.png",
+  "w": 40,
+  "h": 30
+ },
+ {
+  "index": 4,
+  "slot": 128,
+  "source": "dump\\type_captures\\type_02_c534bc7a\\block.bin",
+  "file": "unit_004_9cf0ff3a.png",
+  "w": 34,
+  "h": 28
+ },
+ {
+  "index": 5,
+  "slot": 128,
+  "source": "dump\\type_captures\\type_03_27dc1cb5\\block.bin",
+  "file": "unit_005_6255d09c.png",
+  "w": 40,
+  "h": 30
+ },
+ {
+  "index": 6,
+  "slot": 128,
+  "source": "dump\\type_captures\\type_04_f5630be3\\block.bin",
+  "file": "unit_006_01d9a7db.png",
+  "w": 38,
+  "h": 42
+ },
+ {
+  "index": 7,
+  "slot": 128,
+  "source": "dump\\type_captures\\type_05_46a70fc6\\block.bin",
+  "file": "unit_007_54c5b8f0.png",
+  "w": 44,
+  "h": 40
+ },
+ {
+  "index": 8,
+  "slot": 128,
+  "source": "dump\\type_captures\\type_07_1a9669ba\\block.bin",
+  "file": "unit_008_1d694b17.png",
+  "w": 38,
+  "h": 34
+ },
+ {
+  "index": 9,
+  "slot": 128,
+  "source": "dump\\type_captures\\type_08_8a265155\\block.bin",
+  "file": "unit_009_3e7e1bd2.png",
+  "w": 36,
+  "h": 40
+ },
+ {
+  "index": 10,
+  "slot": 128,
+  "source": "dump\\type_captures\\type_10_1fbfe619\\block.bin",
+  "file": "unit_010_652a1d6c.png",
+  "w": 40,
+  "h": 38
+ },
+ {
+  "index": 11,
+  "slot": 128,
+  "source": "dump\\type_captures\\type_11_d35aebaa\\block.bin",
+  "file": "unit_011_c119bed2.png",
+  "w": 38,
+  "h": 42
+ },
+ {
+  "index": 12,
+  "slot": 128,
+  "source": "dump\\type_captures\\type_13_ffff4786\\block.bin",
+  "file": "unit_012_0e62dd37.png",
+  "w": 34,
+  "h": 36
+ },
+ {
+  "index": 13,
+  "slot": 128,
+  "source": "dump\\type_captures\\type_14_d6aed164\\block.bin",
+  "file": "unit_013_5255057c.png",
+  "w": 34,
+  "h": 34
+ },
+ {
+  "index": 14,
+  "slot": 128,
+  "source": "dump\\type_captures\\type_15_b05fbdbc\\block.bin",
+  "file": "unit_014_d888b8aa.png",
+  "w": 34,
+  "h": 40
+ },
+ {
+  "index": 15,
+  "slot": 128,
+  "source": "dump\\type_captures\\type_16_be0d6690\\block.bin",
+  "file": "unit_015_1594e211.png",
+  "w": 38,
+  "h": 46
+ },
+ {
+  "index": 16,
+  "slot": 128,
+  "source": "dump\\type_captures\\type_21_bd47753b\\block.bin",
+  "file": "unit_016_9289097b.png",
+  "w": 40,
+  "h": 44
+ },
+ {
+  "index": 17,
+  "slot": 128,
+  "source": "dump\\type_captures\\type_22_3cf2fb53\\block.bin",
+  "file": "unit_017_c5fc2677.png",
+  "w": 40,
+  "h": 36
+ },
+ {
+  "index": 18,
+  "slot": 132,
+  "source": "dump\\attack2\\capture_877269c4\\block.bin",
+  "file": "unit_018_b0a3af48.png",
+  "w": 10,
+  "h": 14
+ },
+ {
+  "index": 19,
+  "slot": 132,
+  "source": "dump\\forced_attacks\\type_00_5407c672\\block.bin",
+  "file": "unit_019_366a0509.png",
+  "w": 32,
+  "h": 26
+ },
+ {
+  "index": 20,
+  "slot": 132,
+  "source": "dump\\forced_attacks\\type_20_b6c9c049\\block.bin",
+  "file": "unit_020_6962e3f4.png",
+  "w": 16,
+  "h": 24
+ },
+ {
+  "index": 21,
+  "slot": 132,
+  "source": "dump\\type_captures\\type_01_3e111379\\block.bin",
+  "file": "unit_021_23e7c1af.png",
+  "w": 26,
+  "h": 18
+ },
+ {
+  "index": 22,
+  "slot": 132,
+  "source": "dump\\type_captures\\type_07_1a9669ba\\block.bin",
+  "file": "unit_022_5ffe01f7.png",
+  "w": 32,
+  "h": 28
+ },
+ {
+  "index": 23,
+  "slot": 132,
+  "source": "dump\\type_captures\\type_08_8a265155\\block.bin",
+  "file": "unit_023_ad98a158.png",
+  "w": 32,
+  "h": 34
+ },
+ {
+  "index": 24,
+  "slot": 132,
+  "source": "dump\\type_captures\\type_10_1fbfe619\\block.bin",
+  "file": "unit_024_f2cc0997.png",
+  "w": 34,
+  "h": 32
+ },
+ {
+  "index": 25,
+  "slot": 132,
+  "source": "dump\\type_captures\\type_11_d35aebaa\\block.bin",
+  "file": "unit_025_eaaef911.png",
+  "w": 32,
+  "h": 36
+ },
+ {
+  "index": 26,
+  "slot": 132,
+  "source": "dump\\type_captures\\type_16_be0d6690\\block.bin",
+  "file": "unit_026_66423ee3.png",
+  "w": 32,
+  "h": 40
+ },
+ {
+  "index": 27,
+  "slot": 132,
+  "source": "dump\\type_captures\\type_21_bd47753b\\block.bin",
+  "file": "unit_027_71091c8d.png",
+  "w": 34,
+  "h": 38
+ },
+ {
+  "index": 28,
+  "slot": 132,
+  "source": "dump\\block_changes\\01_c85eaab9\\block.bin",
+  "file": "unit_028_254d5a77.png",
+  "w": 22,
+  "h": 20
+ },
+ {
+  "index": 29,
+  "slot": 132,
+  "source": "dump\\block_changes\\10_a823cd92\\block.bin",
+  "file": "unit_029_35a4a992.png",
+  "w": 38,
+  "h": 34
+ },
+ {
+  "index": 30,
+  "slot": 136,
+  "source": "dump\\forced_attacks\\type_00_5407c672\\block.bin",
+  "file": "unit_030_e0c42011.png",
+  "w": 28,
+  "h": 22
+ },
+ {
+  "index": 31,
+  "slot": 136,
+  "source": "dump\\type_captures\\type_01_3e111379\\block.bin",
+  "file": "unit_031_f2af6e16.png",
+  "w": 22,
+  "h": 14
+ },
+ {
+  "index": 32,
+  "slot": 136,
+  "source": "dump\\type_captures\\type_07_1a9669ba\\block.bin",
+  "file": "unit_032_29e5f399.png",
+  "w": 28,
+  "h": 22
+ },
+ {
+  "index": 33,
+  "slot": 136,
+  "source": "dump\\type_captures\\type_08_8a265155\\block.bin",
+  "file": "unit_033_0de7dda3.png",
+  "w": 28,
+  "h": 28
+ },
+ {
+  "index": 34,
+  "slot": 136,
+  "source": "dump\\type_captures\\type_10_1fbfe619\\block.bin",
+  "file": "unit_034_7e0ff747.png",
+  "w": 30,
+  "h": 28
+ },
+ {
+  "index": 35,
+  "slot": 136,
+  "source": "dump\\type_captures\\type_16_be0d6690\\block.bin",
+  "file": "unit_035_501e457f.png",
+  "w": 28,
+  "h": 34
+ },
+ {
+  "index": 36,
+  "slot": 136,
+  "source": "dump\\block_changes\\01_c85eaab9\\block.bin",
+  "file": "unit_036_f922958f.png",
+  "w": 18,
+  "h": 14
+ },
+ {
+  "index": 37,
+  "slot": 136,
+  "source": "dump\\block_changes\\10_a823cd92\\block.bin",
+  "file": "unit_037_94e4b0ee.png",
+  "w": 34,
+  "h": 28
+ },
+ {
+  "index": 38,
+  "slot": 140,
+  "source": "dump\\attack2\\capture_877269c4\\block.bin",
+  "file": "unit_038_3398642d.png",
+  "w": 20,
+  "h": 30
+ },
+ {
+  "index": 39,
+  "slot": 140,
+  "source": "dump\\forced_attacks\\type_00_5407c672\\block.bin",
+  "file": "unit_039_bb44682f.png",
+  "w": 46,
+  "h": 42
+ },
+ {
+  "index": 40,
+  "slot": 140,
+  "source": "dump\\type_captures\\type_12_3054a10c\\block.bin",
+  "file": "unit_040_ac8b8453.png",
+  "w": 48,
+  "h": 56
+ },
+ {
+  "index": 41,
+  "slot": 140,
+  "source": "dump\\type_captures\\type_15_b05fbdbc\\block.bin",
+  "file": "unit_041_21f2999e.png",
+  "w": 46,
+  "h": 56
+ },
+ {
+  "index": 42,
+  "slot": 140,
+  "source": "dump\\type_captures\\type_16_be0d6690\\block.bin",
+  "file": "unit_042_95142f3e.png",
+  "w": 38,
+  "h": 52
+ },
+ {
+  "index": 43,
+  "slot": 140,
+  "source": "dump\\block_changes\\02_926abc8b\\block.bin",
+  "file": "unit_043_1e06afda.png",
+  "w": 42,
+  "h": 42
+ },
+ {
+  "index": 44,
+  "slot": 140,
+  "source": "dump\\block_changes\\10_a823cd92\\block.bin",
+  "file": "unit_044_31f33f7c.png",
+  "w": 56,
+  "h": 56
+ },
+ {
+  "index": 45,
+  "slot": 144,
+  "source": "dump\\attack2\\capture_877269c4\\block.bin",
+  "file": "unit_045_76915171.png",
+  "w": 18,
+  "h": 24
+ },
+ {
+  "index": 46,
+  "slot": 144,
+  "source": "dump\\forced_attacks\\type_00_5407c672\\block.bin",
+  "file": "unit_046_f2b2229c.png",
+  "w": 42,
+  "h": 38
+ },
+ {
+  "index": 47,
+  "slot": 144,
+  "source": "dump\\type_captures\\type_16_be0d6690\\block.bin",
+  "file": "unit_047_b3fdede6.png",
+  "w": 34,
+  "h": 46
+ },
+ {
+  "index": 48,
+  "slot": 144,
+  "source": "dump\\block_changes\\02_926abc8b\\block.bin",
+  "file": "unit_048_a84ffe24.png",
+  "w": 40,
+  "h": 38
+ },
+ {
+  "index": 49,
+  "slot": 144,
+  "source": "dump\\block_changes\\10_a823cd92\\block.bin",
+  "file": "unit_049_629f38e7.png",
+  "w": 50,
+  "h": 50
+ },
+ {
+  "index": 50,
+  "slot": 148,
+  "source": "dump\\forced_attacks\\type_00_5407c672\\block.bin",
+  "file": "unit_050_1ee0dd02.png",
+  "w": 38,
+  "h": 34
+ },
+ {
+  "index": 51,
+  "slot": 148,
+  "source": "dump\\type_captures\\type_16_be0d6690\\block.bin",
+  "file": "unit_051_987a9043.png",
+  "w": 30,
+  "h": 40
+ },
+ {
+  "index": 52,
+  "slot": 148,
+  "source": "dump\\block_changes\\03_be145e1a\\block.bin",
+  "file": "unit_052_0fecfc81.png",
+  "w": 30,
+  "h": 28
+ },
+ {
+  "index": 53,
+  "slot": 148,
+  "source": "dump\\block_changes\\10_a823cd92\\block.bin",
+  "file": "unit_053_3c423141.png",
+  "w": 44,
+  "h": 44
+ },
+ {
+  "index": 54,
+  "slot": 152,
+  "source": "dump\\attack2\\capture_877269c4\\block.bin",
+  "file": "unit_054_fc4cacc8.png",
+  "w": 18,
+  "h": 30
+ },
+ {
+  "index": 55,
+  "slot": 152,
+  "source": "dump\\forced_attacks\\type_00_5407c672\\block.bin",
+  "file": "unit_055_d763106b.png",
+  "w": 32,
+  "h": 28
+ },
+ {
+  "index": 56,
+  "slot": 152,
+  "source": "dump\\forced_attacks\\type_19_bba028f3\\block.bin",
+  "file": "unit_056_514faf1f.png",
+  "w": 24,
+  "h": 32
+ },
+ {
+  "index": 57,
+  "slot": 152,
+  "source": "dump\\forced_attacks\\type_20_b6c9c049\\block.bin",
+  "file": "unit_057_17689b01.png",
+  "w": 32,
+  "h": 30
+ },
+ {
+  "index": 58,
+  "slot": 152,
+  "source": "dump\\type_captures\\type_16_be0d6690\\block.bin",
+  "file": "unit_058_0a8f922b.png",
+  "w": 32,
+  "h": 40
+ },
+ {
+  "index": 59,
+  "slot": 152,
+  "source": "dump\\block_changes\\03_be145e1a\\block.bin",
+  "file": "unit_059_6baa798c.png",
+  "w": 20,
+  "h": 18
+ },
+ {
+  "index": 60,
+  "slot": 152,
+  "source": "dump\\block_changes\\11_d0bede6f\\block.bin",
+  "file": "unit_060_5c5eda14.png",
+  "w": 36,
+  "h": 36
+ },
+ {
+  "index": 61,
+  "slot": 156,
+  "source": "dump\\attack2\\capture_877269c4\\block.bin",
+  "file": "unit_061_34230638.png",
+  "w": 18,
+  "h": 24
+ },
+ {
+  "index": 62,
+  "slot": 156,
+  "source": "dump\\forced_attacks\\type_00_5407c672\\block.bin",
+  "file": "unit_062_0132dfdd.png",
+  "w": 28,
+  "h": 22
+ },
+ {
+  "index": 63,
+  "slot": 156,
+  "source": "dump\\forced_attacks\\type_20_b6c9c049\\block.bin",
+  "file": "unit_063_315c5785.png",
+  "w": 28,
+  "h": 26
+ },
+ {
+  "index": 64,
+  "slot": 156,
+  "source": "dump\\type_captures\\type_16_be0d6690\\block.bin",
+  "file": "unit_064_c94c4476.png",
+  "w": 28,
+  "h": 34
+ },
+ {
+  "index": 65,
+  "slot": 156,
+  "source": "dump\\block_changes\\03_be145e1a\\block.bin",
+  "file": "unit_065_50c7868e.png",
+  "w": 16,
+  "h": 14
+ },
+ {
+  "index": 66,
+  "slot": 156,
+  "source": "dump\\block_changes\\11_d0bede6f\\block.bin",
+  "file": "unit_066_bcbccc62.png",
+  "w": 32,
+  "h": 30
+ }
+]

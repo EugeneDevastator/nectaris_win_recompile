@@ -1635,6 +1635,25 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
         if (rightFires) fire(fromR, toR, nR0, recoilD, 1, R.type);
     }
 
+    // ----- wrecks: the mine's dead sprite (black splat) replaces the unit
+    // sprite exactly when the destruction explosion starts, and stays on the
+    // ground for the result view.  One per unit destroyed in THIS exchange.
+    if (gVfxSplat.id && t > impactT) {
+        float sw = us * 1.60f;
+        float sh = sw * (float)gVfxSplat.height / (float)gVfxSplat.width;
+        auto wreck = [&](Vector2* pos, int killed) {
+            if (killed <= 0) return;
+            for (int i = 0; i < killed; ++i) {
+                DrawTexturePro(gVfxSplat,
+                               {0, 0, (float)gVfxSplat.width, (float)gVfxSplat.height},
+                               {pos[i].x - sw * 0.5f, pos[i].y - sh * 0.5f, sw, sh},
+                               {0, 0}, 0, WHITE);
+            }
+        };
+        wreck(toL, killedR);   // enemy vehicles lost to the left side
+        wreck(toR, killedL);   // left vehicles lost to the right side
+    }
+
     if (t > impactT && t < impactT + 1.10f) {
         const bool attackerIsLeft = (v.left.unit == v.r.atkSlot);
         const bool counterFires = (v.r.ctrStrength > 0 || v.r.rawDmgToAtk > 0);
@@ -1672,24 +1691,6 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
         };
         if (leftFires) impact(toL, nL0, killedR, R.type, v.left.damage, 1);
         if (rightFires) impact(toR, nR0, killedL, L.type, v.right.damage, 0);
-    }
-
-    // ----- wrecks: the mine's dead sprite (black splat) marks every unit
-    // destroyed in THIS exchange, and stays on the ground for the result view.
-    if (gVfxSplat.id && t > impactT + 0.90f) {
-        float sw = us * 1.60f;
-        float sh = sw * (float)gVfxSplat.height / (float)gVfxSplat.width;
-        auto wreck = [&](Vector2* pos, int killed) {
-            if (killed <= 0) return;
-            for (int i = 0; i < killed; ++i) {
-                DrawTexturePro(gVfxSplat,
-                               {0, 0, (float)gVfxSplat.width, (float)gVfxSplat.height},
-                               {pos[i].x - sw * 0.5f, pos[i].y - sh * 0.5f, sw, sh},
-                               {0, 0}, 0, WHITE);
-            }
-        };
-        wreck(toL, killedR);   // enemy vehicles lost to the left side
-        wreck(toR, killedL);   // left vehicles lost to the right side
     }
 
     // ----- bottom: persistent simulation report (integer-scaled original font)

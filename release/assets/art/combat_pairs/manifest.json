@@ -1,0 +1,1794 @@
+[
+ {
+  "pair": 0,
+  "state": "clean",
+  "bank": 9,
+  "slot": 128,
+  "file": "pair_00_clean_blue.png"
+ },
+ {
+  "pair": 1,
+  "state": "clean",
+  "bank": 9,
+  "slot": 130,
+  "file": "pair_01_clean_blue.png"
+ },
+ {
+  "pair": 2,
+  "state": "clean",
+  "bank": 9,
+  "slot": 132,
+  "file": "pair_02_clean_blue.png"
+ },
+ {
+  "pair": 3,
+  "state": "clean",
+  "bank": 9,
+  "slot": 134,
+  "file": "pair_03_clean_blue.png"
+ },
+ {
+  "pair": 4,
+  "state": "clean",
+  "bank": 9,
+  "slot": 136,
+  "file": "pair_04_clean_blue.png"
+ },
+ {
+  "pair": 5,
+  "state": "clean",
+  "bank": 9,
+  "slot": 138,
+  "file": "pair_05_clean_blue.png"
+ },
+ {
+  "pair": 6,
+  "state": "clean",
+  "bank": 9,
+  "slot": 140,
+  "file": "pair_06_clean_blue.png"
+ },
+ {
+  "pair": 7,
+  "state": "clean",
+  "bank": 9,
+  "slot": 142,
+  "file": "pair_07_clean_blue.png"
+ },
+ {
+  "pair": 8,
+  "state": "clean",
+  "bank": 9,
+  "slot": 144,
+  "file": "pair_08_clean_blue.png"
+ },
+ {
+  "pair": 9,
+  "state": "clean",
+  "bank": 9,
+  "slot": 146,
+  "file": "pair_09_clean_blue.png"
+ },
+ {
+  "pair": 10,
+  "state": "clean",
+  "bank": 9,
+  "slot": 148,
+  "file": "pair_10_clean_blue.png"
+ },
+ {
+  "pair": 11,
+  "state": "clean",
+  "bank": 9,
+  "slot": 150,
+  "file": "pair_11_clean_blue.png"
+ },
+ {
+  "pair": 12,
+  "state": "clean",
+  "bank": 9,
+  "slot": 152,
+  "file": "pair_12_clean_blue.png"
+ },
+ {
+  "pair": 13,
+  "state": "clean",
+  "bank": 9,
+  "slot": 154,
+  "file": "pair_13_clean_blue.png"
+ },
+ {
+  "pair": 14,
+  "state": "clean",
+  "bank": 9,
+  "slot": 156,
+  "file": "pair_14_clean_blue.png"
+ },
+ {
+  "pair": 15,
+  "state": "clean",
+  "bank": 9,
+  "slot": 158,
+  "file": "pair_15_clean_blue.png"
+ },
+ {
+  "pair": 16,
+  "state": "clean",
+  "bank": 9,
+  "slot": 160,
+  "file": "pair_16_clean_blue.png"
+ },
+ {
+  "pair": 17,
+  "state": "clean",
+  "bank": 9,
+  "slot": 162,
+  "file": "pair_17_clean_blue.png"
+ },
+ {
+  "pair": 18,
+  "state": "clean",
+  "bank": 9,
+  "slot": 164,
+  "file": "pair_18_clean_blue.png"
+ },
+ {
+  "pair": 19,
+  "state": "clean",
+  "bank": 9,
+  "slot": 166,
+  "file": "pair_19_clean_blue.png"
+ },
+ {
+  "pair": 20,
+  "state": "clean",
+  "bank": 9,
+  "slot": 168,
+  "file": "pair_20_clean_blue.png"
+ },
+ {
+  "pair": 21,
+  "state": "clean",
+  "bank": 9,
+  "slot": 170,
+  "file": "pair_21_clean_blue.png"
+ },
+ {
+  "pair": 22,
+  "state": "clean",
+  "bank": 9,
+  "slot": 172,
+  "file": "pair_22_clean_blue.png"
+ },
+ {
+  "pair": 23,
+  "state": "clean",
+  "bank": 9,
+  "slot": 174,
+  "file": "pair_23_clean_blue.png"
+ },
+ {
+  "pair": 24,
+  "state": "clean",
+  "bank": 9,
+  "slot": 176,
+  "file": "pair_24_clean_blue.png"
+ },
+ {
+  "pair": 25,
+  "state": "clean",
+  "bank": 9,
+  "slot": 178,
+  "file": "pair_25_clean_blue.png"
+ },
+ {
+  "pair": 26,
+  "state": "clean",
+  "bank": 9,
+  "slot": 180,
+  "file": "pair_26_clean_blue.png"
+ },
+ {
+  "pair": 27,
+  "state": "clean",
+  "bank": 9,
+  "slot": 182,
+  "file": "pair_27_clean_blue.png"
+ },
+ {
+  "pair": 28,
+  "state": "clean",
+  "bank": 9,
+  "slot": 184,
+  "file": "pair_28_clean_blue.png"
+ },
+ {
+  "pair": 29,
+  "state": "clean",
+  "bank": 9,
+  "slot": 186,
+  "file": "pair_29_clean_blue.png"
+ },
+ {
+  "pair": 30,
+  "state": "clean",
+  "bank": 9,
+  "slot": 188,
+  "file": "pair_30_clean_blue.png"
+ },
+ {
+  "pair": 31,
+  "state": "clean",
+  "bank": 9,
+  "slot": 190,
+  "file": "pair_31_clean_blue.png"
+ },
+ {
+  "pair": 0,
+  "state": "damaged",
+  "bank": 9,
+  "slot": 192,
+  "file": "pair_00_damaged_blue.png"
+ },
+ {
+  "pair": 1,
+  "state": "damaged",
+  "bank": 9,
+  "slot": 194,
+  "file": "pair_01_damaged_blue.png"
+ },
+ {
+  "pair": 2,
+  "state": "damaged",
+  "bank": 9,
+  "slot": 196,
+  "file": "pair_02_damaged_blue.png"
+ },
+ {
+  "pair": 3,
+  "state": "damaged",
+  "bank": 9,
+  "slot": 198,
+  "file": "pair_03_damaged_blue.png"
+ },
+ {
+  "pair": 4,
+  "state": "damaged",
+  "bank": 9,
+  "slot": 200,
+  "file": "pair_04_damaged_blue.png"
+ },
+ {
+  "pair": 5,
+  "state": "damaged",
+  "bank": 9,
+  "slot": 202,
+  "file": "pair_05_damaged_blue.png"
+ },
+ {
+  "pair": 6,
+  "state": "damaged",
+  "bank": 9,
+  "slot": 204,
+  "file": "pair_06_damaged_blue.png"
+ },
+ {
+  "pair": 7,
+  "state": "damaged",
+  "bank": 9,
+  "slot": 206,
+  "file": "pair_07_damaged_blue.png"
+ },
+ {
+  "pair": 8,
+  "state": "damaged",
+  "bank": 9,
+  "slot": 208,
+  "file": "pair_08_damaged_blue.png"
+ },
+ {
+  "pair": 9,
+  "state": "damaged",
+  "bank": 9,
+  "slot": 210,
+  "file": "pair_09_damaged_blue.png"
+ },
+ {
+  "pair": 10,
+  "state": "damaged",
+  "bank": 9,
+  "slot": 212,
+  "file": "pair_10_damaged_blue.png"
+ },
+ {
+  "pair": 11,
+  "state": "damaged",
+  "bank": 9,
+  "slot": 214,
+  "file": "pair_11_damaged_blue.png"
+ },
+ {
+  "pair": 12,
+  "state": "damaged",
+  "bank": 9,
+  "slot": 216,
+  "file": "pair_12_damaged_blue.png"
+ },
+ {
+  "pair": 13,
+  "state": "damaged",
+  "bank": 9,
+  "slot": 218,
+  "file": "pair_13_damaged_blue.png"
+ },
+ {
+  "pair": 14,
+  "state": "damaged",
+  "bank": 9,
+  "slot": 220,
+  "file": "pair_14_damaged_blue.png"
+ },
+ {
+  "pair": 15,
+  "state": "damaged",
+  "bank": 9,
+  "slot": 222,
+  "file": "pair_15_damaged_blue.png"
+ },
+ {
+  "pair": 16,
+  "state": "damaged",
+  "bank": 9,
+  "slot": 224,
+  "file": "pair_16_damaged_blue.png"
+ },
+ {
+  "pair": 17,
+  "state": "damaged",
+  "bank": 9,
+  "slot": 226,
+  "file": "pair_17_damaged_blue.png"
+ },
+ {
+  "pair": 18,
+  "state": "damaged",
+  "bank": 9,
+  "slot": 228,
+  "file": "pair_18_damaged_blue.png"
+ },
+ {
+  "pair": 19,
+  "state": "damaged",
+  "bank": 9,
+  "slot": 230,
+  "file": "pair_19_damaged_blue.png"
+ },
+ {
+  "pair": 20,
+  "state": "damaged",
+  "bank": 9,
+  "slot": 232,
+  "file": "pair_20_damaged_blue.png"
+ },
+ {
+  "pair": 21,
+  "state": "damaged",
+  "bank": 9,
+  "slot": 234,
+  "file": "pair_21_damaged_blue.png"
+ },
+ {
+  "pair": 22,
+  "state": "damaged",
+  "bank": 9,
+  "slot": 236,
+  "file": "pair_22_damaged_blue.png"
+ },
+ {
+  "pair": 23,
+  "state": "damaged",
+  "bank": 9,
+  "slot": 238,
+  "file": "pair_23_damaged_blue.png"
+ },
+ {
+  "pair": 24,
+  "state": "damaged",
+  "bank": 9,
+  "slot": 240,
+  "file": "pair_24_damaged_blue.png"
+ },
+ {
+  "pair": 25,
+  "state": "damaged",
+  "bank": 9,
+  "slot": 242,
+  "file": "pair_25_damaged_blue.png"
+ },
+ {
+  "pair": 26,
+  "state": "damaged",
+  "bank": 9,
+  "slot": 244,
+  "file": "pair_26_damaged_blue.png"
+ },
+ {
+  "pair": 27,
+  "state": "damaged",
+  "bank": 9,
+  "slot": 246,
+  "file": "pair_27_damaged_blue.png"
+ },
+ {
+  "pair": 28,
+  "state": "damaged",
+  "bank": 9,
+  "slot": 248,
+  "file": "pair_28_damaged_blue.png"
+ },
+ {
+  "pair": 29,
+  "state": "damaged",
+  "bank": 9,
+  "slot": 250,
+  "file": "pair_29_damaged_blue.png"
+ },
+ {
+  "pair": 30,
+  "state": "damaged",
+  "bank": 9,
+  "slot": 252,
+  "file": "pair_30_damaged_blue.png"
+ },
+ {
+  "pair": 31,
+  "state": "damaged",
+  "bank": 9,
+  "slot": 254,
+  "file": "pair_31_damaged_blue.png"
+ },
+ {
+  "pair": 0,
+  "state": "clean",
+  "bank": 10,
+  "slot": 128,
+  "file": "pair_00_clean_green.png"
+ },
+ {
+  "pair": 1,
+  "state": "clean",
+  "bank": 10,
+  "slot": 130,
+  "file": "pair_01_clean_green.png"
+ },
+ {
+  "pair": 2,
+  "state": "clean",
+  "bank": 10,
+  "slot": 132,
+  "file": "pair_02_clean_green.png"
+ },
+ {
+  "pair": 3,
+  "state": "clean",
+  "bank": 10,
+  "slot": 134,
+  "file": "pair_03_clean_green.png"
+ },
+ {
+  "pair": 4,
+  "state": "clean",
+  "bank": 10,
+  "slot": 136,
+  "file": "pair_04_clean_green.png"
+ },
+ {
+  "pair": 5,
+  "state": "clean",
+  "bank": 10,
+  "slot": 138,
+  "file": "pair_05_clean_green.png"
+ },
+ {
+  "pair": 6,
+  "state": "clean",
+  "bank": 10,
+  "slot": 140,
+  "file": "pair_06_clean_green.png"
+ },
+ {
+  "pair": 7,
+  "state": "clean",
+  "bank": 10,
+  "slot": 142,
+  "file": "pair_07_clean_green.png"
+ },
+ {
+  "pair": 8,
+  "state": "clean",
+  "bank": 10,
+  "slot": 144,
+  "file": "pair_08_clean_green.png"
+ },
+ {
+  "pair": 9,
+  "state": "clean",
+  "bank": 10,
+  "slot": 146,
+  "file": "pair_09_clean_green.png"
+ },
+ {
+  "pair": 10,
+  "state": "clean",
+  "bank": 10,
+  "slot": 148,
+  "file": "pair_10_clean_green.png"
+ },
+ {
+  "pair": 11,
+  "state": "clean",
+  "bank": 10,
+  "slot": 150,
+  "file": "pair_11_clean_green.png"
+ },
+ {
+  "pair": 12,
+  "state": "clean",
+  "bank": 10,
+  "slot": 152,
+  "file": "pair_12_clean_green.png"
+ },
+ {
+  "pair": 13,
+  "state": "clean",
+  "bank": 10,
+  "slot": 154,
+  "file": "pair_13_clean_green.png"
+ },
+ {
+  "pair": 14,
+  "state": "clean",
+  "bank": 10,
+  "slot": 156,
+  "file": "pair_14_clean_green.png"
+ },
+ {
+  "pair": 15,
+  "state": "clean",
+  "bank": 10,
+  "slot": 158,
+  "file": "pair_15_clean_green.png"
+ },
+ {
+  "pair": 16,
+  "state": "clean",
+  "bank": 10,
+  "slot": 160,
+  "file": "pair_16_clean_green.png"
+ },
+ {
+  "pair": 17,
+  "state": "clean",
+  "bank": 10,
+  "slot": 162,
+  "file": "pair_17_clean_green.png"
+ },
+ {
+  "pair": 18,
+  "state": "clean",
+  "bank": 10,
+  "slot": 164,
+  "file": "pair_18_clean_green.png"
+ },
+ {
+  "pair": 19,
+  "state": "clean",
+  "bank": 10,
+  "slot": 166,
+  "file": "pair_19_clean_green.png"
+ },
+ {
+  "pair": 20,
+  "state": "clean",
+  "bank": 10,
+  "slot": 168,
+  "file": "pair_20_clean_green.png"
+ },
+ {
+  "pair": 21,
+  "state": "clean",
+  "bank": 10,
+  "slot": 170,
+  "file": "pair_21_clean_green.png"
+ },
+ {
+  "pair": 22,
+  "state": "clean",
+  "bank": 10,
+  "slot": 172,
+  "file": "pair_22_clean_green.png"
+ },
+ {
+  "pair": 23,
+  "state": "clean",
+  "bank": 10,
+  "slot": 174,
+  "file": "pair_23_clean_green.png"
+ },
+ {
+  "pair": 24,
+  "state": "clean",
+  "bank": 10,
+  "slot": 176,
+  "file": "pair_24_clean_green.png"
+ },
+ {
+  "pair": 25,
+  "state": "clean",
+  "bank": 10,
+  "slot": 178,
+  "file": "pair_25_clean_green.png"
+ },
+ {
+  "pair": 26,
+  "state": "clean",
+  "bank": 10,
+  "slot": 180,
+  "file": "pair_26_clean_green.png"
+ },
+ {
+  "pair": 27,
+  "state": "clean",
+  "bank": 10,
+  "slot": 182,
+  "file": "pair_27_clean_green.png"
+ },
+ {
+  "pair": 28,
+  "state": "clean",
+  "bank": 10,
+  "slot": 184,
+  "file": "pair_28_clean_green.png"
+ },
+ {
+  "pair": 29,
+  "state": "clean",
+  "bank": 10,
+  "slot": 186,
+  "file": "pair_29_clean_green.png"
+ },
+ {
+  "pair": 30,
+  "state": "clean",
+  "bank": 10,
+  "slot": 188,
+  "file": "pair_30_clean_green.png"
+ },
+ {
+  "pair": 31,
+  "state": "clean",
+  "bank": 10,
+  "slot": 190,
+  "file": "pair_31_clean_green.png"
+ },
+ {
+  "pair": 0,
+  "state": "damaged",
+  "bank": 10,
+  "slot": 192,
+  "file": "pair_00_damaged_green.png"
+ },
+ {
+  "pair": 1,
+  "state": "damaged",
+  "bank": 10,
+  "slot": 194,
+  "file": "pair_01_damaged_green.png"
+ },
+ {
+  "pair": 2,
+  "state": "damaged",
+  "bank": 10,
+  "slot": 196,
+  "file": "pair_02_damaged_green.png"
+ },
+ {
+  "pair": 3,
+  "state": "damaged",
+  "bank": 10,
+  "slot": 198,
+  "file": "pair_03_damaged_green.png"
+ },
+ {
+  "pair": 4,
+  "state": "damaged",
+  "bank": 10,
+  "slot": 200,
+  "file": "pair_04_damaged_green.png"
+ },
+ {
+  "pair": 5,
+  "state": "damaged",
+  "bank": 10,
+  "slot": 202,
+  "file": "pair_05_damaged_green.png"
+ },
+ {
+  "pair": 6,
+  "state": "damaged",
+  "bank": 10,
+  "slot": 204,
+  "file": "pair_06_damaged_green.png"
+ },
+ {
+  "pair": 7,
+  "state": "damaged",
+  "bank": 10,
+  "slot": 206,
+  "file": "pair_07_damaged_green.png"
+ },
+ {
+  "pair": 8,
+  "state": "damaged",
+  "bank": 10,
+  "slot": 208,
+  "file": "pair_08_damaged_green.png"
+ },
+ {
+  "pair": 9,
+  "state": "damaged",
+  "bank": 10,
+  "slot": 210,
+  "file": "pair_09_damaged_green.png"
+ },
+ {
+  "pair": 10,
+  "state": "damaged",
+  "bank": 10,
+  "slot": 212,
+  "file": "pair_10_damaged_green.png"
+ },
+ {
+  "pair": 11,
+  "state": "damaged",
+  "bank": 10,
+  "slot": 214,
+  "file": "pair_11_damaged_green.png"
+ },
+ {
+  "pair": 12,
+  "state": "damaged",
+  "bank": 10,
+  "slot": 216,
+  "file": "pair_12_damaged_green.png"
+ },
+ {
+  "pair": 13,
+  "state": "damaged",
+  "bank": 10,
+  "slot": 218,
+  "file": "pair_13_damaged_green.png"
+ },
+ {
+  "pair": 14,
+  "state": "damaged",
+  "bank": 10,
+  "slot": 220,
+  "file": "pair_14_damaged_green.png"
+ },
+ {
+  "pair": 15,
+  "state": "damaged",
+  "bank": 10,
+  "slot": 222,
+  "file": "pair_15_damaged_green.png"
+ },
+ {
+  "pair": 16,
+  "state": "damaged",
+  "bank": 10,
+  "slot": 224,
+  "file": "pair_16_damaged_green.png"
+ },
+ {
+  "pair": 17,
+  "state": "damaged",
+  "bank": 10,
+  "slot": 226,
+  "file": "pair_17_damaged_green.png"
+ },
+ {
+  "pair": 18,
+  "state": "damaged",
+  "bank": 10,
+  "slot": 228,
+  "file": "pair_18_damaged_green.png"
+ },
+ {
+  "pair": 19,
+  "state": "damaged",
+  "bank": 10,
+  "slot": 230,
+  "file": "pair_19_damaged_green.png"
+ },
+ {
+  "pair": 20,
+  "state": "damaged",
+  "bank": 10,
+  "slot": 232,
+  "file": "pair_20_damaged_green.png"
+ },
+ {
+  "pair": 21,
+  "state": "damaged",
+  "bank": 10,
+  "slot": 234,
+  "file": "pair_21_damaged_green.png"
+ },
+ {
+  "pair": 22,
+  "state": "damaged",
+  "bank": 10,
+  "slot": 236,
+  "file": "pair_22_damaged_green.png"
+ },
+ {
+  "pair": 23,
+  "state": "damaged",
+  "bank": 10,
+  "slot": 238,
+  "file": "pair_23_damaged_green.png"
+ },
+ {
+  "pair": 24,
+  "state": "damaged",
+  "bank": 10,
+  "slot": 240,
+  "file": "pair_24_damaged_green.png"
+ },
+ {
+  "pair": 25,
+  "state": "damaged",
+  "bank": 10,
+  "slot": 242,
+  "file": "pair_25_damaged_green.png"
+ },
+ {
+  "pair": 26,
+  "state": "damaged",
+  "bank": 10,
+  "slot": 244,
+  "file": "pair_26_damaged_green.png"
+ },
+ {
+  "pair": 27,
+  "state": "damaged",
+  "bank": 10,
+  "slot": 246,
+  "file": "pair_27_damaged_green.png"
+ },
+ {
+  "pair": 28,
+  "state": "damaged",
+  "bank": 10,
+  "slot": 248,
+  "file": "pair_28_damaged_green.png"
+ },
+ {
+  "pair": 29,
+  "state": "damaged",
+  "bank": 10,
+  "slot": 250,
+  "file": "pair_29_damaged_green.png"
+ },
+ {
+  "pair": 30,
+  "state": "damaged",
+  "bank": 10,
+  "slot": 252,
+  "file": "pair_30_damaged_green.png"
+ },
+ {
+  "pair": 31,
+  "state": "damaged",
+  "bank": 10,
+  "slot": 254,
+  "file": "pair_31_damaged_green.png"
+ },
+ {
+  "pair": 0,
+  "state": "clean",
+  "bank": 11,
+  "slot": 128,
+  "file": "pair_00_clean_red.png"
+ },
+ {
+  "pair": 1,
+  "state": "clean",
+  "bank": 11,
+  "slot": 130,
+  "file": "pair_01_clean_red.png"
+ },
+ {
+  "pair": 2,
+  "state": "clean",
+  "bank": 11,
+  "slot": 132,
+  "file": "pair_02_clean_red.png"
+ },
+ {
+  "pair": 3,
+  "state": "clean",
+  "bank": 11,
+  "slot": 134,
+  "file": "pair_03_clean_red.png"
+ },
+ {
+  "pair": 4,
+  "state": "clean",
+  "bank": 11,
+  "slot": 136,
+  "file": "pair_04_clean_red.png"
+ },
+ {
+  "pair": 5,
+  "state": "clean",
+  "bank": 11,
+  "slot": 138,
+  "file": "pair_05_clean_red.png"
+ },
+ {
+  "pair": 6,
+  "state": "clean",
+  "bank": 11,
+  "slot": 140,
+  "file": "pair_06_clean_red.png"
+ },
+ {
+  "pair": 7,
+  "state": "clean",
+  "bank": 11,
+  "slot": 142,
+  "file": "pair_07_clean_red.png"
+ },
+ {
+  "pair": 8,
+  "state": "clean",
+  "bank": 11,
+  "slot": 144,
+  "file": "pair_08_clean_red.png"
+ },
+ {
+  "pair": 9,
+  "state": "clean",
+  "bank": 11,
+  "slot": 146,
+  "file": "pair_09_clean_red.png"
+ },
+ {
+  "pair": 10,
+  "state": "clean",
+  "bank": 11,
+  "slot": 148,
+  "file": "pair_10_clean_red.png"
+ },
+ {
+  "pair": 11,
+  "state": "clean",
+  "bank": 11,
+  "slot": 150,
+  "file": "pair_11_clean_red.png"
+ },
+ {
+  "pair": 12,
+  "state": "clean",
+  "bank": 11,
+  "slot": 152,
+  "file": "pair_12_clean_red.png"
+ },
+ {
+  "pair": 13,
+  "state": "clean",
+  "bank": 11,
+  "slot": 154,
+  "file": "pair_13_clean_red.png"
+ },
+ {
+  "pair": 14,
+  "state": "clean",
+  "bank": 11,
+  "slot": 156,
+  "file": "pair_14_clean_red.png"
+ },
+ {
+  "pair": 15,
+  "state": "clean",
+  "bank": 11,
+  "slot": 158,
+  "file": "pair_15_clean_red.png"
+ },
+ {
+  "pair": 16,
+  "state": "clean",
+  "bank": 11,
+  "slot": 160,
+  "file": "pair_16_clean_red.png"
+ },
+ {
+  "pair": 17,
+  "state": "clean",
+  "bank": 11,
+  "slot": 162,
+  "file": "pair_17_clean_red.png"
+ },
+ {
+  "pair": 18,
+  "state": "clean",
+  "bank": 11,
+  "slot": 164,
+  "file": "pair_18_clean_red.png"
+ },
+ {
+  "pair": 19,
+  "state": "clean",
+  "bank": 11,
+  "slot": 166,
+  "file": "pair_19_clean_red.png"
+ },
+ {
+  "pair": 20,
+  "state": "clean",
+  "bank": 11,
+  "slot": 168,
+  "file": "pair_20_clean_red.png"
+ },
+ {
+  "pair": 21,
+  "state": "clean",
+  "bank": 11,
+  "slot": 170,
+  "file": "pair_21_clean_red.png"
+ },
+ {
+  "pair": 22,
+  "state": "clean",
+  "bank": 11,
+  "slot": 172,
+  "file": "pair_22_clean_red.png"
+ },
+ {
+  "pair": 23,
+  "state": "clean",
+  "bank": 11,
+  "slot": 174,
+  "file": "pair_23_clean_red.png"
+ },
+ {
+  "pair": 24,
+  "state": "clean",
+  "bank": 11,
+  "slot": 176,
+  "file": "pair_24_clean_red.png"
+ },
+ {
+  "pair": 25,
+  "state": "clean",
+  "bank": 11,
+  "slot": 178,
+  "file": "pair_25_clean_red.png"
+ },
+ {
+  "pair": 26,
+  "state": "clean",
+  "bank": 11,
+  "slot": 180,
+  "file": "pair_26_clean_red.png"
+ },
+ {
+  "pair": 27,
+  "state": "clean",
+  "bank": 11,
+  "slot": 182,
+  "file": "pair_27_clean_red.png"
+ },
+ {
+  "pair": 28,
+  "state": "clean",
+  "bank": 11,
+  "slot": 184,
+  "file": "pair_28_clean_red.png"
+ },
+ {
+  "pair": 29,
+  "state": "clean",
+  "bank": 11,
+  "slot": 186,
+  "file": "pair_29_clean_red.png"
+ },
+ {
+  "pair": 30,
+  "state": "clean",
+  "bank": 11,
+  "slot": 188,
+  "file": "pair_30_clean_red.png"
+ },
+ {
+  "pair": 31,
+  "state": "clean",
+  "bank": 11,
+  "slot": 190,
+  "file": "pair_31_clean_red.png"
+ },
+ {
+  "pair": 0,
+  "state": "damaged",
+  "bank": 11,
+  "slot": 192,
+  "file": "pair_00_damaged_red.png"
+ },
+ {
+  "pair": 1,
+  "state": "damaged",
+  "bank": 11,
+  "slot": 194,
+  "file": "pair_01_damaged_red.png"
+ },
+ {
+  "pair": 2,
+  "state": "damaged",
+  "bank": 11,
+  "slot": 196,
+  "file": "pair_02_damaged_red.png"
+ },
+ {
+  "pair": 3,
+  "state": "damaged",
+  "bank": 11,
+  "slot": 198,
+  "file": "pair_03_damaged_red.png"
+ },
+ {
+  "pair": 4,
+  "state": "damaged",
+  "bank": 11,
+  "slot": 200,
+  "file": "pair_04_damaged_red.png"
+ },
+ {
+  "pair": 5,
+  "state": "damaged",
+  "bank": 11,
+  "slot": 202,
+  "file": "pair_05_damaged_red.png"
+ },
+ {
+  "pair": 6,
+  "state": "damaged",
+  "bank": 11,
+  "slot": 204,
+  "file": "pair_06_damaged_red.png"
+ },
+ {
+  "pair": 7,
+  "state": "damaged",
+  "bank": 11,
+  "slot": 206,
+  "file": "pair_07_damaged_red.png"
+ },
+ {
+  "pair": 8,
+  "state": "damaged",
+  "bank": 11,
+  "slot": 208,
+  "file": "pair_08_damaged_red.png"
+ },
+ {
+  "pair": 9,
+  "state": "damaged",
+  "bank": 11,
+  "slot": 210,
+  "file": "pair_09_damaged_red.png"
+ },
+ {
+  "pair": 10,
+  "state": "damaged",
+  "bank": 11,
+  "slot": 212,
+  "file": "pair_10_damaged_red.png"
+ },
+ {
+  "pair": 11,
+  "state": "damaged",
+  "bank": 11,
+  "slot": 214,
+  "file": "pair_11_damaged_red.png"
+ },
+ {
+  "pair": 12,
+  "state": "damaged",
+  "bank": 11,
+  "slot": 216,
+  "file": "pair_12_damaged_red.png"
+ },
+ {
+  "pair": 13,
+  "state": "damaged",
+  "bank": 11,
+  "slot": 218,
+  "file": "pair_13_damaged_red.png"
+ },
+ {
+  "pair": 14,
+  "state": "damaged",
+  "bank": 11,
+  "slot": 220,
+  "file": "pair_14_damaged_red.png"
+ },
+ {
+  "pair": 15,
+  "state": "damaged",
+  "bank": 11,
+  "slot": 222,
+  "file": "pair_15_damaged_red.png"
+ },
+ {
+  "pair": 16,
+  "state": "damaged",
+  "bank": 11,
+  "slot": 224,
+  "file": "pair_16_damaged_red.png"
+ },
+ {
+  "pair": 17,
+  "state": "damaged",
+  "bank": 11,
+  "slot": 226,
+  "file": "pair_17_damaged_red.png"
+ },
+ {
+  "pair": 18,
+  "state": "damaged",
+  "bank": 11,
+  "slot": 228,
+  "file": "pair_18_damaged_red.png"
+ },
+ {
+  "pair": 19,
+  "state": "damaged",
+  "bank": 11,
+  "slot": 230,
+  "file": "pair_19_damaged_red.png"
+ },
+ {
+  "pair": 20,
+  "state": "damaged",
+  "bank": 11,
+  "slot": 232,
+  "file": "pair_20_damaged_red.png"
+ },
+ {
+  "pair": 21,
+  "state": "damaged",
+  "bank": 11,
+  "slot": 234,
+  "file": "pair_21_damaged_red.png"
+ },
+ {
+  "pair": 22,
+  "state": "damaged",
+  "bank": 11,
+  "slot": 236,
+  "file": "pair_22_damaged_red.png"
+ },
+ {
+  "pair": 23,
+  "state": "damaged",
+  "bank": 11,
+  "slot": 238,
+  "file": "pair_23_damaged_red.png"
+ },
+ {
+  "pair": 24,
+  "state": "damaged",
+  "bank": 11,
+  "slot": 240,
+  "file": "pair_24_damaged_red.png"
+ },
+ {
+  "pair": 25,
+  "state": "damaged",
+  "bank": 11,
+  "slot": 242,
+  "file": "pair_25_damaged_red.png"
+ },
+ {
+  "pair": 26,
+  "state": "damaged",
+  "bank": 11,
+  "slot": 244,
+  "file": "pair_26_damaged_red.png"
+ },
+ {
+  "pair": 27,
+  "state": "damaged",
+  "bank": 11,
+  "slot": 246,
+  "file": "pair_27_damaged_red.png"
+ },
+ {
+  "pair": 28,
+  "state": "damaged",
+  "bank": 11,
+  "slot": 248,
+  "file": "pair_28_damaged_red.png"
+ },
+ {
+  "pair": 29,
+  "state": "damaged",
+  "bank": 11,
+  "slot": 250,
+  "file": "pair_29_damaged_red.png"
+ },
+ {
+  "pair": 30,
+  "state": "damaged",
+  "bank": 11,
+  "slot": 252,
+  "file": "pair_30_damaged_red.png"
+ },
+ {
+  "pair": 31,
+  "state": "damaged",
+  "bank": 11,
+  "slot": 254,
+  "file": "pair_31_damaged_red.png"
+ },
+ {
+  "pair": 0,
+  "state": "clean",
+  "bank": 12,
+  "slot": 128,
+  "file": "pair_00_clean_gray.png"
+ },
+ {
+  "pair": 1,
+  "state": "clean",
+  "bank": 12,
+  "slot": 130,
+  "file": "pair_01_clean_gray.png"
+ },
+ {
+  "pair": 2,
+  "state": "clean",
+  "bank": 12,
+  "slot": 132,
+  "file": "pair_02_clean_gray.png"
+ },
+ {
+  "pair": 3,
+  "state": "clean",
+  "bank": 12,
+  "slot": 134,
+  "file": "pair_03_clean_gray.png"
+ },
+ {
+  "pair": 4,
+  "state": "clean",
+  "bank": 12,
+  "slot": 136,
+  "file": "pair_04_clean_gray.png"
+ },
+ {
+  "pair": 5,
+  "state": "clean",
+  "bank": 12,
+  "slot": 138,
+  "file": "pair_05_clean_gray.png"
+ },
+ {
+  "pair": 6,
+  "state": "clean",
+  "bank": 12,
+  "slot": 140,
+  "file": "pair_06_clean_gray.png"
+ },
+ {
+  "pair": 7,
+  "state": "clean",
+  "bank": 12,
+  "slot": 142,
+  "file": "pair_07_clean_gray.png"
+ },
+ {
+  "pair": 8,
+  "state": "clean",
+  "bank": 12,
+  "slot": 144,
+  "file": "pair_08_clean_gray.png"
+ },
+ {
+  "pair": 9,
+  "state": "clean",
+  "bank": 12,
+  "slot": 146,
+  "file": "pair_09_clean_gray.png"
+ },
+ {
+  "pair": 10,
+  "state": "clean",
+  "bank": 12,
+  "slot": 148,
+  "file": "pair_10_clean_gray.png"
+ },
+ {
+  "pair": 11,
+  "state": "clean",
+  "bank": 12,
+  "slot": 150,
+  "file": "pair_11_clean_gray.png"
+ },
+ {
+  "pair": 12,
+  "state": "clean",
+  "bank": 12,
+  "slot": 152,
+  "file": "pair_12_clean_gray.png"
+ },
+ {
+  "pair": 13,
+  "state": "clean",
+  "bank": 12,
+  "slot": 154,
+  "file": "pair_13_clean_gray.png"
+ },
+ {
+  "pair": 14,
+  "state": "clean",
+  "bank": 12,
+  "slot": 156,
+  "file": "pair_14_clean_gray.png"
+ },
+ {
+  "pair": 15,
+  "state": "clean",
+  "bank": 12,
+  "slot": 158,
+  "file": "pair_15_clean_gray.png"
+ },
+ {
+  "pair": 16,
+  "state": "clean",
+  "bank": 12,
+  "slot": 160,
+  "file": "pair_16_clean_gray.png"
+ },
+ {
+  "pair": 17,
+  "state": "clean",
+  "bank": 12,
+  "slot": 162,
+  "file": "pair_17_clean_gray.png"
+ },
+ {
+  "pair": 18,
+  "state": "clean",
+  "bank": 12,
+  "slot": 164,
+  "file": "pair_18_clean_gray.png"
+ },
+ {
+  "pair": 19,
+  "state": "clean",
+  "bank": 12,
+  "slot": 166,
+  "file": "pair_19_clean_gray.png"
+ },
+ {
+  "pair": 20,
+  "state": "clean",
+  "bank": 12,
+  "slot": 168,
+  "file": "pair_20_clean_gray.png"
+ },
+ {
+  "pair": 21,
+  "state": "clean",
+  "bank": 12,
+  "slot": 170,
+  "file": "pair_21_clean_gray.png"
+ },
+ {
+  "pair": 22,
+  "state": "clean",
+  "bank": 12,
+  "slot": 172,
+  "file": "pair_22_clean_gray.png"
+ },
+ {
+  "pair": 23,
+  "state": "clean",
+  "bank": 12,
+  "slot": 174,
+  "file": "pair_23_clean_gray.png"
+ },
+ {
+  "pair": 24,
+  "state": "clean",
+  "bank": 12,
+  "slot": 176,
+  "file": "pair_24_clean_gray.png"
+ },
+ {
+  "pair": 25,
+  "state": "clean",
+  "bank": 12,
+  "slot": 178,
+  "file": "pair_25_clean_gray.png"
+ },
+ {
+  "pair": 26,
+  "state": "clean",
+  "bank": 12,
+  "slot": 180,
+  "file": "pair_26_clean_gray.png"
+ },
+ {
+  "pair": 27,
+  "state": "clean",
+  "bank": 12,
+  "slot": 182,
+  "file": "pair_27_clean_gray.png"
+ },
+ {
+  "pair": 28,
+  "state": "clean",
+  "bank": 12,
+  "slot": 184,
+  "file": "pair_28_clean_gray.png"
+ },
+ {
+  "pair": 29,
+  "state": "clean",
+  "bank": 12,
+  "slot": 186,
+  "file": "pair_29_clean_gray.png"
+ },
+ {
+  "pair": 30,
+  "state": "clean",
+  "bank": 12,
+  "slot": 188,
+  "file": "pair_30_clean_gray.png"
+ },
+ {
+  "pair": 31,
+  "state": "clean",
+  "bank": 12,
+  "slot": 190,
+  "file": "pair_31_clean_gray.png"
+ },
+ {
+  "pair": 0,
+  "state": "damaged",
+  "bank": 12,
+  "slot": 192,
+  "file": "pair_00_damaged_gray.png"
+ },
+ {
+  "pair": 1,
+  "state": "damaged",
+  "bank": 12,
+  "slot": 194,
+  "file": "pair_01_damaged_gray.png"
+ },
+ {
+  "pair": 2,
+  "state": "damaged",
+  "bank": 12,
+  "slot": 196,
+  "file": "pair_02_damaged_gray.png"
+ },
+ {
+  "pair": 3,
+  "state": "damaged",
+  "bank": 12,
+  "slot": 198,
+  "file": "pair_03_damaged_gray.png"
+ },
+ {
+  "pair": 4,
+  "state": "damaged",
+  "bank": 12,
+  "slot": 200,
+  "file": "pair_04_damaged_gray.png"
+ },
+ {
+  "pair": 5,
+  "state": "damaged",
+  "bank": 12,
+  "slot": 202,
+  "file": "pair_05_damaged_gray.png"
+ },
+ {
+  "pair": 6,
+  "state": "damaged",
+  "bank": 12,
+  "slot": 204,
+  "file": "pair_06_damaged_gray.png"
+ },
+ {
+  "pair": 7,
+  "state": "damaged",
+  "bank": 12,
+  "slot": 206,
+  "file": "pair_07_damaged_gray.png"
+ },
+ {
+  "pair": 8,
+  "state": "damaged",
+  "bank": 12,
+  "slot": 208,
+  "file": "pair_08_damaged_gray.png"
+ },
+ {
+  "pair": 9,
+  "state": "damaged",
+  "bank": 12,
+  "slot": 210,
+  "file": "pair_09_damaged_gray.png"
+ },
+ {
+  "pair": 10,
+  "state": "damaged",
+  "bank": 12,
+  "slot": 212,
+  "file": "pair_10_damaged_gray.png"
+ },
+ {
+  "pair": 11,
+  "state": "damaged",
+  "bank": 12,
+  "slot": 214,
+  "file": "pair_11_damaged_gray.png"
+ },
+ {
+  "pair": 12,
+  "state": "damaged",
+  "bank": 12,
+  "slot": 216,
+  "file": "pair_12_damaged_gray.png"
+ },
+ {
+  "pair": 13,
+  "state": "damaged",
+  "bank": 12,
+  "slot": 218,
+  "file": "pair_13_damaged_gray.png"
+ },
+ {
+  "pair": 14,
+  "state": "damaged",
+  "bank": 12,
+  "slot": 220,
+  "file": "pair_14_damaged_gray.png"
+ },
+ {
+  "pair": 15,
+  "state": "damaged",
+  "bank": 12,
+  "slot": 222,
+  "file": "pair_15_damaged_gray.png"
+ },
+ {
+  "pair": 16,
+  "state": "damaged",
+  "bank": 12,
+  "slot": 224,
+  "file": "pair_16_damaged_gray.png"
+ },
+ {
+  "pair": 17,
+  "state": "damaged",
+  "bank": 12,
+  "slot": 226,
+  "file": "pair_17_damaged_gray.png"
+ },
+ {
+  "pair": 18,
+  "state": "damaged",
+  "bank": 12,
+  "slot": 228,
+  "file": "pair_18_damaged_gray.png"
+ },
+ {
+  "pair": 19,
+  "state": "damaged",
+  "bank": 12,
+  "slot": 230,
+  "file": "pair_19_damaged_gray.png"
+ },
+ {
+  "pair": 20,
+  "state": "damaged",
+  "bank": 12,
+  "slot": 232,
+  "file": "pair_20_damaged_gray.png"
+ },
+ {
+  "pair": 21,
+  "state": "damaged",
+  "bank": 12,
+  "slot": 234,
+  "file": "pair_21_damaged_gray.png"
+ },
+ {
+  "pair": 22,
+  "state": "damaged",
+  "bank": 12,
+  "slot": 236,
+  "file": "pair_22_damaged_gray.png"
+ },
+ {
+  "pair": 23,
+  "state": "damaged",
+  "bank": 12,
+  "slot": 238,
+  "file": "pair_23_damaged_gray.png"
+ },
+ {
+  "pair": 24,
+  "state": "damaged",
+  "bank": 12,
+  "slot": 240,
+  "file": "pair_24_damaged_gray.png"
+ },
+ {
+  "pair": 25,
+  "state": "damaged",
+  "bank": 12,
+  "slot": 242,
+  "file": "pair_25_damaged_gray.png"
+ },
+ {
+  "pair": 26,
+  "state": "damaged",
+  "bank": 12,
+  "slot": 244,
+  "file": "pair_26_damaged_gray.png"
+ },
+ {
+  "pair": 27,
+  "state": "damaged",
+  "bank": 12,
+  "slot": 246,
+  "file": "pair_27_damaged_gray.png"
+ },
+ {
+  "pair": 28,
+  "state": "damaged",
+  "bank": 12,
+  "slot": 248,
+  "file": "pair_28_damaged_gray.png"
+ },
+ {
+  "pair": 29,
+  "state": "damaged",
+  "bank": 12,
+  "slot": 250,
+  "file": "pair_29_damaged_gray.png"
+ },
+ {
+  "pair": 30,
+  "state": "damaged",
+  "bank": 12,
+  "slot": 252,
+  "file": "pair_30_damaged_gray.png"
+ },
+ {
+  "pair": 31,
+  "state": "damaged",
+  "bank": 12,
+  "slot": 254,
+  "file": "pair_31_damaged_gray.png"
+ }
+]

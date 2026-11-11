@@ -1,0 +1,500 @@
+[
+ {
+  "unit": 0,
+  "name": "M-77",
+  "rotations": [
+   {
+    "rotation": 0,
+    "source": "res13",
+    "sprite": 0
+   },
+   {
+    "rotation": 2,
+    "source": "res13",
+    "sprite": 46
+   }
+  ]
+ },
+ {
+  "unit": 1,
+  "name": "FX-1",
+  "rotations": [
+   {
+    "rotation": 0,
+    "source": "res13",
+    "sprite": 1
+   },
+   {
+    "rotation": 2,
+    "source": "res13",
+    "sprite": 47
+   }
+  ]
+ },
+ {
+  "unit": 2,
+  "name": "AX-87",
+  "rotations": [
+   {
+    "rotation": 0,
+    "source": "res13",
+    "sprite": 2
+   },
+   {
+    "rotation": 1,
+    "source": "res13",
+    "sprite": 25
+   },
+   {
+    "rotation": 2,
+    "source": "res13",
+    "sprite": 48
+   }
+  ]
+ },
+ {
+  "unit": 3,
+  "name": "EF-88",
+  "rotations": [
+   {
+    "rotation": 0,
+    "source": "res13",
+    "sprite": 3
+   },
+   {
+    "rotation": 1,
+    "source": "res13",
+    "sprite": 26
+   },
+   {
+    "rotation": 2,
+    "source": "res13",
+    "sprite": 49
+   }
+  ]
+ },
+ {
+  "unit": 4,
+  "name": "T-79",
+  "rotations": [
+   {
+    "rotation": 0,
+    "source": "res13",
+    "sprite": 4
+   },
+   {
+    "rotation": 1,
+    "source": "res13",
+    "sprite": 27
+   },
+   {
+    "rotation": 2,
+    "source": "res13",
+    "sprite": 50
+   }
+  ]
+ },
+ {
+  "unit": 5,
+  "name": "PT-6",
+  "rotations": [
+   {
+    "rotation": 0,
+    "source": "res13",
+    "sprite": 5
+   },
+   {
+    "rotation": 1,
+    "source": "res13",
+    "sprite": 28
+   },
+   {
+    "rotation": 2,
+    "source": "res13",
+    "sprite": 51
+   }
+  ]
+ },
+ {
+  "unit": 6,
+  "name": "S-61",
+  "rotations": [
+   {
+    "rotation": 0,
+    "source": "res13",
+    "sprite": 6
+   },
+   {
+    "rotation": 1,
+    "source": "res13",
+    "sprite": 29
+   },
+   {
+    "rotation": 2,
+    "source": "res13",
+    "sprite": 52
+   }
+  ]
+ },
+ {
+  "unit": 7,
+  "name": "GS-81",
+  "rotations": [
+   {
+    "rotation": 0,
+    "source": "res13",
+    "sprite": 7
+   },
+   {
+    "rotation": 1,
+    "source": "res13",
+    "sprite": 30
+   },
+   {
+    "rotation": 2,
+    "source": "res13",
+    "sprite": 53
+   }
+  ]
+ },
+ {
+  "unit": 8,
+  "name": "GT-86",
+  "rotations": [
+   {
+    "rotation": 0,
+    "source": "res13",
+    "sprite": 8
+   },
+   {
+    "rotation": 1,
+    "source": "res13",
+    "sprite": 31
+   },
+   {
+    "rotation": 2,
+    "source": "res13",
+    "sprite": 54
+   }
+  ]
+ },
+ {
+  "unit": 9,
+  "name": "HMB-2",
+  "rotations": [
+   {
+    "rotation": 0,
+    "source": "res13",
+    "sprite": 9
+   },
+   {
+    "rotation": 1,
+    "source": "res13",
+    "sprite": 32
+   },
+   {
+    "rotation": 2,
+    "source": "res13",
+    "sprite": 55
+   }
+  ]
+ },
+ {
+  "unit": 10,
+  "name": "TT-1",
+  "rotations": [
+   {
+    "rotation": 0,
+    "source": "res13",
+    "sprite": 10
+   },
+   {
+    "rotation": 1,
+    "source": "res13",
+    "sprite": 33
+   },
+   {
+    "rotation": 2,
+    "source": "res13",
+    "sprite": 56
+   }
+  ]
+ },
+ {
+  "unit": 11,
+  "name": "SG-4",
+  "rotations": [
+   {
+    "rotation": 0,
+    "source": "res13",
+    "sprite": 11
+   },
+   {
+    "rotation": 1,
+    "source": "res13",
+    "sprite": 34
+   },
+   {
+    "rotation": 2,
+    "source": "res13",
+    "sprite": 57
+   }
+  ]
+ },
+ {
+  "unit": 12,
+  "name": "MR-22",
+  "rotations": [
+   {
+    "rotation": 0,
+    "source": "res13",
+    "sprite": 12
+   },
+   {
+    "rotation": 1,
+    "source": "res13",
+    "sprite": 35
+   },
+   {
+    "rotation": 2,
+    "source": "res13",
+    "sprite": 58
+   }
+  ]
+ },
+ {
+  "unit": 13,
+  "name": "MB-5",
+  "rotations": [
+   {
+    "rotation": 0,
+    "source": "res13",
+    "sprite": 13
+   },
+   {
+    "rotation": 1,
+    "source": "res13",
+    "sprite": 36
+   },
+   {
+    "rotation": 2,
+    "source": "res13",
+    "sprite": 59
+   }
+  ]
+ },
+ {
+  "unit": 14,
+  "name": "MB-4",
+  "rotations": [
+   {
+    "rotation": 0,
+    "source": "res13",
+    "sprite": 14
+   },
+   {
+    "rotation": 1,
+    "source": "res13",
+    "sprite": 37
+   },
+   {
+    "rotation": 2,
+    "source": "res13",
+    "sprite": 60
+   }
+  ]
+ },
+ {
+  "unit": 15,
+  "name": "AAG-4",
+  "rotations": [
+   {
+    "rotation": 0,
+    "source": "res13",
+    "sprite": 15
+   },
+   {
+    "rotation": 1,
+    "source": "res13",
+    "sprite": 38
+   },
+   {
+    "rotation": 2,
+    "source": "res13",
+    "sprite": 61
+   }
+  ]
+ },
+ {
+  "unit": 16,
+  "name": "MM107",
+  "rotations": [
+   {
+    "rotation": 0,
+    "source": "res14",
+    "sprite": 0
+   },
+   {
+    "rotation": 1,
+    "source": "res14",
+    "sprite": 1
+   },
+   {
+    "rotation": 2,
+    "source": "res14",
+    "sprite": 2
+   },
+   {
+    "rotation": 3,
+    "source": "res14",
+    "sprite": 3
+   }
+  ]
+ },
+ {
+  "unit": 17,
+  "name": "SS-80",
+  "rotations": [
+   {
+    "rotation": 0,
+    "source": "res14",
+    "sprite": 4
+   },
+   {
+    "rotation": 1,
+    "source": "res14",
+    "sprite": 5
+   },
+   {
+    "rotation": 2,
+    "source": "res14",
+    "sprite": 6
+   },
+   {
+    "rotation": 3,
+    "source": "res14",
+    "sprite": 7
+   }
+  ]
+ },
+ {
+  "unit": 18,
+  "name": "GX-77",
+  "rotations": [
+   {
+    "rotation": 0,
+    "source": "res14",
+    "sprite": 8
+   },
+   {
+    "rotation": 1,
+    "source": "res14",
+    "sprite": 9
+   },
+   {
+    "rotation": 2,
+    "source": "res14",
+    "sprite": 10
+   },
+   {
+    "rotation": 3,
+    "source": "res14",
+    "sprite": 11
+   }
+  ]
+ },
+ {
+  "unit": 19,
+  "name": "GX-87",
+  "rotations": [
+   {
+    "rotation": 0,
+    "source": "res14",
+    "sprite": 12
+   },
+   {
+    "rotation": 1,
+    "source": "res14",
+    "sprite": 13
+   },
+   {
+    "rotation": 2,
+    "source": "res14",
+    "sprite": 14
+   },
+   {
+    "rotation": 3,
+    "source": "res14",
+    "sprite": 15
+   }
+  ]
+ },
+ {
+  "unit": 20,
+  "name": "CBX-1",
+  "rotations": [
+   {
+    "rotation": 0,
+    "source": "res14",
+    "sprite": 16
+   },
+   {
+    "rotation": 1,
+    "source": "res14",
+    "sprite": 17
+   },
+   {
+    "rotation": 2,
+    "source": "res14",
+    "sprite": 18
+   },
+   {
+    "rotation": 3,
+    "source": "res14",
+    "sprite": 19
+   }
+  ]
+ },
+ {
+  "unit": 21,
+  "name": "NC-1",
+  "rotations": [
+   {
+    "rotation": 0,
+    "source": "res14",
+    "sprite": 20
+   },
+   {
+    "rotation": 1,
+    "source": "res14",
+    "sprite": 21
+   },
+   {
+    "rotation": 2,
+    "source": "res14",
+    "sprite": 22
+   },
+   {
+    "rotation": 3,
+    "source": "res14",
+    "sprite": 23
+   }
+  ]
+ },
+ {
+  "unit": 22,
+  "name": "C-61",
+  "rotations": [
+   {
+    "rotation": 0,
+    "source": "res13",
+    "sprite": 22
+   },
+   {
+    "rotation": 1,
+    "source": "res13",
+    "sprite": 45
+   }
+  ]
+ }
+]

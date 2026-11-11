@@ -17,6 +17,26 @@ cmake -S port -B port/build -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release `
 cmake --build port/build -j 8
 ```
 
+Two folders are involved:
+
+* `port/build/` — the CMake working build. It holds object files, the built
+  `nectaris.exe`, scratch screenshots and a **copy of `assets/`** (the
+  `POST_BUILD` step copies it next to the exe so the folder runs standalone).
+  `tools/test_port_turn.py` launches this exe.
+* `release/` — the clean distribution payload (`nectaris.exe` + `assets/` +
+  `map16.png`). `nectaris_port.zip` is created from this folder only, so it
+  never contains build intermediates or test images.
+
+Publish with:
+
+```powershell
+python tools/make_release.py
+```
+
+It rebuilds, copies the exe, **mirrors `assets/` into `release/` (deleting
+stale files)** and rewrites `nectaris_port.zip`.  Editing assets without this
+step leaves `release/` behind.
+
 ## UI font
 
 All interface text uses **Not Jam Mono Clean 16** from
