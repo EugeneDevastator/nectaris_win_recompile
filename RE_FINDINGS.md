@@ -160,10 +160,10 @@ terD = isAir(type[D]) ? 0 : terrain_def[terrain[D]]
 defAeff = defA * (100 + terA) / 100       # terrain is a percentage bonus
 defDeff = defD * (100 + terD) / 100
 
-# support: idle allies adjacent to the supported unit; 50% of their power.
-supportA = sum(atkVs(N, D) * (hp[N] + 1)) for idle friendly N adjacent to A
+# support: units that can engage the opposing unit (idle allies in its ZOC)
+supportA = sum(atkVs(N, D) * (hp[N] + 1)) for idle attacker allies adjacent to D
 supportA /= hA * 2
-supportD = sum(defense[type[N]] * (hp[N] + 1)) for idle friendly N adjacent to D
+supportD = sum(defense[type[N]] * (hp[N] + 1)) for idle defender allies adjacent to A
 supportD /= hD * 2
 
 # surround (FUN_00423a80 + FUN_0041bd40): the current player's ZOC bit 0x40 is

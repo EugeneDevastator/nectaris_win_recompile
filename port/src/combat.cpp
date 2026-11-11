@@ -123,18 +123,18 @@ CombatResult resolveCombat(const Mission& m,
     out.terrainDefD = terD;
 
     // ----- support fire (only during a direct exchange)
-    // Attacking side: idle allies adjacent to the ATTACKER add 50% of their
-    // attack value.  Defending side: idle allies adjacent to the DEFENDER add
-    // 50% of their defence value.
+    // A unit can contribute when it is in the opposing side's ZOC:
+    //  - attacker support: idle attacker allies adjacent to the DEFENDER
+    //  - defender support: idle defender allies adjacent to the ATTACKER
     int supA = 0, supD = 0;
     const int supportDiv = (rules.supportDivisor > 0) ? rules.supportDivisor : 1;
     if (mode == 0) {
         for (int d = 0; d < 6; ++d) {
             int nx, ny;
-            hexNeighbor(A.x, A.y, d, nx, ny);
+            hexNeighbor(D.x, D.y, d, nx, ny);
             if (!inBounds(m, nx, ny)) continue;
             int s = unitAt(m, nx, ny);
-            if (s < 0 || s == defSlot) continue;
+            if (s < 0 || s == atkSlot || s == defSlot) continue;
             const Unit& N = m.units[s];
             if (N.owner != A.owner || N.acted) continue;
             int raw = attackValue(m, types, s, defSlot) * (N.hp + 1);
@@ -146,10 +146,10 @@ CombatResult resolveCombat(const Mission& m,
 
         for (int d = 0; d < 6; ++d) {
             int nx, ny;
-            hexNeighbor(D.x, D.y, d, nx, ny);
+            hexNeighbor(A.x, A.y, d, nx, ny);
             if (!inBounds(m, nx, ny)) continue;
             int s = unitAt(m, nx, ny);
-            if (s < 0 || s == atkSlot) continue;
+            if (s < 0 || s == defSlot || s == atkSlot) continue;
             const Unit& N = m.units[s];
             if (N.owner != D.owner || N.acted) continue;
             int raw = types[N.type].def * (N.hp + 1);

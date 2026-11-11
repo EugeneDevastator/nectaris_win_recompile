@@ -908,7 +908,7 @@ static CombatSide makeCombatSide(int slot, int hp0, int hp1,
     s.expPct = isAttacker ? r.expPctA : r.expPctD;
     s.xpGain = isAttacker ? r.xpToAtk : r.xpToDef;
     s.damage = isAttacker ? r.dmgToDef : r.dmgToAtk;
-    s.surroundPct = isAttacker ? r.surroundPctA : r.surroundPctD;
+    s.surroundPct = isAttacker ? 0 : r.surroundPctD;
     return s;
 }
 
@@ -1445,7 +1445,7 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
         bool attacker = (side.unit == v.r.atkSlot);
         bool showZoc = !attacker;   // only the defender's ZOC coverage affects combat
         int enemyOwner = 1 - side.team;
-        const auto& sideSup = attacker ? v.r.supportAtkUnits : v.r.supportDefUnits;
+        const auto& oppSup = attacker ? v.r.supportDefUnits : v.r.supportAtkUnits;
         bool surrounded = showZoc && (attacker ? v.r.surroundedA : v.r.surroundedD);
         float r = std::max(6.5f, panW * 0.030f);
         float bw = 5.4f * r + 10.0f;
@@ -1468,7 +1468,7 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
             bool friendly = occ >= 0 && gMission.units[occ].owner == side.team;
             bool enemy = occ >= 0 && gMission.units[occ].owner != side.team;
             bool sup = false;
-            for (const SupportContribution& c : sideSup)
+            for (const SupportContribution& c : oppSup)
                 if (occ >= 0 && c.slot == occ) { sup = true; break; }
             float a = (-90.0f + 60.0f * k) * 3.14159265f / 180.0f;
             Vector2 p = {center.x + std::cos(a) * d, center.y + std::sin(a) * d};
