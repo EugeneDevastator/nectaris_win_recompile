@@ -89,6 +89,18 @@ static const char* kGameDir = nullptr;
 static std::string gAssetDir;
 static float gPanX = 0.0f, gPanY = 0.0f;
 static float gMapPixelW = 0.0f, gMapPixelH = 0.0f;
+static float gHexSize = 30.0f;
+static float gStepX = 45.0f, gStepY = 51.96f;
+static float gHexH = 51.96f;
+static float gOriginX = 20.0f, gOriginY = 20.0f;
+
+// Recompute the map bounds for the current mission.  The zoom (hex size and
+// step) is fixed for the session, so units stay the same size on every map;
+// only the pan limits follow the new width/height.
+static void updateMapGeometry() {
+    gMapPixelW = gOriginX * 2 + gStepX * (gMission.w - 1) + 2 * gHexSize;
+    gMapPixelH = gOriginY * 2 + gStepY * (gMission.h - 1) + gHexH + gStepY * 0.5f;
+}
 
 // Non-macro aliases (raylib's RED/GREEN are macros, so they cannot be used as
 // local constant names in some expressions).
@@ -372,6 +384,7 @@ static bool loadMission(const std::string& path) {    json j = loadJson(path);
     // Optional full-map backdrop. Loading is deferred until the GL context
     // exists (see ensureBackdrop); a missing file is not fatal.
     gBackdropDirty = true;
+    updateMapGeometry();
     return true;
 }
 
@@ -612,10 +625,6 @@ static std::vector<std::pair<int, int>> movementPath(const Mission& m, int slot,
 
 // ------------------------------------------------------------------ hex map
 static int CELL = 64;
-static float gHexSize = 30.0f;
-static float gStepX = 45.0f, gStepY = 51.96f;
-static float gHexH = 51.96f;
-static float gOriginX = 20.0f, gOriginY = 20.0f;
 
 static void hexCenter(int x, int y, float& cx, float& cy) {
     cx = gOriginX + gPanX + gHexSize + x * gStepX;
@@ -1968,6 +1977,8 @@ int main(int argc, char** argv) {
         return 0;
     }
 
+    // Fixed zoom for this session: pick it from the launch mission so the map
+    // fits at start, then keep the same unit size when switching with N/B.
     gHexSize = std::clamp(std::min(1000.0f / (1.5f * gMission.w + 1.0f),
                                    620.0f / (1.7320508f * gMission.h + 0.5f)), 14.0f, 42.0f);
     gStepX = 1.5f * gHexSize;
@@ -1975,10 +1986,9 @@ int main(int argc, char** argv) {
     gStepY = gHexH;
     gOriginX = 24.0f;
     gOriginY = 24.0f;
-    int mapW = (int)(gOriginX * 2 + gStepX * (gMission.w - 1) + 2 * gHexSize);
-    int mapH = (int)(gOriginY * 2 + gStepY * (gMission.h - 1) + gHexH + gStepY * 0.5f);
-    gMapPixelW = (float)mapW;
-    gMapPixelH = (float)mapH;
+    updateMapGeometry();
+    int mapW = (int)gMapPixelW;
+    int mapH = (int)gMapPixelH;
     int panelW = 620;
 
     if (argc > 3 && std::string(argv[3]) == "--hextest") {
@@ -2702,8 +2712,26 @@ int main(int argc, char** argv) {
         Vector2 mouse = GetMousePosition();
         if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT) && !IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
             Vector2 d = GetMouseDelta();
+            // Grab-style pan: the map follows the cursor.
             gPanX += d.x;
             gPanY += d.y;
+        }
+        if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
+            // Edge auto-scroll: drag to a window edge and the map keeps moving
+            // in that direction, so one gesture can cross the whole map.
+            Vector2 mp = GetMousePosition();
+            float W = (float)GetScreenWidth(), H = (float)GetScreenHeight();
+            const float edge = 42.0f;
+            float speed = 900.0f * GetFrameTime();
+            if (mp.x < edge) gPanX -= speed * (1.0f - mp.x / edge);
+            else if (mp.x > W - edge) gPanX += speed * ((mp.x - (W - edge)) / edge);
+            if (mp.y < edge) gPanY -= speed * (1.0f - mp.y / edge);
+            else if (mp.y > H - edge) gPanY += speed * ((mp.y - (H - edge)) / edge);
+        }
+        {
+            // Mouse wheel: scroll the view vertically (up = look up).
+            float wheel = GetMouseWheelMove();
+            if (wheel != 0.0f) gPanY += wheel * gStepY * 0.75f;
             // Allow a little empty space around the map so its edges can be
             // inspected comfortably (about 1.5 hexes of padding per side).
             const float padX = gStepX * 1.5f;
@@ -3116,7 +3144,7 @@ int main(int argc, char** argv) {
             uiText("Click factory: view units", px, 290, 12, SKYBLUE);
         }
         uiText("SPACE deselect / end turn   R restart", px, 430, 8, GRAY);
-        uiText("ESC cancel   RMB drag: pan", px, 470, 8, GRAY);
+        uiText("ESC cancel   RMB drag / wheel: pan", px, 470, 8, GRAY);
 
         if (alive1 == 0) uiText("VICTORY", px, 520, 28, kGreen);
         if (alive0 == 0) uiText("DEFEAT", px, 520, 28, kRed);

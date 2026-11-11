@@ -71,7 +71,7 @@ Controls:
 | LMB the same unit again | deselect |
 | SPACE | deselect if a unit is selected, otherwise end turn (the computer turn then animates) |
 | U | choose a target hex for the selected transport's cargo (animates out) |
-| RMB drag | pan the map |
+| RMB drag / mouse wheel | pan the map (1.5 hexes of padding around the edges) |
 | ESC | deselect |
 | N | next map (test map first, then campaign 1-16) |
 | B | previous map |
