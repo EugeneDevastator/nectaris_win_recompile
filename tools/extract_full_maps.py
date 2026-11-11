@@ -10,7 +10,7 @@ OUT = os.path.join(ROOT, 'dump', 'orig_maps')
 os.makedirs(OUT, exist_ok=True)
 EXE = os.path.join(ROOT, 'game', 'Nec.exe')
 MAP_STATE = 0x416700
-CROP = (24, 36, 504, 356)
+CROP = (24, 36, 504, 372)
 
 K32 = ctypes.WinDLL('kernel32', use_last_error=True)
 K32.CreateFileMappingW.restype = wt.HANDLE
@@ -40,9 +40,17 @@ dm.k32.WriteProcessMemory.argtypes = [wt.HANDLE, ctypes.c_void_p, ctypes.c_void_
 dm.k32.WriteProcessMemory.restype = wt.BOOL
 
 def find_pid():
+    pids = []
     for line in subprocess.check_output(['tasklist', '/FI', 'IMAGENAME eq Nec.exe', '/FO', 'CSV', '/NH'], text=True).splitlines():
         p = [x.strip('"') for x in line.split('","')]
-        if p and p[0].lower() == 'nec.exe': return int(p[1])
+        if p and p[0].lower() == 'nec.exe':
+            pids.append(int(p[1]))
+    # Some leftover instances can be inaccessible; use the first openable one.
+    for pid in pids:
+        h = dm.k32.OpenProcess(0x1F0FFF, False, pid)
+        if h:
+            dm.k32.CloseHandle(h)
+            return pid
     return None
 def find_window(pid):
     found = []
@@ -77,6 +85,10 @@ def extract(mission):
     kernel32.VirtualAllocEx.argtypes = [wt.HANDLE, ctypes.c_void_p, ctypes.c_size_t, wt.DWORD, wt.DWORD]
     kernel32.WriteProcessMemory.argtypes = [wt.HANDLE, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_size_t, ctypes.POINTER(ctypes.c_size_t)]
     empty = kernel32.VirtualAllocEx(h, None, 0x10, 0x3000, 0x04)
+    if not empty:
+        print('  mission %2d: VirtualAllocEx failed (WinError %d)' % (mission + 1, ctypes.get_last_error()), flush=True)
+        dm.k32.CloseHandle(h)
+        return None
     got = ctypes.c_size_t()
     kernel32.WriteProcessMemory(h, ctypes.c_void_p(empty), b'\xff', 1, ctypes.byref(got))
     wr(0x46b988 + mission * 4, struct.pack('<I', empty))
@@ -103,7 +115,9 @@ def extract(mission):
     tap(0x20)  # action selection: make the cursor/scroll respond
     time.sleep(0.4)
     w = u8(0x495c02); hgt = u8(0x495c03)
-    full = Image.new('RGB', (w * 32, hgt * 32), (0, 0, 0))
+    # Odd-q maps draw a half hex row below the last cell row; the last 4 px of
+    # the viewport are the UI border, so the art ends at h*32+12.
+    full = Image.new('RGB', (w * 32, hgt * 32 + 12), (0, 0, 0))
     seen = set()
     for oy in range(0, hgt, 10):
         for ox in range(0, w, 15):
@@ -133,6 +147,8 @@ def extract(mission):
                 rgb[i*3] = pal[4+i*4]; rgb[i*3+1] = pal[5+i*4]; rgb[i*3+2] = pal[6+i*4]
             im = Image.frombytes('P', (704, 544), fb).transpose(Image.FLIP_TOP_BOTTOM).crop((32, 32, 672, 512))
             im.putpalette(bytes(rgb))
+            if os.environ.get('SAVE_PAGES'):
+                im.convert('RGB').save(os.path.join(OUT, 'page_m%02d_ox%d_oy%d.png' % (mission + 1, aox, aoy)))
             crop = im.convert('RGB').crop(CROP)
             full.paste(crop, (aox * 32, aoy * 32))
             seen.add((aox, aoy))

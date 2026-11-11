@@ -462,7 +462,12 @@ when the cursor reaches the edge, so `tools/extract_full_maps.py`:
    corners, capturing each 15x10 page,
 4. stitches the pages at `origin * 32` into the full map.
 
-Sizes: 15x10 -> 480x320, 15x20 -> 480x640, 30x10 -> 960x320, 30x20 -> 960x640.
+Sizes: 15x10 -> 480x332, 15x20 -> 480x652, 30x10 -> 960x332, 30x20 -> 960x652.
+The odd-q hex map draws an extra half row below the last cell row, so each
+15x10 viewport is captured as 480x336 (the bottom 4 px are the UI border and are
+trimmed): the map is `h*32 + 12` pixels tall instead of `h*32`. Without that the
+bottom half-hex (e.g. a base on the last row of mission 5) is cut. Pages
+overlap by 16 px and are stitched at `origin * 32`.
 The port aligns the captured cell grid to the first hex centre and nudges it
 half a step right/up, extending the destination half a cell so the odd-q
 bottom/right edge is covered; the image is point-filtered.
