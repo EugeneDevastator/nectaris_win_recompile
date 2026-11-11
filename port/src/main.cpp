@@ -61,6 +61,7 @@ static Texture2D gUnitMapTex[24], gUnitMapFlipTex[24];
 static Texture2D gVfx[16];
 static Texture2D gVfxHalf[64];
 static Texture2D gVfxQuad[16];
+static Texture2D gVfxSplat = {0};   // shared wreck: mine's dead sprite
 
 // Combat VFX config (assets/data/combat_vfx.json).  Frames refer to resource-23
 // half frames; quads are groups of four consecutive halves assembled 2x2.
@@ -1435,8 +1436,12 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
         drawPanel(v.right.panel, dxPanel, panW);
     }
 
-    Color flashA = (t > impactT && t < impactT + 0.50f) ? Color{255, 150, 150, 255} : WHITE;
-    Color flashD = flashA;
+    // Only a side that actually took damage flashes red.
+    bool hurtL = (v.left.damage > 0);
+    bool hurtR = (v.right.damage > 0);
+    bool flashOn = (t > impactT && t < impactT + 0.50f);
+    Color flashA = (hurtL && flashOn) ? Color{255, 150, 150, 255} : WHITE;
+    Color flashD = (hurtR && flashOn) ? Color{255, 150, 150, 255} : WHITE;
     float rk = (t > fireT && t < fireT + fireDur)
                    ? std::sin((t - fireT) / fireDur * 3.14159f)
                    : 0.0f;
@@ -1651,10 +1656,14 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
                                 Fade(WHITE, alpha));
                 } else if (damage > 0 && !hit.empty()) {
                     int frame = hit[(int)(dt / 0.10f) % (int)hit.size()];
-                    drawVfxHalf(frame, to[i], us * 1.55f, WHITE);
+                    float a = 1.0f - std::clamp((dt - 0.40f) / 0.40f, 0.0f, 1.0f);
+                    drawVfxHalf(frame, to[i], us * 1.55f, Fade(WHITE, a));
                 } else if (!miss.empty()) {
+                    // Missed shot: small, short-lived ground burst (clearly not
+                    // the multi-frame destruction explosion).
                     int frame = miss[(int)(dt / 0.12f) % (int)miss.size()];
-                    drawVfxHalf(frame, to[i], us * 1.30f, WHITE);
+                    float a = 1.0f - std::clamp((dt - 0.30f) / 0.30f, 0.0f, 1.0f);
+                    drawVfxHalf(frame, to[i], us * 0.90f, Fade(WHITE, a));
                 } else {
                     drawExplosion(to[i].x, to[i].y, us * 0.70f, dt * 7.0f, 1.0f);
                 }
@@ -1663,6 +1672,24 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
         };
         if (leftFires) impact(toL, nL0, killedR, R.type, v.left.damage, 1);
         if (rightFires) impact(toR, nR0, killedL, L.type, v.right.damage, 0);
+    }
+
+    // ----- wrecks: the mine's dead sprite (black splat) marks every unit
+    // destroyed in THIS exchange, and stays on the ground for the result view.
+    if (gVfxSplat.id && t > impactT + 0.90f) {
+        float sw = us * 1.60f;
+        float sh = sw * (float)gVfxSplat.height / (float)gVfxSplat.width;
+        auto wreck = [&](Vector2* pos, int killed) {
+            if (killed <= 0) return;
+            for (int i = 0; i < killed; ++i) {
+                DrawTexturePro(gVfxSplat,
+                               {0, 0, (float)gVfxSplat.width, (float)gVfxSplat.height},
+                               {pos[i].x - sw * 0.5f, pos[i].y - sh * 0.5f, sw, sh},
+                               {0, 0}, 0, WHITE);
+            }
+        };
+        wreck(toL, killedR);   // enemy vehicles lost to the left side
+        wreck(toR, killedL);   // left vehicles lost to the right side
     }
 
     // ----- bottom: persistent simulation report (integer-scaled original font)
@@ -2046,6 +2073,7 @@ int main(int argc, char** argv) {
     for (int i = 0; i < 16; ++i) {
         gVfxQuad[i] = LoadTexture((gAssetDir + TextFormat("art/combat_effects/vfx_quad_%02d.png", i * 4)).c_str());
     }
+    gVfxSplat = LoadTexture((gAssetDir + "art/combat_effects/splat.png").c_str());
     gFxShell = LoadTexture((gAssetDir + "art/combat_effects/effect_195.png").c_str());
     gFxFlash = LoadTexture((gAssetDir + "art/combat_effects/effect_193.png").c_str());
     gFxStreak = LoadTexture((gAssetDir + "art/combat_effects/effect_195.png").c_str());
@@ -3126,6 +3154,7 @@ int main(int argc, char** argv) {
     for (int i = 0; i < 16; ++i) if (gVfx[i].id) UnloadTexture(gVfx[i]);
     for (int i = 0; i < 64; ++i) if (gVfxHalf[i].id) UnloadTexture(gVfxHalf[i]);
     for (int i = 0; i < 16; ++i) if (gVfxQuad[i].id) UnloadTexture(gVfxQuad[i]);
+    if (gVfxSplat.id) UnloadTexture(gVfxSplat);
     if (gUiFontReady) UnloadFont(gUiFont);
     CloseAudioDevice();
     CloseWindow();
