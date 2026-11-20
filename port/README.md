@@ -370,8 +370,11 @@ Every resolved attack switches to a battle screen modeled on the original:
 * **ranged layout**: indirect/ranged battles open a wider black gap between the
   two terrain panels (the panels shrink slightly so the pair still fits the
   playfield); direct battles stay edge-to-edge.
-* **ride-in**: vehicles roll in from the screen edges to their staggered 2×4
-  formation slots at the original `0.05 + i×0.235 s` beats.
+* **ride-in**: units roll in from their panel's outer edge to their staggered
+  2×4 formation slots at the original `0.05 + i×0.235 s` beats.  Slots use a
+  perspective scale (rear rows ~0.62×, front rows ~1.07×, matching the captured
+  original), ground units slide in horizontally while aircraft dive in from
+  above the outer corner.
 * **simultaneous fire**: both sides fire at once, using `vfx_00` cell (0,0)
   (the right-pointing missile) for every projectile and full-size `vfx_07`
   with a fade-out for every explosion. The killed vehicle slots (`finalCount ..
@@ -386,7 +389,9 @@ Every resolved attack switches to a battle screen modeled on the original:
   a small, short-lived ground burst (`vfx_half_27`) so they never look like a
   kill. Destroyed formations play their per-class death animation, then leave a
   black **splat** (`assets/art/combat_effects/splat.png`, the mine's dead frame,
-  one per unit lost in this exchange) on the ground for the result view.
+  one per unit lost in this exchange) on the ground for the result view.  Kills
+  are staggered (~0.12 s apart), so the formation loses slots one at a time
+  like the original instead of all in one frame.
 * **persistent report (no disappearing numbers)**: the bottom bar stays visible
   during and after the animation and shows the simulation inputs and resolve:
   * **attacker**: attack / own defence, support bonus, experience bonus,

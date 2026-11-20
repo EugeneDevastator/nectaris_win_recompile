@@ -1457,8 +1457,10 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
     float recoilA = -us * 0.20f * rk;
     float recoilD = us * 0.20f * rk;
 
-    // original materialise rhythm: arrival at 0.05 + i*0.235 s
-    auto drawArmy = [&](float px, int count, int type, bool mirror,
+    // Original rhythm: arrival at 0.05 + i*0.235 s; rear formation rows are
+    // drawn smaller (perspective), and destroyed slots vanish one by one as
+    // their explosions play instead of all at once.
+    auto drawArmy = [&](float px, int count0, int count1, int type, bool mirror,
                         float nudge, Color flash) {
         if (type < 0 || type >= 24) return;
         Texture2D& bt = mirror ? gUnitSprite[type] : gUnitSpriteFlip[type];
@@ -1472,7 +1474,12 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
         };
         Rectangle src = {0, 0, (float)bt.width, (float)bt.height};
         const float dur = 0.70f;
-        for (int i = 0; i < count; ++i) {
+        const bool air = gTypes[type].airborne();
+        for (int i = 0; i < count0; ++i) {
+            if (i >= count1) {
+                float death = impactT + (i - count1) * 0.12f;
+                if (t >= death) continue;      // slot already exploded
+            }
             float arrive = 0.05f + i * 0.235f;
             float start = arrive - dur;
             if (t < start) continue;
@@ -1480,17 +1487,28 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
             float ease = 1.0f - (1.0f - k) * (1.0f - k);
             float sx = mirror ? (1.0f - FORM[i][0]) : FORM[i][0];
             Vector2 dest = panelPoint(px, sx, FORM[i][1]);
+            // Rear slots (smaller panel y) sit farther away and are smaller.
+            float depth = std::clamp((FORM[i][1] - 0.30f) / 0.55f, 0.0f, 1.0f);
+            float slotScale = 0.62f + 0.45f * depth;
+            // Ground units roll in horizontally; aircraft dive in from above
+            // the outer corner.
             float startX = mirror ? (float)W + us : -(float)us;
+            float startY = dest.y;
+            if (air) {
+                startX = mirror ? (float)W + us * 0.4f : -(float)us * 0.4f;
+                startY = panY - us * 1.1f;
+            }
             float x = startX + (dest.x - startX) * ease;
-            float y = dest.y + std::sin(k * 3.14159f * 2.0f) * us * 0.05f;
+            float y = startY + (dest.y - startY) * ease;
+            if (!air) y += std::sin(k * 3.14159f * 2.0f) * us * 0.05f;
             x += nudge;
-            float s = us * 1.3f * (bt.width / 32.0f);
+            float s = us * 1.3f * (bt.width / 32.0f) * slotScale;
             DrawTexturePro(bt, src, {x - s / 2, y - s / 2, s, s}, {0, 0}, 0, c);
         }
     };
 
-    drawArmy(axPanel, impact ? nL1 : nL0, L.type, false, recoilA, flashA);
-    drawArmy(dxPanel, impact ? nR1 : nR0, R.type, true, recoilD, flashD);
+    drawArmy(axPanel, nL0, impact ? nL1 : nL0, L.type, false, recoilA, flashA);
+    drawArmy(dxPanel, nR0, impact ? nR1 : nR0, R.type, true, recoilD, flashD);
 
     // ----- surrounding hex diagrams (own unit): allied/enemy cells, plus a
     // strip of this side's participating supporters so the allied support is
@@ -1646,13 +1664,15 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
 
     // ----- wrecks: the mine's dead sprite (black splat) replaces the unit
     // sprite exactly when the destruction explosion starts, and stays on the
-    // ground for the result view.  One per unit destroyed in THIS exchange.
+    // ground for the result view.  One per unit destroyed in THIS exchange,
+    // staggered with its explosion.
     if (gVfxSplat.id && t > impactT) {
         float sw = us * 1.60f;
         float sh = sw * (float)gVfxSplat.height / (float)gVfxSplat.width;
         auto wreck = [&](Vector2* pos, int killed) {
             if (killed <= 0) return;
             for (int i = 0; i < killed; ++i) {
+                if (t < impactT + i * 0.12f) continue;
                 DrawTexturePro(gVfxSplat,
                                {0, 0, (float)gVfxSplat.width, (float)gVfxSplat.height},
                                {pos[i].x - sw * 0.5f, pos[i].y - sh * 0.5f, sw, sh},
@@ -1676,9 +1696,13 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
             const std::vector<int>& miss = gVfxMiss;
             for (int i = 0; i < count; ++i) {
                 if (i < killed && !death.empty()) {
-                    int step = std::clamp((int)(dt / gVfxDeathStep), 0, (int)death.size() - 1);
+                    // Stagger kills: the original removes the formation slots
+                    // one at a time instead of all in the same frame.
+                    float ddel = dt - i * 0.12f;
+                    if (ddel < 0.0f) continue;
+                    int step = std::clamp((int)(ddel / gVfxDeathStep), 0, (int)death.size() - 1);
                     float fadeStart = (float)death.size() * gVfxDeathStep;
-                    float alpha = 1.0f - std::clamp((dt - fadeStart) / 0.35f, 0.0f, 1.0f);
+                    float alpha = 1.0f - std::clamp((ddel - fadeStart) / 0.35f, 0.0f, 1.0f);
                     drawVfxQuad(death[step], to[i],
                                 us * 2.40f * vfxScaleFor(targetType),
                                 Fade(WHITE, alpha));
