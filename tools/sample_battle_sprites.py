@@ -96,6 +96,12 @@ def u32(va):
     return struct.unpack('<I', dm.read(h, base, va, 4))[0]
 
 
+def wr(va, data):
+    got = ctypes.c_size_t()
+    return dm.k32.WriteProcessMemory(h, ctypes.c_void_p(base + (va - 0x400000)),
+                                     data, len(data), ctypes.byref(got))
+
+
 def focus():
     fg = U32.GetForegroundWindow()
     ft = U32.GetWindowThreadProcessId(fg, None)
@@ -164,6 +170,33 @@ while time.time() - t0 < 50:
     toggle = not toggle
 print('map %.1fs' % (time.time() - t0), flush=True)
 time.sleep(3.0)
+
+# Optional type override: patch every player/enemy unit's type byte in the SoA
+# before the attack so the same scripted battle can be replayed as air-vs-ground
+# or ground-vs-air.  Args: [atk_type] [def_type] (use -1 to keep).
+ATK_TYPE = int(sys.argv[1]) if len(sys.argv) > 1 else -1
+DEF_TYPE = int(sys.argv[2]) if len(sys.argv) > 2 else -1
+if ATK_TYPE >= 0 or DEF_TYPE >= 0:
+    types = dm.read(h, base, 0x4957a0, 0x38)
+    changed = 0
+    for slot in range(0x38):
+        t = types[slot]
+        if t == 0xff:
+            continue
+        owner = t & 0x80
+        if owner == 0 and ATK_TYPE >= 0:
+            wr(0x4957a0 + slot, bytes([owner | ATK_TYPE]))
+            changed += 1
+        elif owner != 0 and DEF_TYPE >= 0:
+            wr(0x4957a0 + slot, bytes([owner | DEF_TYPE]))
+            changed += 1
+    print('patched types', changed, 'atk', ATK_TYPE, 'def', DEF_TYPE, flush=True)
+    time.sleep(0.3)
+
+if len(sys.argv) > 3:
+    OUT = os.path.join(ROOT, 'dump', 'battle_sprites_mem_' + sys.argv[3])
+os.makedirs(os.path.join(OUT, 'frames'), exist_ok=True)
+
 for _ in range(22):
     tap(LEFT, gap=0.08)
 for _ in range(22):

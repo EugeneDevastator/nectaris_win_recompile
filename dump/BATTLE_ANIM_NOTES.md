@@ -55,8 +55,10 @@ Each 64x64 battle unit is four consecutive 16x16 sprite ids, so a unit group is
 ~50 Hz; `tools/track_battle_sprites.py` prints the per-frame group origins.
 The capture in `dump/battle_sprites_mem/frames` (306 samples) shows:
 
-* Entry is a **horizontal slide at a fixed row**: one coordinate ramps while
-  the other stays constant (e.g. `p3/s124` x 254 -> 196, row 84).
+* Entry direction depends on the unit class: ground units slide in
+  horizontally at a fixed row; aircraft rise/descend vertically from the panel
+  edge with a diagonal drift; bikes use a shallow diagonal.  The per-group
+  classification is printed by `tools/classify_entry.py`.
 * Units are staggered (first group around sample 42, last around sample 60;
   formation complete near sample 130).
 * The formation is drawn in **perspective**: the game uses separate scaled
