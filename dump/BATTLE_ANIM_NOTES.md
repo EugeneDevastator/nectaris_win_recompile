@@ -110,22 +110,22 @@ ranged setup (move the attacker's SoA cell two hexes away); the sampler's
 distance argument exists but the scripted attack menu does not yet confirm a
 ranged target, so they still fall back to the class curves.
 
-## Aircraft animation (FX-1 capture, applied to all air units)
+## Aircraft animation (validated capture)
 
-A dedicated plane-only battle (`python tools/sample_battle_sprites.py 1 1 planes`)
-was captured and analysed:
+A plane-only battle (`python tools/sample_battle_sprites.py 1 1 planes`) was
+captured and re-checked with `tools/overlay_queue.py` and
+`tools/overlay_screen_paths.py`, which draw the queue trajectories over the
+captured frame.  The lines show:
 
-* **appearance**: aircraft descend from **above the panel** — the queue start
-  offset is ≈ `+15, -35` queue units (small lateral drift, large vertical drop),
-  then they settle into the formation slot.
-* **idle**: once parked the position is essentially static; the capture shows
-  only a ±1–2 unit bob.
-* **attack**: during the firing window the planes strafe forward by ≈25 queue
-  units (toward the enemy) and dip slightly, then return.
+* aircraft enter **horizontally at their slot row**, like ground units; the
+  earlier "vertical entry" impression came from their slots being near the top
+  of the panel, not from a different path,
+* after parking they are static (no hover animation),
+* no firing motion was captured — the attack phase only spawns effect sprites,
+  so no attack lunge/hover is applied in the port.
 
-The port applies this to every `airborne()` unit: vertical entry from above,
-a small hover bob, and the attack lunge.  The battle scene is also clipped to
-the two panels so aircraft entering from above never draw over the name bar.
+The port therefore uses the same type/terrain entry curves for air units and
+only clips the battle scene to the panels.
 
 
 

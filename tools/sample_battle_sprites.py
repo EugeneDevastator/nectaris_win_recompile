@@ -251,7 +251,7 @@ nxt_key = t1 + 1.0
 while time.time() - t1 < 9.0:
     q = read_queue()
     json.dump(q, open(os.path.join(OUT, 'frames', 'f%04d.json' % idx), 'w'))
-    if idx % 8 == 0:
+    if idx % 8 == 0 or os.environ.get('SAVE_ALL'):
         frame_rgb().save(os.path.join(OUT, 'frames', 'f%04d.png' % idx))
     idx += 1
     if time.time() >= nxt_key:
