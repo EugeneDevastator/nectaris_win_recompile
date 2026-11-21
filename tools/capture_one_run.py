@@ -247,7 +247,7 @@ def main():
                     y, x = struct.unpack_from('<HH', e, 0)
                     if x == 0 and y == 0:
                         continue
-                    entries.append([bank, x, y, e[4], e[5] | (e[7] << 8)])
+                    entries.append([bank, x, y, e[4], e[5] | (e[7] << 8), i])
             frames.append({'t': ts, 'e': entries})
         with open(path, 'w', encoding='utf-8') as f:
             json.dump({'atk': args.atk, 'def': args.dfn, 'frames': frames}, f)

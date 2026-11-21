@@ -1515,52 +1515,42 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
             (unsigned char)flash.a
         };
         Rectangle src = {0, 0, (float)bt.width, (float)bt.height};
-        // Measured entry: units appear within ~0.4 s of each other and take
-        // roughly 1.3-1.8 s to slide into their slot.
-        const float dur = 1.30f;
+        // Measured from the per-frame sprite-queue capture
+        // (dump/one_run/slotrun.json, tools/two_paths_shape.py): every slot is a
+        // horizontal slide at a fixed row; the motion is linear with only a
+        // short ease-out.  The first slot travels for ~2.0 s and later slots
+        // start later but all settle just before the firing phase.
+        const float arriveT = 2.02f;
+        const float stagger = 0.12f;
         for (int i = 0; i < count0; ++i) {
             if (i >= count1) {
                 float death = impactT + (i - count1) * 0.12f;
                 if (t >= death) continue;      // slot already exploded
             }
-            float start = 0.08f + i * 0.09f;
+            float start = 0.06f + i * stagger;
             if (t < start) continue;
+            float dur = std::max(0.30f, arriveT - start);
             float k = std::clamp((t - start) / dur, 0.0f, 1.0f);
-            float ease = 1.0f - (1.0f - k) * (1.0f - k);
+            float ease = k;
+            if (k > 0.82f) {
+                float u = (k - 0.82f) / 0.18f;
+                ease = 0.82f + (1.0f - (1.0f - u) * (1.0f - u)) * 0.18f;
+            }
             float sx = mirror ? (1.0f - FORM[i][0]) : FORM[i][0];
             Vector2 dest = panelPoint(px, sx, FORM[i][1]);
             // Rear slots (smaller panel y) sit farther away and are smaller.
             float depth = std::clamp((FORM[i][1] - 0.30f) / 0.55f, 0.0f, 1.0f);
             float slotScale = 0.62f + 0.45f * depth;
-            // Entry path from the queue-derived asset: start and mid control
-            // points around the final slot, applied as a quadratic curve.
-            const UnitType& utype = gTypes[type];
-            const char* cls = utype.airborne() ? "air"
-                            : (utype.moveClass == 2 ? "bike" : "ground");
-            int sideTerrain = mirror ? v.right.terrain : v.left.terrain;
-            float sdx = 0.0f, sdy = 0.0f, mdx = 0.0f, mdy = 0.0f;
-            auto pit = gEntryPaths.find("t" + std::to_string(type) + "_" +
-                                        std::to_string(sideTerrain));
-            if (pit == gEntryPaths.end())
-                pit = gEntryPaths.find("t" + std::to_string(type));
-            if (pit == gEntryPaths.end()) pit = gEntryPaths.find(cls);
-            if (pit != gEntryPaths.end()) {
-                sdx = pit->second.start[0]; sdy = pit->second.start[1];
-                mdx = pit->second.mid[0];   mdy = pit->second.mid[1];
-            }
-            const float unitPx = panW / 128.0f;   // queue units -> panel pixels
-            const float xSign = mirror ? 1.0f : -1.0f;
-            const float ySign = mirror ? -1.0f : 1.0f;
-            // Units enter from behind the screen edge, not from inside the
-            // panel: start just outside the panel and keep the measured
-            // vertical drift from the capture.
-            float psx = mirror ? (playX + playW + us) : (playX - us);
-            float psy = dest.y + ySign * sdy * unitPx;
-            float pmx = dest.x + (psx - dest.x) * 0.55f;
-            float pmy = dest.y + (psy - dest.y) * 0.55f;
-            float u = 1.0f - ease;
-            float x = u * u * psx + 2.0f * u * ease * pmx + ease * ease * dest.x;
-            float y = u * u * psy + 2.0f * u * ease * pmy + ease * ease * dest.y;
+            // Units enter from behind the panel edge along the panel's depth
+            // axis: mostly horizontal with a shallow downward drift (the
+            // capture shows ~0.4 of vertical per horizontal).  Later slots
+            // start closer so the line speed stays roughly constant, matching
+            // the measured simultaneous arrival.
+            float travel = panW * 0.55f * (dur / arriveT);
+            float psx = mirror ? (dest.x + travel) : (dest.x - travel);
+            float psy = dest.y - travel * 0.38f;
+            float x = psx + (dest.x - psx) * ease;
+            float y = psy + (dest.y - psy) * ease;
             x += nudge;
             float s = us * 1.3f * (bt.width / 32.0f) * slotScale;
             DrawTexturePro(bt, src, {x - s / 2, y - s / 2, s, s}, {0, 0}, 0, c);

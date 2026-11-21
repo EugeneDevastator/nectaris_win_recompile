@@ -48,24 +48,28 @@ u16 palette/flags   (bit 0x40 = add 0x200 sprite base, bit 0x80 = flip)
 u16 sprite          (high byte + 0x40 base, low bits select the size path)
 ```
 
-Each 64x64 battle unit is four consecutive 16x16 sprite ids, so a unit group is
-`(palette, sprite & ~3)` and its origin is the minimum x/y of the four chunks.
+Each 64x64 battle unit is four consecutive 16x16 sprite ids on a 16-unit
+grid.  **Several units share the same sprite base**, so grouping by
+`(palette, sprite & ~3)` merges them; group the four chunks by position
+instead (e.g. `tools/two_paths_shape.py`).
 
-`tools/sample_battle_sprites.py` captures this queue from the running game at
-~50 Hz; `tools/track_battle_sprites.py` prints the per-frame group origins.
-The capture in `dump/battle_sprites_mem/frames` (306 samples) shows:
+`tools/capture_one_run.py` records every distinct queue snapshot (one per game
+frame, ~50 Hz including the bank flip) into `dump/one_run/<tag>.json` together
+with the matching framebuffer.  `tools/two_paths_shape.py` tracks one unit per
+side:
 
-* Entry direction depends on the unit class: ground units slide in
-  horizontally at a fixed row; aircraft rise/descend vertically from the panel
-  edge with a diagonal drift; bikes use a shallow diagonal.  The per-group
-  classification is printed by `tools/classify_entry.py`.
-* Units are staggered (first group around sample 42, last around sample 60;
-  formation complete near sample 130).
-* The formation is drawn in **perspective**: the game uses separate scaled
-  sprite variants per depth row (front rows ~1.8x the rear rows in the frames).
+* Entry is a **horizontal slide at a fixed row** in queue space; on screen the
+  perspective projection adds a shallow downward drift (~0.4 vertical per
+  horizontal), so units enter from behind the top-outer corner of their panel.
+* Motion is essentially **linear**, with a short ease-out over the final ~15%.
+* All slots **arrive together**: the first slot starts at t≈0 and travels for
+  ~2.2 s, later slots start up to ~1.9 s later and travel proportionally less.
+* Both sides use the same curve shape, so the port drives both panels from one
+  entry model (`port/src/main.cpp`, `arriveT = 2.02 s`, `stagger = 0.12 s`).
+* Units are staggered, and the formation is drawn in **perspective** (front
+  rows use larger sprite variants).
 * After entry the unit positions are **completely static** through the attack.
-  The groups that keep moving are effect/projectile sprites (palette 5/69),
-  not units.
+  The groups that keep moving are effect/projectile sprites, not units.
 * No unit dodge or aircraft spin appears in this recording.
 
 ## Damage
