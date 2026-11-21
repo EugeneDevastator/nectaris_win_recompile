@@ -30,6 +30,7 @@ def main():
             out[side].append({'slot': [round(u, 4), round(v, 4)],
                               'sprite': -1,
                               'sprite_end': -1,
+                              'flip': -1,
                               'scale': 1.0})
         out[side].sort(key=lambda t: (t['slot'][0], t['slot'][1]))
     dst = os.path.join(ROOT, 'assets', 'data', 'combat_perspective.json')

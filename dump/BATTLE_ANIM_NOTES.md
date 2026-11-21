@@ -117,6 +117,11 @@ Measured with `dump/object_runs/objraw.json`:
   SE). Set a fixed index (0-5) to pin a direction.
 * `sprite_end` — optional frame once the slot has settled (`-1` keeps the
   entry frame). Useful to force the original's fixed facing after arrival.
+* `flip` — `-1` (default) mirrors the sprite automatically when the unit moves
+  left; `0`/`1` force the unflipped/flipped orientation. The impostor sheets
+  only contain the forward/right-facing angles, so every leftward-facing pose
+  is the same frame drawn horizontally mirrored (this is what keeps the right
+  panel's units pointing at the player).
 * `scale` — multiplier on the depth-based scale (`1.0` = measured default).
   Perspective is applied **during the movement**: the sprite size follows the
   unit's current depth row, so it grows/shrinks along the recorded path.

@@ -99,6 +99,7 @@ struct PerspSlot {
     Vector2 slot = {0, 0};
     int sprite = -1;      // -1 = auto direction from movement, else frame index
     int spriteEnd = -1;   // optional frame once settled (-1 = keep the entry one)
+    int flip = -1;        // -1 = auto from movement, 0/1 = force
     float scale = 1.0f;   // multiplier on the depth-based scale
 };
 static std::map<std::string, std::vector<PerspSlot>> gPersp;
@@ -108,18 +109,23 @@ static float gEntrySpeed = 1.0f;
 static std::vector<Texture2D> gUnitFrameTex[24][2];
 static bool gUnitFrameLoaded[24][2] = {};
 
-// Hex direction order of the unit frames: 0=E, 1=NE, 2=NW, 3=W, 4=SW, 5=SE.
-static int directionFrame(float dx, float dy, int count) {
+// Hex direction order of the unit frames: 0=E, 1=NE, 2=N, 5=SE.  The sheet only
+// contains the forward/right-facing angles, so left-facing movement uses the
+// mirrored frame with flip=true and the sprite is drawn horizontally mirrored.
+static int directionFrame(float dx, float dy, int count, bool& flip) {
+    flip = false;
     if (count <= 0) return 0;
+    if (dx < 0.0f) {
+        dx = -dx;
+        flip = true;
+    }
     float ax = std::fabs(dx), ay = std::fabs(dy);
-    if (ax < 1e-4f && ay < 1e-4f) return std::min(3, count - 1);
+    if (ax < 1e-4f && ay < 1e-4f) return 0;
     int idx;
-    if (ay > ax * 1.6f) {
-        idx = (dy < 0) ? 2 : 4;
-    } else if (dx >= 0) {
-        idx = (dy < -ax * 0.4f) ? 1 : (dy > ax * 0.4f ? 5 : 0);
+    if (ay > ax * 1.2f) {
+        idx = (dy < 0) ? 2 : 1;          // steep: front / down
     } else {
-        idx = (dy < -ax * 0.4f) ? 2 : (dy > ax * 0.4f ? 4 : 3);
+        idx = 0;                          // horizontal / shallow diagonal
     }
     return std::clamp(idx, 0, count - 1);
 }
@@ -388,6 +394,7 @@ static void loadData() {
                     p.slot = {r["slot"][0].get<float>(), r["slot"][1].get<float>()};
                 p.sprite = r.value("sprite", -1);
                 p.spriteEnd = r.value("sprite_end", -1);
+                p.flip = r.value("flip", -1);
                 p.scale = r.value("scale", 1.0f);
                 gPersp[side].push_back(p);
             }
@@ -1677,6 +1684,7 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
             }
             Vector2 slotUv, posUv;
             bool settled = true;
+            bool autoFlip = false;
             int autoDir = std::min(3, std::max(0, frameCount - 1));
             if (!curves.empty()) {
                 const EntryCurve& cv = curves[std::min<int>(i, (int)curves.size() - 1)];
@@ -1686,7 +1694,7 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
                 settled = (local * speed >= cv.duration * speed);
                 Vector2 before;
                 curveAt(cv, std::max(0.0f, local - 0.10f), before);
-                autoDir = directionFrame(posUv.x - before.x, posUv.y - before.y, frameCount);
+                autoDir = directionFrame(posUv.x - before.x, posUv.y - before.y, frameCount, autoFlip);
             } else {
                 float sx = mirror ? (1.0f - FORM[i][0]) : FORM[i][0];
                 slotUv = {sx, FORM[i][1]};
@@ -1694,13 +1702,14 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
             }
             // Perspective/sprite settings are user-editable per slot; a slot
             // edit also shifts the whole recorded path by the same delta.
-            int sprite = autoDir, spriteEnd = -1;
+            int sprite = autoDir, spriteEnd = -1, flipMode = -1;
             float scaleMul = 1.0f;
             Vector2 delta = {0, 0};
             if (!persp.empty()) {
                 const PerspSlot& ps = persp[std::min<int>(i, (int)persp.size() - 1)];
                 if (ps.sprite >= 0) sprite = ps.sprite;
                 spriteEnd = ps.spriteEnd;
+                flipMode = ps.flip;
                 scaleMul = ps.scale;
                 delta = {ps.slot.x - slotUv.x, ps.slot.y - slotUv.y};
                 slotUv = ps.slot;
@@ -1716,6 +1725,11 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
             Texture2D* tex = combatUnitTexture(type, useFrames ? sprite : -1, mirror);
             if (!tex || !tex->id) tex = baseTex;
             Rectangle src = {0, 0, (float)tex->width, (float)tex->height};
+            // The impostor sheet only has the forward/right-facing angles;
+            // left-facing motion mirrors it horizontally.
+            bool drawFlip = (flipMode < 0) ? autoFlip : (flipMode != 0);
+            if (useFrames && drawFlip)
+                src = {(float)tex->width, 0, -(float)tex->width, (float)tex->height};
             Vector2 dest = panelPoint(px, posUv.x, posUv.y);
             if (useFrames) {
                 // Directional frames are cropped to their opaque bounds; draw

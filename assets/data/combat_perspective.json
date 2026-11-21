@@ -8,6 +8,7 @@
    ],
    "sprite": -1,
    "sprite_end": -1,
+   "flip": -1,
    "scale": 1.0
   },
   {
@@ -17,6 +18,7 @@
    ],
    "sprite": -1,
    "sprite_end": -1,
+   "flip": -1,
    "scale": 1.0
   },
   {
@@ -26,6 +28,7 @@
    ],
    "sprite": -1,
    "sprite_end": -1,
+   "flip": -1,
    "scale": 1.0
   },
   {
@@ -35,6 +38,7 @@
    ],
    "sprite": -1,
    "sprite_end": -1,
+   "flip": -1,
    "scale": 1.0
   },
   {
@@ -44,6 +48,7 @@
    ],
    "sprite": -1,
    "sprite_end": -1,
+   "flip": -1,
    "scale": 1.0
   },
   {
@@ -53,6 +58,7 @@
    ],
    "sprite": -1,
    "sprite_end": -1,
+   "flip": -1,
    "scale": 1.0
   },
   {
@@ -62,6 +68,7 @@
    ],
    "sprite": -1,
    "sprite_end": -1,
+   "flip": -1,
    "scale": 1.0
   },
   {
@@ -71,6 +78,7 @@
    ],
    "sprite": -1,
    "sprite_end": -1,
+   "flip": -1,
    "scale": 1.0
   }
  ],
@@ -82,6 +90,7 @@
    ],
    "sprite": -1,
    "sprite_end": -1,
+   "flip": -1,
    "scale": 1.0
   },
   {
@@ -91,6 +100,7 @@
    ],
    "sprite": -1,
    "sprite_end": -1,
+   "flip": -1,
    "scale": 1.0
   },
   {
@@ -100,6 +110,7 @@
    ],
    "sprite": -1,
    "sprite_end": -1,
+   "flip": -1,
    "scale": 1.0
   },
   {
@@ -109,6 +120,7 @@
    ],
    "sprite": -1,
    "sprite_end": -1,
+   "flip": -1,
    "scale": 1.0
   },
   {
@@ -118,6 +130,7 @@
    ],
    "sprite": -1,
    "sprite_end": -1,
+   "flip": -1,
    "scale": 1.0
   },
   {
@@ -127,6 +140,7 @@
    ],
    "sprite": -1,
    "sprite_end": -1,
+   "flip": -1,
    "scale": 1.0
   }
  ]
