@@ -30,27 +30,41 @@ tilemap; the cycle makes them flash/brighten.
 `0x416460` is the alternate (post-impact) driver: it sets the frame counter to
 7 and runs the same 8-step palette cycle.
 
-## Formation and entry (from captured frames)
+## Formation and entry (decoded from live memory)
 
-Tracking sprite blobs per frame (`tools/track_battle.py`, left panel of a 6-unit
-S-61 squad, panel-local 256x256 coordinates):
+The battle renderer keeps its sprite list in a fixed queue:
 
-| blob centre | size | note |
-|---|---|---|
-| 72, 26 | 28x20 | rear row, smallest |
-| 114, 34 | 28x20 | rear row |
-| 170, 56 | 46x42 | middle |
-| 73, 106 | 46x36 | middle |
-| 112, 147 | 50x38 | front row, largest |
-| 32, 153 | 50x38 | front row |
+| address | contents |
+|---|---|
+| `0x4836f0` | bank 0: 256 entries x 8 bytes |
+| `0x483ef0` | bank 1: same layout |
 
-* The formation is drawn in **perspective**: front rows are ~1.8x larger than
-  the rear rows (50 px vs 28 px).
-* Slots sit on a diagonal: rear row shifted right, front row shifted left.
-* Units enter **staggered from the outer edge** of their panel (left army from
-  the left edge, right army from the right edge) and slide to their slot.
-* Aircraft enter **diagonally from above the outer corner** (seen in
-  `dump/unit_vfx/t09_d01`, right panel), not horizontally.
+Entry layout (consumer at `0x4124d8`):
+
+```
+u16 x  -> screen X = (x + viewport_offset) * 2 - 32
+u16 y  -> screen Y = y * 2 - 32
+u16 palette/flags   (bit 0x40 = add 0x200 sprite base, bit 0x80 = flip)
+u16 sprite          (high byte + 0x40 base, low bits select the size path)
+```
+
+Each 64x64 battle unit is four consecutive 16x16 sprite ids, so a unit group is
+`(palette, sprite & ~3)` and its origin is the minimum x/y of the four chunks.
+
+`tools/sample_battle_sprites.py` captures this queue from the running game at
+~50 Hz; `tools/track_battle_sprites.py` prints the per-frame group origins.
+The capture in `dump/battle_sprites_mem/frames` (306 samples) shows:
+
+* Entry is a **horizontal slide at a fixed row**: one coordinate ramps while
+  the other stays constant (e.g. `p3/s124` x 254 -> 196, row 84).
+* Units are staggered (first group around sample 42, last around sample 60;
+  formation complete near sample 130).
+* The formation is drawn in **perspective**: the game uses separate scaled
+  sprite variants per depth row (front rows ~1.8x the rear rows in the frames).
+* After entry the unit positions are **completely static** through the attack.
+  The groups that keep moving are effect/projectile sprites (palette 5/69),
+  not units.
+* No unit dodge or aircraft spin appears in this recording.
 
 ## Damage
 
@@ -61,16 +75,14 @@ S-61 squad, panel-local 256x256 coordinates):
 
 ## Not confirmed
 
-The unit-motion VM (`0x407e50` / `0x42af30` script table) is what would drive
-scripted spins/dodges if a particular scene uses them.  The captured PC battles
-show only edge entry + palette cycling + staggered destruction, so a full
-"spin/dodge" set is not in these recordings; the VM opcode set is still
-undecoded.  `tools/track_battle.py` can be pointed at new captures to check
-other scenarios (ranged, air attacker, specific terrain pairs).
+Scripted spins/dodges, if any scene uses them, would come from the unit-motion
+VM (`0x407e50` / script table `0x42af30`), which is still undecoded.  The
+memory sampler can be pointed at other scenarios (ranged, air attacker) to
+check their queues directly.
 
 ## Port implementation
 
 * per-slot perspective scale (`0.62 + 0.45 * depth`)
-* aircraft dive in from above the outer corner, ground units slide in
+* horizontal roll-in at a fixed row (matches the queue dumps)
 * staggered kill removal and staggered explosions/splats
 * palette-style damage flash only on the side that lost HP

@@ -1474,7 +1474,6 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
         };
         Rectangle src = {0, 0, (float)bt.width, (float)bt.height};
         const float dur = 0.70f;
-        const bool air = gTypes[type].airborne();
         for (int i = 0; i < count0; ++i) {
             if (i >= count1) {
                 float death = impactT + (i - count1) * 0.12f;
@@ -1490,17 +1489,11 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
             // Rear slots (smaller panel y) sit farther away and are smaller.
             float depth = std::clamp((FORM[i][1] - 0.30f) / 0.55f, 0.0f, 1.0f);
             float slotScale = 0.62f + 0.45f * depth;
-            // Ground units roll in horizontally; aircraft dive in from above
-            // the outer corner.
+            // Memory dumps show a horizontal slide at a fixed row for every
+            // unit class (left army from the left edge, right from the right).
             float startX = mirror ? (float)W + us : -(float)us;
-            float startY = dest.y;
-            if (air) {
-                startX = mirror ? (float)W + us * 0.4f : -(float)us * 0.4f;
-                startY = panY - us * 1.1f;
-            }
             float x = startX + (dest.x - startX) * ease;
-            float y = startY + (dest.y - startY) * ease;
-            if (!air) y += std::sin(k * 3.14159f * 2.0f) * us * 0.05f;
+            float y = dest.y + std::sin(k * 3.14159f * 2.0f) * us * 0.05f;
             x += nudge;
             float s = us * 1.3f * (bt.width / 32.0f) * slotScale;
             DrawTexturePro(bt, src, {x - s / 2, y - s / 2, s, s}, {0, 0}, 0, c);

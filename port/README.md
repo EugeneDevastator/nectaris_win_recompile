@@ -373,8 +373,8 @@ Every resolved attack switches to a battle screen modeled on the original:
 * **ride-in**: units roll in from their panel's outer edge to their staggered
   2×4 formation slots at the original `0.05 + i×0.235 s` beats.  Slots use a
   perspective scale (rear rows ~0.62×, front rows ~1.07×, matching the captured
-  original), ground units slide in horizontally while aircraft dive in from
-  above the outer corner.
+  original).  Memory dumps of the sprite queue confirm a horizontal slide at a
+  fixed row for every unit class.
 * **simultaneous fire**: both sides fire at once, using `vfx_00` cell (0,0)
   (the right-pointing missile) for every projectile and full-size `vfx_07`
   with a fade-out for every explosion. The killed vehicle slots (`finalCount ..
