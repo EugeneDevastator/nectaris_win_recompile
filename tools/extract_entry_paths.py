@@ -28,26 +28,37 @@ DEFAULT_DIRS = [
 
 
 def groups(path, bank=0):
-    frames = sorted(glob.glob(os.path.join(path, 'f*.json')))
-    series = {}
-    for i, f in enumerate(frames):
-        try:
-            entries = json.load(open(f))
-        except Exception:
-            continue
-        by = {}
-        for e in entries:
-            if e['bank'] != bank or (e['x'] == 0 and e['y'] == 0):
+    qpath = os.path.join(path, 'queue.jsonl')
+    frames = []
+    if os.path.exists(qpath):
+        with open(qpath, encoding='utf-8') as f:
+            for line in f:
+                try:
+                    raw = json.loads(line)
+                except Exception:
+                    continue
+                frames.append([(e[0], e[1], e[2], e[3], e[4]) for e in raw])
+    else:
+        for p in sorted(glob.glob(os.path.join(path, 'f*.json'))):
+            try:
+                entries = json.load(open(p))
+            except Exception:
                 continue
-            key = (e['pal'], e['sprite'] & ~3)
+            frames.append([(e['bank'], e['x'], e['y'], e['pal'], e['sprite']) for e in entries])
+    series = {}
+    for i, entries in enumerate(frames):
+        by = {}
+        for bank_id, x, y, pal, sprite in entries:
+            if bank_id != bank or (x == 0 and y == 0):
+                continue
+            key = (pal, sprite & ~3)
             g = by.setdefault(key, {'x': [], 'y': []})
-            g['x'].append(e['x'])
-            g['y'].append(e['y'])
+            g['x'].append(y)   # screen Y
+            g['y'].append(x)   # screen X
         for k, g in by.items():
             if len(g['x']) < 4:
                 continue
-            # e['x'] is screen Y, e['y'] is screen X (blitter fields are x,y,pal,sprite)
-            series.setdefault(k, []).append((i, min(g['y']), min(g['x'])))
+            series.setdefault(k, []).append((i, min(g['x']), min(g['y'])))
     return series
 
 
@@ -63,12 +74,17 @@ def settle_index(pts, stable=4):
 
 
 def main():
-    dirs = sys.argv[1:] or DEFAULT_DIRS
+    if sys.argv[1:]:
+        dirs = sys.argv[1:]
+    else:
+        dirs = [d for d in DEFAULT_DIRS if os.path.isdir(os.path.join(ROOT, d))]
+        dirs += sorted(glob.glob(os.path.join(ROOT, 'dump', 'battle_matrix', 'jobs', '*')))
     out = {}
     for d in dirs:
         path = os.path.join(ROOT, d) if not os.path.isabs(d) else d
         series = groups(path)
-        name = os.path.basename(os.path.dirname(path))
+        base = os.path.basename(path.rstrip('/\\'))
+        name = os.path.basename(os.path.dirname(path.rstrip('/\\'))) if base == 'frames' else base
         entries = []
         for k, pts in sorted(series.items()):
             end_i = settle_index(pts)

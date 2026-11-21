@@ -298,6 +298,10 @@ static void loadData() {
             for (auto it = ej["types"].begin(); it != ej["types"].end(); ++it)
                 gEntryPaths["t" + it.key()] = readPath(it.value());
         }
+        if (ej.contains("terrain_types")) {
+            for (auto it = ej["terrain_types"].begin(); it != ej["terrain_types"].end(); ++it)
+                gEntryPaths["t" + it.key()] = readPath(it.value());
+        }
     }
 }
 
@@ -1530,8 +1534,12 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
             const UnitType& utype = gTypes[type];
             const char* cls = utype.airborne() ? "air"
                             : (utype.moveClass == 2 ? "bike" : "ground");
+            int sideTerrain = mirror ? v.right.terrain : v.left.terrain;
             float sdx = 0.0f, sdy = 0.0f, mdx = 0.0f, mdy = 0.0f;
-            auto pit = gEntryPaths.find("t" + std::to_string(type));
+            auto pit = gEntryPaths.find("t" + std::to_string(type) + "_" +
+                                        std::to_string(sideTerrain));
+            if (pit == gEntryPaths.end())
+                pit = gEntryPaths.find("t" + std::to_string(type));
             if (pit == gEntryPaths.end()) pit = gEntryPaths.find(cls);
             if (pit != gEntryPaths.end()) {
                 sdx = pit->second.start[0]; sdy = pit->second.start[1];

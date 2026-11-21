@@ -8,12 +8,14 @@ wide, so the port maps them with `offset_px = units * panel_size / 128`.
 """
 import json
 import os
+import re
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 SRC = os.path.join(ROOT, 'dump', 'entry_paths.json')
 DST = os.path.join(ROOT, 'assets', 'data', 'combat_entry_paths.json')
 
-# capture dir -> (left/attacker type, right/defender type)
+# capture dir -> (left/attacker type, right/defender type); matrix captures
+# encode type/terrain in the directory name and are parsed below.
 CAPTURE_TYPES = {
     'battle_sprites_mem': (4, 6),
     'battle_sprites_mem_air': (2, 6),
@@ -25,6 +27,7 @@ CAPTURE_TYPES = {
     'battle_sprites_mem_t19': (19, 6),
     'battle_sprites_mem_t5': (5, 6),
 }
+MATRIX_RE = re.compile(r'^a(\d+)_d(\d+)_t(\d+)$')
 EFFECT_PALS = {5, 69, 65}
 
 
@@ -49,8 +52,15 @@ def main():
     data = json.load(open(SRC, encoding='utf-8'))
     per_type = {}
     class_acc = {}
+    per_terrain = {}
     for cap, entries in data.items():
-        types = CAPTURE_TYPES.get(cap)
+        m = MATRIX_RE.match(cap)
+        if m:
+            atk_t, def_t, terr = int(m.group(1)), int(m.group(2)), int(m.group(3))
+            types = (atk_t, def_t)
+        else:
+            types = CAPTURE_TYPES.get(cap)
+            terr = 0
         if not types:
             continue
         for e in entries:
@@ -65,6 +75,13 @@ def main():
             a['sy'].append(abs(start[2]))
             a['mx'].append(abs(mid[1]))
             a['my'].append(abs(mid[2]))
+            if terr:
+                k = (utype, terr)
+                a = per_terrain.setdefault(k, {'sx': [], 'sy': [], 'mx': [], 'my': []})
+                a['sx'].append(abs(start[1]))
+                a['sy'].append(abs(start[2]))
+                a['mx'].append(abs(mid[1]))
+                a['my'].append(abs(mid[2]))
             # class fallback buckets
             cls = 'air' if utype in (1, 2, 3, 22) else ('bike' if utype == 20 else 'ground')
             b = class_acc.setdefault(cls, {'sx': [], 'sy': [], 'mx': [], 'my': []})
@@ -77,6 +94,10 @@ def main():
                           'mid': [p90(a['mx']), p90(a['my'])],
                           'end': [0, 0]}
                  for t, a in per_type.items()}
+    terrain_out = {'%d_%d' % (t, terr): {'start': [p90(a['sx']), p90(a['sy'])],
+                                         'mid': [p90(a['mx']), p90(a['my'])],
+                                         'end': [0, 0]}
+                   for (t, terr), a in per_terrain.items()}
     classes_out = {cls: {'start': [p90(a['sx']), p90(a['sy'])],
                          'mid': [p90(a['mx']), p90(a['my'])],
                          'end': [0, 0]}
@@ -90,6 +111,7 @@ def main():
                 'is 256 units); x is mirrored for the right-side army.',
         'unit_scale': 128,
         'types': types_out,
+        'terrain_types': terrain_out,
         'classes': classes_out,
     }
     with open(DST, 'w', encoding='utf-8') as f:
