@@ -192,10 +192,29 @@ def main():
         # frames are not lost
         samples = []
         stop = threading.Event()
+        frame_dir = os.path.join(OUT, args.tag + '_frames')
+        os.makedirs(frame_dir, exist_ok=True)
+
+        def save_frame(idx):
+            try:
+                pal = dm.read(h, base, 0x480f20, 4 + 256 * 4)
+                fb = dm.read_abs(h, struct.unpack('<I', dm.read(h, base, 0x480f18, 4))[0], 704 * 544)
+                from PIL import Image
+                rgb = bytearray(768)
+                for i in range(256):
+                    rgb[i * 3] = pal[4 + i * 4]
+                    rgb[i * 3 + 1] = pal[5 + i * 4]
+                    rgb[i * 3 + 2] = pal[6 + i * 4]
+                im = Image.frombytes('P', (704, 544), fb).transpose(Image.FLIP_TOP_BOTTOM).crop((32, 32, 672, 512))
+                im.putpalette(bytes(rgb))
+                im.convert('RGB').save(os.path.join(frame_dir, 'f%04d.png' % idx))
+            except Exception:
+                pass
 
         def sampler():
             last = None
             tstart = time.time()
+            idx = 0
             while not stop.is_set():
                 try:
                     q0 = dm.read(h, base, 0x4836f0, 0x800)
@@ -205,6 +224,8 @@ def main():
                 if (q0, q1) != last:
                     samples.append((round(time.time() - tstart, 4), q0, q1))
                     last = (q0, q1)
+                    save_frame(idx)
+                    idx += 1
                 time.sleep(0.001)
 
         th = threading.Thread(target=sampler, daemon=True)

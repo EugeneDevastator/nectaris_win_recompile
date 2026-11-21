@@ -1551,10 +1551,13 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
             const float unitPx = panW / 128.0f;   // queue units -> panel pixels
             const float xSign = mirror ? 1.0f : -1.0f;
             const float ySign = mirror ? -1.0f : 1.0f;
-            float psx = dest.x + xSign * sdx * unitPx;
+            // Units enter from behind the screen edge, not from inside the
+            // panel: start just outside the panel and keep the measured
+            // vertical drift from the capture.
+            float psx = mirror ? (playX + playW + us) : (playX - us);
             float psy = dest.y + ySign * sdy * unitPx;
-            float pmx = dest.x + xSign * mdx * unitPx;
-            float pmy = dest.y + ySign * mdy * unitPx;
+            float pmx = dest.x + (psx - dest.x) * 0.55f;
+            float pmy = dest.y + (psy - dest.y) * 0.55f;
             float u = 1.0f - ease;
             float x = u * u * psx + 2.0f * u * ease * pmx + ease * ease * dest.x;
             float y = u * u * psy + 2.0f * u * ease * pmy + ease * ease * dest.y;
