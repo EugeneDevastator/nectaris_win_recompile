@@ -105,26 +105,29 @@ Measured with `dump/object_runs/objraw.json`:
 {
   "speed": 1.1,                      // global entry-speed multiplier
   "left": [
-    {"slot": [0.031, 0.680], "sprite": 0, "sprite_end": -1, "scale": 1.0},
+    {"slot": [0.031, 0.680], "sprite": -1, "sprite_end": -1, "scale": 1.0},
     ...
   ],
   "right": [ ... ]
 }
 ```
 
-* `sprite` — combat sprite variant during the slide. `0` uses
-  `units/unit_XX/combat_alive.png`; `N` loads `units/unit_XX/combat_vN.png`
-  when that file exists (drop extracted variants in as plain PNGs).
-* `sprite_end` — optional variant used once the slot has settled (`-1` keeps
-  `sprite`). The original swaps pre-scaled variants as the unit moves through
-  the depth rows; use this pair to mirror the start/end variants.
+* `sprite` — directional frame to draw. `-1` = **automatic**: the frame is
+  chosen from the unit's current movement vector (hex order E, NE, NW, W, SW,
+  SE). Set a fixed index (0-5) to pin a direction.
+* `sprite_end` — optional frame once the slot has settled (`-1` keeps the
+  entry frame). Useful to force the original's fixed facing after arrival.
 * `scale` — multiplier on the depth-based scale (`1.0` = measured default).
   Perspective is applied **during the movement**: the sprite size follows the
-  unit's current depth row (`0.72 + 0.80 * panel y`), so it grows/shrinks along
-  the recorded path instead of being fixed per slot.
+  unit's current depth row, so it grows/shrinks along the recorded path.
 * `slot` — settled panel position; editing it moves the unit and its whole
   recorded path by the same offset.
 * `speed` — multiplies the playback speed of the captured entry curves.
+
+The frames themselves come from the extracted unit art streams in
+`assets/art/unit_frames/unit_XX_frame_NN_combat_blue.png` (player) and
+`..._combat_green.png` (enemy), so they are original art and are recoloured
+variants of the same source. Edit/replace those PNGs to change a pose.
 
 `tools/measure_perspective.py` regenerates the defaults from the curves (it
 overwrites the file, so keep a copy of manual edits).

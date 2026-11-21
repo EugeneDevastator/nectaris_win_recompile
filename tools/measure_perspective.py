@@ -4,10 +4,9 @@ The measured entry curves already contain each slot's settled position.  This
 tool writes assets/data/combat_perspective.json with one editable row per slot:
 
   sprite : which combat sprite variant to draw
-           (0 = combat_alive.png, N = combat_vN.png if present in the unit
-           folder, otherwise falls back to combat_alive.png)
-  scale  : sprite size multiplier (1.0 = the original 64 px sprite on a
-           256 px panel; default follows the depth row, front rows larger)
+           (-1 = automatic direction from the movement vector,
+            N = unit_frames/unit_XX_frame_NN_combat_{blue,green}.png)
+  scale  : multiplier on the depth-based scale (1.0 = measured default)
   slot   : settled panel position (informational; normally from the curves)
   speed  : global entry-speed multiplier
 
@@ -29,7 +28,8 @@ def main():
         for s in curves.get(side, []):
             u, v = s['slot']
             out[side].append({'slot': [round(u, 4), round(v, 4)],
-                              'sprite': 0,
+                              'sprite': -1,
+                              'sprite_end': -1,
                               'scale': 1.0})
         out[side].sort(key=lambda t: (t['slot'][0], t['slot'][1]))
     dst = os.path.join(ROOT, 'assets', 'data', 'combat_perspective.json')
