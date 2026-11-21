@@ -148,7 +148,8 @@ python tools/analyze_matrix.py                   # refresh motion.json
 
 * per-slot perspective scale (`0.62 + 0.45 * depth`)
 * quadratic entry curves driven by `assets/data/combat_entry_paths.json`,
-  keyed by unit type (11 types sampled) with class fallbacks
+  keyed by unit type **and terrain** (with type/class fallbacks); the glide
+  uses the measured ~1.3 s duration and 0.09 s stagger so the motion is visible
 * staggered kill removal and staggered explosions/splats
 * palette-style damage flash only on the side that lost HP
 
