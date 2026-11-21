@@ -21,6 +21,9 @@ CAPTURE_TYPES = {
     'battle_sprites_mem_t18': (18, 6),
     'battle_sprites_mem_t20': (20, 6),
     'battle_sprites_mem_t15': (15, 1),
+    'battle_sprites_mem_t3': (3, 6),
+    'battle_sprites_mem_t19': (19, 6),
+    'battle_sprites_mem_t5': (5, 6),
 }
 EFFECT_PALS = {5, 69, 65}
 

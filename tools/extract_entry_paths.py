@@ -21,6 +21,9 @@ DEFAULT_DIRS = [
     'dump/battle_sprites_mem_t18/frames',
     'dump/battle_sprites_mem_t20/frames',
     'dump/battle_sprites_mem_t15/frames',
+    'dump/battle_sprites_mem_t3/frames',
+    'dump/battle_sprites_mem_t19/frames',
+    'dump/battle_sprites_mem_t5/frames',
 ]
 
 

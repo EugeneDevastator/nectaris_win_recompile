@@ -103,17 +103,55 @@ when sampled, with class fallbacks:
 "classes": { "ground": {...}, "air": {...}, "bike": {...} }
 ```
 
-Sampled so far: types 1, 2, 4, 6, 9, 15, 18, 20 (FX-1, AX-87, T-79, S-61,
-HMB-2, AAG-4, GX-77, CBX-1) using `tools/sample_battle_sprites.py <atk> <def>
-<tag>`.  Offsets are original queue units (the blitter scales by 2; the panel
-is 256 units), so the port maps them with `offset_px = units * panelW / 128`
-and mirrors X for the right-hand army.  The renderer interpolates a quadratic
-curve through start → mid → slot, which reproduces the measured glide.
+Sampled so far: types 1, 2, 3, 4, 5, 6, 9, 15, 18, 19, 20 (FX-1, AX-87, EF-88,
+T-79, PT-6, S-61, HMB-2, AAG-4, GX-77, GX-87, CBX-1) using
+`tools/sample_battle_sprites.py <atk> <def> <tag>`.  Artillery types need a
+ranged setup (move the attacker's SoA cell two hexes away); the sampler's
+distance argument exists but the scripted attack menu does not yet confirm a
+ranged target, so they still fall back to the class curves.
+
+## Long-run capture matrix
+
+`tools/capture_battle_matrix.py` sweeps attacker type × defender type × terrain
+(grass/forest/mountain/city/road/base) through the real attack flow.  It:
+
+* builds 210 jobs (attackers that can hit the chosen defender domain),
+* patches unit types and the terrain under both units before the attack,
+* samples the sprite queue at ~50 Hz into
+  `dump/battle_matrix/jobs/<aXX_dYY_tZZ>/queue.jsonl`,
+* writes `dump/battle_matrix/state.json` after every job, so an interrupted or
+  crashed run resumes where it stopped (`--limit`, `--retries`, `--fresh`,
+  `--only` control a run).
+
+`tools/analyze_matrix.py` converts each queue into `motion.json`:
+
+```json
+{"units": [{"pal": 4, "base0": 128, "orientations": [128],
+            "samples": [{"t": 0.54, "x": 91, "y": 255, "base": 128, "orient": 0}, ...]}]}
+```
+
+`base` is the unit's four-chunk sprite base and `orient` the index of that base
+in the unit's orientation list, so each captured position can be mapped back to
+the corresponding impostor sprite variant.  In the PC captures so far the unit
+pose is constant (`orientations` has one entry); rotation variants would show
+up as extra bases.
+
+Run it for as long as you like:
+
+```powershell
+python tools/capture_battle_matrix.py            # all remaining jobs
+python tools/capture_battle_matrix.py --limit 20 # one batch
+python tools/analyze_matrix.py                   # refresh motion.json
+```
 
 ## Port implementation
 
 * per-slot perspective scale (`0.62 + 0.45 * depth`)
 * quadratic entry curves driven by `assets/data/combat_entry_paths.json`,
-  keyed by unit type (8 types sampled) with class fallbacks
+  keyed by unit type (11 types sampled) with class fallbacks
 * staggered kill removal and staggered explosions/splats
 * palette-style damage flash only on the side that lost HP
+
+Long-run capture: `tools/capture_battle_matrix.py` (resumable, 210
+type/terrain jobs) + `tools/analyze_matrix.py` (per-position motion and sprite
+orientation index for impostor mapping).

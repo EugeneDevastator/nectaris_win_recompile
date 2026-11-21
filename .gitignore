@@ -50,3 +50,5 @@ dump/unit_vfx/
 # ------------------------------------------------------------------ existing local artifacts
 _bak/
 _bak/*
+
+dump/battle_matrix/

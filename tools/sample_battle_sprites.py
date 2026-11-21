@@ -213,6 +213,34 @@ for _ in range(4):
         tap(DOWN, gap=0.14)
         if u8(0x481a71) > by:
             break
+# Optional range setup: move the first blue unit's SoA cell DIST hexes away from
+# the first green unit so artillery/ranged types can attack.  Done right before
+# the attack keys so the map icons (separate object list) are already placed.
+DIST = int(sys.argv[4]) if len(sys.argv) > 4 else 0
+if DIST > 0:
+    types = dm.read(h, base, 0x4957a0, 0x38)
+    st = dm.read(h, base, 0x495ab0, 0x38)
+    fl = dm.read(h, base, 0x495af0, 0x38)
+    atk_slot = def_slot = -1
+    for i in range(0x38):
+        t = types[i]
+        if t == 0xff:
+            continue
+        if (t & 0x80) == 0 and atk_slot < 0:
+            atk_slot = i
+        elif (t & 0x80) != 0 and def_slot < 0:
+            def_slot = i
+    if atk_slot >= 0 and def_slot >= 0:
+        dx = st[def_slot] & 0x1f
+        dy = fl[def_slot] & 0x1f
+        nx = dx + DIST if dx + DIST < 32 else dx - DIST
+        if nx < 0:
+            nx = dx
+        wr(0x495ab0 + atk_slot, bytes([(st[atk_slot] & 0xe0) | (nx & 0x1f)]))
+        wr(0x495af0 + atk_slot, bytes([(fl[atk_slot] & 0xe0) | (dy & 0x1f)]))
+        print('moved attacker slot', atk_slot, 'to', nx, dy, 'target', dx, dy, flush=True)
+        time.sleep(0.2)
+
 for vk in [SPACE, SPACE, RIGHT, RIGHT, SPACE, SPACE, RIGHT, DOWN, SPACE]:
     tap(vk, gap=0.35)
 print('battle entry', flush=True)
