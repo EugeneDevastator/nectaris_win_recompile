@@ -110,6 +110,22 @@ ranged setup (move the attacker's SoA cell two hexes away); the sampler's
 distance argument exists but the scripted attack menu does not yet confirm a
 ranged target, so they still fall back to the class curves.
 
+## Per-frame capture (`tools/capture_one_run.py`)
+
+The 50 Hz sampler can miss the fastest part of an entry.  `capture_one_run.py`
+starts a tight background sampler *before* the attack keys and records every
+distinct queue snapshot (one per game frame, ~30 fps), deduplicated, into
+`dump/one_run/<tag>.json`.  It confirmed the plane entry directly:
+
+```
+p4/s112  field-X 260 -> 256 -> 252 -> 248 ... -> 193, field-Y constant 146
+```
+
+i.e. a horizontal slide at a fixed row, ~67 queue units (≈0.5 panel width),
+easing out over ~1.5 s.  No vertical drop and no movement during the firing
+window — the firing phase only spawns effect sprites.  `tools/overlay_queue.py`
+draws these trajectories over a captured frame for visual checks.
+
 ## Aircraft animation (validated capture)
 
 A plane-only battle (`python tools/sample_battle_sprites.py 1 1 planes`) was
@@ -127,7 +143,7 @@ captured frame.  The lines show:
 The port therefore uses the same type/terrain entry curves for air units and
 only clips the battle scene to the panels.
 
-
+## Long-run capture matrix
 
 `tools/capture_battle_matrix.py` sweeps attacker type × defender type × terrain
 (grass/forest/mountain/city/road/base) through the real attack flow.  It:
