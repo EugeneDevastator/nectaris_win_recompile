@@ -157,6 +157,7 @@ def main():
     ap.add_argument('tag')
     ap.add_argument('--seconds', type=float, default=7.0)
     ap.add_argument('--frames', action='store_true')
+    ap.add_argument('--dumpbank', default=None, help='write the battle sprite bank here')
     args = ap.parse_args()
 
     hdesk = U32.CreateDesktopW(DESKTOP, None, None, 0, 0x10000000, None)
@@ -289,6 +290,19 @@ def main():
         th.start()
         for vk in [SPACE, SPACE, RIGHT, RIGHT, SPACE, SPACE, RIGHT, DOWN, SPACE]:
             tap(vk, gap=0.30)
+        if args.dumpbank:
+            time.sleep(1.2)
+            try:
+                bankptr = struct.unpack('<I', dm.read(h, base, 0x480f14, 4))[0]
+                bank = dm.read_abs(h, bankptr, 1024 * 900)
+                with open(args.dumpbank, 'wb') as bf:
+                    bf.write(bank)
+                pal = dm.read(h, base, 0x480f20, 4 + 256 * 4)
+                with open(args.dumpbank + '.pal', 'wb') as pf:
+                    pf.write(pal)
+                print('bank', hex(bankptr), '->', args.dumpbank)
+            except Exception as ex:
+                print('bank dump failed', ex)
         time.sleep(args.seconds)
         stop.set()
         th.join(timeout=2.0)

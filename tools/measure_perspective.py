@@ -28,12 +28,9 @@ def main():
     for side in ('left', 'right'):
         for s in curves.get(side, []):
             u, v = s['slot']
-            # rear rows (small v) are smaller; 1.0 = one 64 px sprite per
-            # 256 px panel.  Tune by hand if a row looks wrong.
-            scale = round(0.72 + 0.80 * v, 2)
             out[side].append({'slot': [round(u, 4), round(v, 4)],
                               'sprite': 0,
-                              'scale': scale})
+                              'scale': 1.0})
         out[side].sort(key=lambda t: (t['slot'][0], t['slot'][1]))
     dst = os.path.join(ROOT, 'assets', 'data', 'combat_perspective.json')
     json.dump(out, open(dst, 'w', encoding='utf-8'), indent=1)

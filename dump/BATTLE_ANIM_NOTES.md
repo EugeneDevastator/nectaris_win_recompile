@@ -105,19 +105,23 @@ Measured with `dump/object_runs/objraw.json`:
 {
   "speed": 1.1,                      // global entry-speed multiplier
   "left": [
-    {"slot": [0.031, 0.680], "sprite": 0, "scale": 1.26},
+    {"slot": [0.031, 0.680], "sprite": 0, "sprite_end": -1, "scale": 1.0},
     ...
   ],
   "right": [ ... ]
 }
 ```
 
-* `sprite` — combat sprite variant for that slot. `0` uses
+* `sprite` — combat sprite variant during the slide. `0` uses
   `units/unit_XX/combat_alive.png`; `N` loads `units/unit_XX/combat_vN.png`
-  when that file exists (drop extracted variants in as plain PNGs). The chosen
-  texture is scaled, never recoloured, so a wrong variant is a one-line edit.
-* `scale` — sprite size, `1.0` = the original 64 px sprite on a 256 px panel.
-  Defaults follow the measured depth row (rear smaller, front larger).
+  when that file exists (drop extracted variants in as plain PNGs).
+* `sprite_end` — optional variant used once the slot has settled (`-1` keeps
+  `sprite`). The original swaps pre-scaled variants as the unit moves through
+  the depth rows; use this pair to mirror the start/end variants.
+* `scale` — multiplier on the depth-based scale (`1.0` = measured default).
+  Perspective is applied **during the movement**: the sprite size follows the
+  unit's current depth row (`0.72 + 0.80 * panel y`), so it grows/shrinks along
+  the recorded path instead of being fixed per slot.
 * `slot` — settled panel position; editing it moves the unit and its whole
   recorded path by the same offset.
 * `speed` — multiplies the playback speed of the captured entry curves.

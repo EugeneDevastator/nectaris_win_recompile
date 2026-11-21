@@ -97,8 +97,9 @@ static std::map<std::string, std::vector<EntryCurve>> gEntryCurves;
 // entry-speed multiplier.
 struct PerspSlot {
     Vector2 slot = {0, 0};
-    int sprite = 0;
-    float scale = 1.0f;
+    int sprite = 0;       // variant during the slide
+    int spriteEnd = -1;   // optional variant once settled (-1 = same)
+    float scale = 1.0f;   // multiplier on the depth-based scale
 };
 static std::map<std::string, std::vector<PerspSlot>> gPersp;
 static float gEntrySpeed = 1.0f;
@@ -368,6 +369,7 @@ static void loadData() {
                 if (r.contains("slot") && r["slot"].size() >= 2)
                     p.slot = {r["slot"][0].get<float>(), r["slot"][1].get<float>()};
                 p.sprite = r.value("sprite", 0);
+                p.spriteEnd = r.value("sprite_end", -1);
                 p.scale = r.value("scale", 1.0f);
                 gPersp[side].push_back(p);
             }
@@ -1629,11 +1631,13 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
                 if (t >= death) continue;      // slot already exploded
             }
             Vector2 slotUv, posUv;
+            bool settled = true;
             if (!curves.empty()) {
                 const EntryCurve& cv = curves[std::min<int>(i, (int)curves.size() - 1)];
                 slotUv = cv.slot;
                 float local = (t - cv.t0) * speed;
                 float dur = cv.duration * speed;
+                settled = (local >= dur);
                 if (local <= 0.0f || cv.pts.empty()) {
                     posUv = cv.start;
                 } else if (local >= dur) {
@@ -1655,18 +1659,24 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
             }
             // Perspective/sprite settings are user-editable per slot; a slot
             // edit also shifts the whole recorded path by the same delta.
-            int sprite = 0;
-            float cfgScale = 0.72f + 0.80f * slotUv.y;
+            int sprite = 0, spriteEnd = -1;
+            float scaleMul = 1.0f;
             Vector2 delta = {0, 0};
             if (!persp.empty()) {
                 const PerspSlot& ps = persp[std::min<int>(i, (int)persp.size() - 1)];
                 sprite = ps.sprite;
-                cfgScale = ps.scale;
+                spriteEnd = ps.spriteEnd;
+                scaleMul = ps.scale;
                 delta = {ps.slot.x - slotUv.x, ps.slot.y - slotUv.y};
                 slotUv = ps.slot;
             }
             posUv.x += delta.x;
             posUv.y += delta.y;
+            // Perspective is active during the slide: the sprite scale follows
+            // the unit's current depth, not its final slot.
+            float depthNow = std::clamp(posUv.y, 0.0f, 1.0f);
+            float cfgScale = (0.72f + 0.80f * depthNow) * scaleMul;
+            if (settled && spriteEnd >= 0) sprite = spriteEnd;
             Texture2D* tex = combatUnitTexture(type, sprite, mirror);
             if (!tex || !tex->id) tex = baseTex;
             Rectangle src = {0, 0, (float)tex->width, (float)tex->height};
