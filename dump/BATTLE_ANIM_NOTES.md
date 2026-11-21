@@ -97,6 +97,34 @@ Measured with `dump/object_runs/objraw.json`:
 * The port plays these recorded curves directly; the artificial
   `arriveT/stagger` model and the quadratic curve are gone.
 
+## Editable perspective / sprite config
+
+`assets/data/combat_perspective.json` is loaded at startup (no rebuild needed):
+
+```json
+{
+  "speed": 1.1,                      // global entry-speed multiplier
+  "left": [
+    {"slot": [0.031, 0.680], "sprite": 0, "scale": 1.26},
+    ...
+  ],
+  "right": [ ... ]
+}
+```
+
+* `sprite` — combat sprite variant for that slot. `0` uses
+  `units/unit_XX/combat_alive.png`; `N` loads `units/unit_XX/combat_vN.png`
+  when that file exists (drop extracted variants in as plain PNGs). The chosen
+  texture is scaled, never recoloured, so a wrong variant is a one-line edit.
+* `scale` — sprite size, `1.0` = the original 64 px sprite on a 256 px panel.
+  Defaults follow the measured depth row (rear smaller, front larger).
+* `slot` — settled panel position; editing it moves the unit and its whole
+  recorded path by the same offset.
+* `speed` — multiplies the playback speed of the captured entry curves.
+
+`tools/measure_perspective.py` regenerates the defaults from the curves (it
+overwrites the file, so keep a copy of manual edits).
+
 ## Damage
 
 * Killed slots are removed **one at a time** over several frames (the aircraft

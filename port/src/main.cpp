@@ -92,6 +92,18 @@ struct EntryCurve {
     std::vector<Vector3> pts;   // x = time, y = u, z = v
 };
 static std::map<std::string, std::vector<EntryCurve>> gEntryCurves;
+// Editable perspective/sprite settings (assets/data/combat_perspective.json):
+// per slot: sprite variant number, scale, settled position; plus a global
+// entry-speed multiplier.
+struct PerspSlot {
+    Vector2 slot = {0, 0};
+    int sprite = 0;
+    float scale = 1.0f;
+};
+static std::map<std::string, std::vector<PerspSlot>> gPersp;
+static float gEntrySpeed = 1.0f;
+static Texture2D gUnitVariant[24][8];
+static bool gUnitVariantTried[24][8] = {};
 static CombatUnitVfx gUnitVfx[24];
 static std::vector<int> gVfxProjectile[2], gVfxMuzzle[2], gVfxHit, gVfxMiss;
 static float gVfxDeathStep = 0.09f;
@@ -338,6 +350,26 @@ static void loadData() {
                     }
                 }
                 if (!c.pts.empty()) gEntryCurves[side].push_back(c);
+            }
+        }
+    }
+
+    // Editable perspective/sprite settings.
+    gPersp.clear();
+    std::ifstream pf(gAssetDir + "data/combat_perspective.json");
+    if (pf) {
+        json pj = json::parse(pf);
+        gEntrySpeed = pj.value("speed", 1.0f);
+        if (gEntrySpeed <= 0.0f) gEntrySpeed = 1.0f;
+        for (const char* side : {"left", "right"}) {
+            if (!pj.contains(side)) continue;
+            for (const auto& r : pj[side]) {
+                PerspSlot p;
+                if (r.contains("slot") && r["slot"].size() >= 2)
+                    p.slot = {r["slot"][0].get<float>(), r["slot"][1].get<float>()};
+                p.sprite = r.value("sprite", 0);
+                p.scale = r.value("scale", 1.0f);
+                gPersp[side].push_back(p);
             }
         }
     }
@@ -1307,8 +1339,30 @@ static void drawTargetingFrame(const Mission& m, int srcX, int srcY, int type,
     EndDrawing();
 }
 
-static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D enemyTex) {
-    (void)playerTex;
+// Combat sprite texture for a unit type, optional perspective variant and side.
+// variant 0 = the extracted combat_alive sprite; N loads unit_XX/combat_vN.png
+// when present, so variants can be edited/dropped in as plain PNG files.
+static Texture2D* combatUnitTexture(int type, int variant, bool rightSide) {
+    if (type < 0 || type >= 24) return nullptr;
+    Texture2D& base = rightSide ? gUnitSprite[type] : gUnitSpriteFlip[type];
+    if (variant > 0 && variant < 8 && !gUnitVariantTried[type][variant]) {
+        gUnitVariantTried[type][variant] = true;
+        std::string p = gAssetDir + TextFormat("units/unit_%02d/combat_v%d.png", type, variant);
+        if (FileExists(p.c_str())) {
+            Image im = LoadImage(p.c_str());
+            if (im.data) {
+                if (!rightSide) ImageFlipHorizontal(&im);
+                gUnitVariant[type][variant] = LoadTextureFromImage(im);
+                UnloadImage(im);
+            }
+        }
+    }
+    if (variant > 0 && variant < 8 && gUnitVariant[type][variant].id)
+        return &gUnitVariant[type][variant];
+    return base.id ? &base : nullptr;
+}
+
+static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D enemyTex) {    (void)playerTex;
     (void)enemyTex;
     int W = GetScreenWidth(), H = GetScreenHeight();
     const Color NAVY = {0, 0, 80, 255};
@@ -1500,8 +1554,11 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
         {0.40f, 0.37f}, {0.23f, 0.34f}, {0.40f, 0.53f}, {0.19f, 0.47f},
         {0.36f, 0.72f}, {0.16f, 0.67f}, {0.31f, 0.89f}, {0.08f, 0.83f}
     };
-    // Settled slot position: measured entry curves when available, FORM otherwise.
+    // Settled slot position: editable perspective config, then measured entry
+    // curves, then FORM.
     auto slotPos = [&](bool right, int i) -> Vector2 {
+        const auto& ps = gPersp[right ? "right" : "left"];
+        if (!ps.empty()) return ps[std::min<int>(i, (int)ps.size() - 1)].slot;
         const auto& cs = gEntryCurves[right ? "right" : "left"];
         if (!cs.empty()) return cs[std::min<int>(i, (int)cs.size() - 1)].slot;
         int k = std::clamp(i, 0, 7);
@@ -1550,8 +1607,8 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
     auto drawArmy = [&](float px, int count0, int count1, int type, bool mirror,
                         float nudge, Color flash) {
         if (type < 0 || type >= 24) return;
-        Texture2D& bt = mirror ? gUnitSprite[type] : gUnitSpriteFlip[type];
-        if (!bt.id) return;
+        Texture2D* baseTex = combatUnitTexture(type, 0, mirror);
+        if (!baseTex || !baseTex->id) return;
         Color team = mirror ? Color{150, 255, 150, 255} : WHITE;
         Color c = {
             (unsigned char)(team.r * flash.r / 255),
@@ -1559,12 +1616,13 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
             (unsigned char)(team.b * flash.b / 255),
             (unsigned char)flash.a
         };
-        Rectangle src = {0, 0, (float)bt.width, (float)bt.height};
         // Entry curves captured from the live sprite-object table
         // (assets/data/combat_entry_curves.json): each slot is parked at the
         // panel edge and slides in linearly at its own start time, all slots
         // arriving together just before the firing phase.
         const auto& curves = gEntryCurves[mirror ? "right" : "left"];
+        const auto& persp = gPersp[mirror ? "right" : "left"];
+        float speed = (gEntrySpeed > 0.0f) ? gEntrySpeed : 1.0f;
         for (int i = 0; i < count0; ++i) {
             if (i >= count1) {
                 float death = impactT + (i - count1) * 0.12f;
@@ -1574,18 +1632,20 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
             if (!curves.empty()) {
                 const EntryCurve& cv = curves[std::min<int>(i, (int)curves.size() - 1)];
                 slotUv = cv.slot;
-                float local = t - cv.t0;
+                float local = (t - cv.t0) * speed;
+                float dur = cv.duration * speed;
                 if (local <= 0.0f || cv.pts.empty()) {
                     posUv = cv.start;
-                } else if (local >= cv.duration) {
+                } else if (local >= dur) {
                     posUv = cv.slot;
                 } else {
                     size_t k = 0;
-                    while (k + 1 < cv.pts.size() && cv.pts[k + 1].x < local) ++k;
+                    while (k + 1 < cv.pts.size() && cv.pts[k + 1].x * speed < local) ++k;
                     const Vector3& a = cv.pts[k];
                     const Vector3& b = cv.pts[std::min(k + 1, cv.pts.size() - 1)];
-                    float span = b.x - a.x;
-                    float f = span > 1e-6f ? (local - a.x) / span : 1.0f;
+                    float ta = a.x * speed, tb = b.x * speed;
+                    float span = tb - ta;
+                    float f = span > 1e-6f ? (local - ta) / span : 1.0f;
                     posUv = {a.y + (b.y - a.y) * f, a.z + (b.z - a.z) * f};
                 }
             } else {
@@ -1593,14 +1653,29 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
                 slotUv = {sx, FORM[i][1]};
                 posUv = slotUv;
             }
-            // Rear slots (smaller panel y) sit farther away and are smaller.
-            float depth = std::clamp((slotUv.y - 0.10f) / 0.65f, 0.0f, 1.0f);
-            float slotScale = 0.62f + 0.45f * depth;
+            // Perspective/sprite settings are user-editable per slot; a slot
+            // edit also shifts the whole recorded path by the same delta.
+            int sprite = 0;
+            float cfgScale = 0.72f + 0.80f * slotUv.y;
+            Vector2 delta = {0, 0};
+            if (!persp.empty()) {
+                const PerspSlot& ps = persp[std::min<int>(i, (int)persp.size() - 1)];
+                sprite = ps.sprite;
+                cfgScale = ps.scale;
+                delta = {ps.slot.x - slotUv.x, ps.slot.y - slotUv.y};
+                slotUv = ps.slot;
+            }
+            posUv.x += delta.x;
+            posUv.y += delta.y;
+            Texture2D* tex = combatUnitTexture(type, sprite, mirror);
+            if (!tex || !tex->id) tex = baseTex;
+            Rectangle src = {0, 0, (float)tex->width, (float)tex->height};
             Vector2 dest = panelPoint(px, posUv.x, posUv.y);
             float x = dest.x + nudge;
             float y = dest.y;
-            float s = us * 1.3f * (bt.width / 32.0f) * slotScale;
-            DrawTexturePro(bt, src, {x - s / 2, y - s / 2, s, s}, {0, 0}, 0, c);
+            // A scale of 1 draws the original 64 px sprite on a 256 px panel.
+            float s = panW * 0.25f * std::max(0.2f, cfgScale);
+            DrawTexturePro(*tex, src, {x, y, s, s}, {0, 0}, 0, c);
         }
     };
 
