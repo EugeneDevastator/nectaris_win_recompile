@@ -1508,14 +1508,15 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
             (unsigned char)flash.a
         };
         Rectangle src = {0, 0, (float)bt.width, (float)bt.height};
-        const float dur = 0.70f;
+        // Measured entry: units appear within ~0.4 s of each other and take
+        // roughly 1.3-1.8 s to slide into their slot.
+        const float dur = 1.30f;
         for (int i = 0; i < count0; ++i) {
             if (i >= count1) {
                 float death = impactT + (i - count1) * 0.12f;
                 if (t >= death) continue;      // slot already exploded
             }
-            float arrive = 0.05f + i * 0.235f;
-            float start = arrive - dur;
+            float start = 0.08f + i * 0.09f;
             if (t < start) continue;
             float k = std::clamp((t - start) / dur, 0.0f, 1.0f);
             float ease = 1.0f - (1.0f - k) * (1.0f - k);

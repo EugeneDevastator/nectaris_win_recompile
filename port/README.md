@@ -371,9 +371,11 @@ Every resolved attack switches to a battle screen modeled on the original:
   two terrain panels (the panels shrink slightly so the pair still fits the
   playfield); direct battles stay edge-to-edge.
 * **ride-in**: units roll in from their panel's outer edge to their staggered
-  2×4 formation slots at the original `0.05 + i×0.235 s` beats.  Slots use a
-  perspective scale (rear rows ~0.62×, front rows ~1.07×, matching the captured
-  original).  Entry curves come from the queue-derived control points in
+  2×4 formation slots.  The memory captures put each entry at ~1.3–1.8 s with a
+  small stagger, so the port now uses a 1.3 s glide with 0.09 s steps (the old
+  0.7 s entry finished almost instantly).  Slots use a perspective scale (rear
+  rows ~0.62×, front rows ~1.07×, matching the captured original).  Entry
+  curves come from the queue-derived control points in
   `assets/data/combat_entry_paths.json`, keyed by unit type with class
   fallbacks, so each unit has its own measured start/mid offsets.
 * **simultaneous fire**: both sides fire at once, using `vfx_00` cell (0,0)
