@@ -110,7 +110,24 @@ ranged setup (move the attacker's SoA cell two hexes away); the sampler's
 distance argument exists but the scripted attack menu does not yet confirm a
 ranged target, so they still fall back to the class curves.
 
-## Long-run capture matrix
+## Aircraft animation (FX-1 capture, applied to all air units)
+
+A dedicated plane-only battle (`python tools/sample_battle_sprites.py 1 1 planes`)
+was captured and analysed:
+
+* **appearance**: aircraft descend from **above the panel** — the queue start
+  offset is ≈ `+15, -35` queue units (small lateral drift, large vertical drop),
+  then they settle into the formation slot.
+* **idle**: once parked the position is essentially static; the capture shows
+  only a ±1–2 unit bob.
+* **attack**: during the firing window the planes strafe forward by ≈25 queue
+  units (toward the enemy) and dip slightly, then return.
+
+The port applies this to every `airborne()` unit: vertical entry from above,
+a small hover bob, and the attack lunge.  The battle scene is also clipped to
+the two panels so aircraft entering from above never draw over the name bar.
+
+
 
 `tools/capture_battle_matrix.py` sweeps attacker type × defender type × terrain
 (grass/forest/mountain/city/road/base) through the real attack flow.  It:

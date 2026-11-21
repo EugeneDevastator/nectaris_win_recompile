@@ -1474,6 +1474,9 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
         DrawTexturePro(tex, {0, 0, (float)tex.width, (float)tex.height},
                        {x, panY, w, panH}, {0, 0}, 0, WHITE);
     };
+    // clip the battle scene to the two panels so entries (especially aircraft
+    // descending from above) never draw over the name bar or report
+    BeginScissorMode((int)playX, (int)panY, (int)playW, (int)panH);
     // v.left / v.right already carry their fixed-side background panel.
     if (ranged) {
         drawPanel(v.left.panel, axPanel, panW);
@@ -1552,9 +1555,29 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
             float psy = dest.y + ySign * sdy * unitPx;
             float pmx = dest.x + xSign * mdx * unitPx;
             float pmy = dest.y + ySign * mdy * unitPx;
+            if (utype.airborne()) {
+                // Plane capture: aircraft descend from above the panel with a
+                // small lateral drift, not from the side edge.
+                psx = dest.x + xSign * us * 0.55f;
+                psy = panY - us * 1.35f;
+                pmx = dest.x + xSign * us * 0.25f;
+                pmy = panY + (dest.y - panY) * 0.35f;
+            }
             float u = 1.0f - ease;
             float x = u * u * psx + 2.0f * u * ease * pmx + ease * ease * dest.x;
             float y = u * u * psy + 2.0f * u * ease * pmy + ease * ease * dest.y;
+            if (utype.airborne()) {
+                // Hover bob while parked.
+                y += std::sin(t * 9.0f + i * 1.7f) * 1.6f;
+                // Attack strafe: the captured planes lunge toward the enemy
+                // during the firing window, then return.
+                float ph = std::clamp((t - fireT) / 1.10f, 0.0f, 1.0f);
+                if (t > fireT && t < fireT + 1.10f) {
+                    float lunge = std::sin(ph * 3.14159f) * panW * 0.18f;
+                    x += mirror ? -lunge : lunge;
+                    y += std::sin(ph * 3.14159f) * us * 0.10f;
+                }
+            }
             x += nudge;
             float s = us * 1.3f * (bt.width / 32.0f) * slotScale;
             DrawTexturePro(bt, src, {x - s / 2, y - s / 2, s, s}, {0, 0}, 0, c);
@@ -1781,6 +1804,7 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
     }
 
     // ----- bottom: persistent simulation report (integer-scaled original font)
+    EndScissorMode();
     DrawRectangle((int)playX, (int)botY, (int)playW, (int)botH, NAVY);
 
     const CombatSide& SL = v.left;
