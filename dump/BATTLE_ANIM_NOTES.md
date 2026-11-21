@@ -82,9 +82,31 @@ VM (`0x407e50` / script table `0x42af30`), which is still undecoded.  The
 memory sampler can be pointed at other scenarios (ranged, air attacker) to
 check their queues directly.
 
+## Entry paths (full curves)
+
+`tools/extract_entry_paths.py` turns the captures into normalised paths: for
+every unit group it records the X/Y sequence from first appearance to the
+settled slot and stores offsets from the slot over time 0..1 in
+`dump/entry_paths.json`.
+
+`tools/build_entry_path_asset.py` reduces those to the control points shipped
+in `assets/data/combat_entry_paths.json`:
+
+```json
+"ground": { "start": [72, 13], "mid": [35, 12], "end": [0, 0] },
+"air":    { "start": [51, 21], "mid": [35, 11], "end": [0, 0] }
+```
+
+Offsets are original queue units (the blitter scales by 2; the panel is
+256 units), so the port maps them with `offset_px = units * panelW / 128` and
+mirrors X for the right-hand army.  The renderer interpolates a quadratic
+curve through start → mid → slot, which reproduces the measured glide instead
+of a straight line.
+
 ## Port implementation
 
 * per-slot perspective scale (`0.62 + 0.45 * depth`)
-* horizontal roll-in at a fixed row (matches the queue dumps)
+* quadratic entry curves driven by `assets/data/combat_entry_paths.json`
+  (ground horizontal, aircraft diagonal/vertical, bikes shallow diagonal)
 * staggered kill removal and staggered explosions/splats
 * palette-style damage flash only on the side that lost HP

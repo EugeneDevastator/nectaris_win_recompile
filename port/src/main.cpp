@@ -77,6 +77,11 @@ struct CombatUnitVfx {
     float scale = -1.0f;
 };
 static std::map<std::string, CombatVfxClass> gVfxClasses;
+struct EntryPath {
+    float start[2] = {0, 0};
+    float mid[2] = {0, 0};
+};
+static std::map<std::string, EntryPath> gEntryPaths;
 static CombatUnitVfx gUnitVfx[24];
 static std::vector<int> gVfxProjectile[2], gVfxMuzzle[2], gVfxHit, gVfxMiss;
 static float gVfxDeathStep = 0.09f;
@@ -261,6 +266,30 @@ static void loadData() {
                     u.muzzle[0] = ints(it.value()["muzzle_left"]);
                 if (it.value().contains("muzzle_right"))
                     u.muzzle[1] = ints(it.value()["muzzle_right"]);
+            }
+        }
+    }
+
+    // Entry paths decoded from the original's live sprite queue.
+    gEntryPaths.clear();
+    gEntryPaths["ground"] = {{35.7f, 6.6f}, {17.7f, 5.6f}};
+    gEntryPaths["air"] = {{31.0f, 12.7f}, {10.2f, 6.1f}};
+    gEntryPaths["bike"] = {{35.7f, 10.0f}, {17.7f, 8.0f}};
+    std::ifstream ep(gAssetDir + "data/combat_entry_paths.json");
+    if (ep) {
+        json ej = json::parse(ep);
+        if (ej.contains("classes")) {
+            for (auto it = ej["classes"].begin(); it != ej["classes"].end(); ++it) {
+                EntryPath p;
+                if (it.value().contains("start") && it.value()["start"].size() >= 2) {
+                    p.start[0] = it.value()["start"][0].get<float>();
+                    p.start[1] = it.value()["start"][1].get<float>();
+                }
+                if (it.value().contains("mid") && it.value()["mid"].size() >= 2) {
+                    p.mid[0] = it.value()["mid"][0].get<float>();
+                    p.mid[1] = it.value()["mid"][1].get<float>();
+                }
+                gEntryPaths[it.key()] = p;
             }
         }
     }
@@ -1489,28 +1518,27 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
             // Rear slots (smaller panel y) sit farther away and are smaller.
             float depth = std::clamp((FORM[i][1] - 0.30f) / 0.55f, 0.0f, 1.0f);
             float slotScale = 0.62f + 0.45f * depth;
-            // Entry direction from the memory classification: ground units
-            // slide in horizontally at a fixed row, aircraft rise/descend
-            // vertically from the panel edge with a diagonal drift, bikes come
-            // in on a shallow diagonal.
+            // Entry path from the queue-derived asset: start and mid control
+            // points around the final slot, applied as a quadratic curve.
             const UnitType& utype = gTypes[type];
-            float startX = mirror ? (float)W + us : -(float)us;
-            float startY = dest.y;
-            if (utype.airborne()) {
-                if (mirror) {
-                    startY = panY - us * 1.2f;
-                    startX = dest.x + us * 0.9f;
-                } else {
-                    startY = panY + panH + us * 1.2f;
-                    startX = dest.x - us * 0.9f;
-                }
-            } else if (utype.moveClass == 2) {          // bike
-                startY = dest.y + (mirror ? -us * 0.7f : us * 0.7f);
+            const char* cls = utype.airborne() ? "air"
+                            : (utype.moveClass == 2 ? "bike" : "ground");
+            float sdx = 0.0f, sdy = 0.0f, mdx = 0.0f, mdy = 0.0f;
+            auto pit = gEntryPaths.find(cls);
+            if (pit != gEntryPaths.end()) {
+                sdx = pit->second.start[0]; sdy = pit->second.start[1];
+                mdx = pit->second.mid[0];   mdy = pit->second.mid[1];
             }
-            float x = startX + (dest.x - startX) * ease;
-            float y = startY + (dest.y - startY) * ease;
-            if (!utype.airborne() && utype.moveClass != 2)
-                y += std::sin(k * 3.14159f * 2.0f) * us * 0.05f;
+            const float unitPx = panW / 128.0f;   // queue units -> panel pixels
+            const float xSign = mirror ? 1.0f : -1.0f;
+            const float ySign = mirror ? -1.0f : 1.0f;
+            float psx = dest.x + xSign * sdx * unitPx;
+            float psy = dest.y + ySign * sdy * unitPx;
+            float pmx = dest.x + xSign * mdx * unitPx;
+            float pmy = dest.y + ySign * mdy * unitPx;
+            float u = 1.0f - ease;
+            float x = u * u * psx + 2.0f * u * ease * pmx + ease * ease * dest.x;
+            float y = u * u * psy + 2.0f * u * ease * pmy + ease * ease * dest.y;
             x += nudge;
             float s = us * 1.3f * (bt.width / 32.0f) * slotScale;
             DrawTexturePro(bt, src, {x - s / 2, y - s / 2, s, s}, {0, 0}, 0, c);

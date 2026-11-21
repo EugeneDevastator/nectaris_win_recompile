@@ -373,9 +373,9 @@ Every resolved attack switches to a battle screen modeled on the original:
 * **ride-in**: units roll in from their panel's outer edge to their staggered
   2×4 formation slots at the original `0.05 + i×0.235 s` beats.  Slots use a
   perspective scale (rear rows ~0.62×, front rows ~1.07×, matching the captured
-  original).  Entry direction follows the memory classification: ground units
-  slide in horizontally, aircraft rise/descend from the panel edge with a
-  diagonal drift, bikes use a shallow diagonal.
+  original).  Entry direction follows the queue-derived control points in
+  `assets/data/combat_entry_paths.json` (ground horizontal, aircraft
+  diagonal/vertical, bikes shallow diagonal) and is drawn as a quadratic curve.
 * **simultaneous fire**: both sides fire at once, using `vfx_00` cell (0,0)
   (the right-pointing missile) for every projectile and full-size `vfx_07`
   with a fade-out for every explosion. The killed vehicle slots (`finalCount ..
