@@ -1,15 +1,129 @@
 {
  "note": "Entry paths decoded from the live 0x4836f0 sprite queue. Offsets are original queue units (blitter scales by 2; panel is 256 units); x is mirrored for the right-side army.",
  "unit_scale": 128,
+ "types": {
+  "4": {
+   "start": [
+    51,
+    9
+   ],
+   "mid": [
+    24,
+    9
+   ],
+   "end": [
+    0,
+    0
+   ]
+  },
+  "6": {
+   "start": [
+    62,
+    16
+   ],
+   "mid": [
+    28,
+    8
+   ],
+   "end": [
+    0,
+    0
+   ]
+  },
+  "2": {
+   "start": [
+    58,
+    20
+   ],
+   "mid": [
+    37,
+    12
+   ],
+   "end": [
+    0,
+    0
+   ]
+  },
+  "9": {
+   "start": [
+    72,
+    17
+   ],
+   "mid": [
+    43,
+    11
+   ],
+   "end": [
+    0,
+    0
+   ]
+  },
+  "1": {
+   "start": [
+    76,
+    0
+   ],
+   "mid": [
+    24,
+    0
+   ],
+   "end": [
+    0,
+    0
+   ]
+  },
+  "18": {
+   "start": [
+    107,
+    0
+   ],
+   "mid": [
+    40,
+    0
+   ],
+   "end": [
+    0,
+    0
+   ]
+  },
+  "20": {
+   "start": [
+    107,
+    0
+   ],
+   "mid": [
+    37,
+    0
+   ],
+   "end": [
+    0,
+    0
+   ]
+  },
+  "15": {
+   "start": [
+    65,
+    16
+   ],
+   "mid": [
+    40,
+    14
+   ],
+   "end": [
+    0,
+    0
+   ]
+  }
+ },
  "classes": {
   "ground": {
    "start": [
     72,
-    13
+    16
    ],
    "mid": [
-    35,
-    12
+    40,
+    11
    ],
    "end": [
     0,
@@ -18,12 +132,26 @@
   },
   "air": {
    "start": [
-    51,
-    21
+    72,
+    20
    ],
    "mid": [
-    35,
-    11
+    37,
+    12
+   ],
+   "end": [
+    0,
+    0
+   ]
+  },
+  "bike": {
+   "start": [
+    107,
+    0
+   ],
+   "mid": [
+    37,
+    0
    ],
    "end": [
     0,

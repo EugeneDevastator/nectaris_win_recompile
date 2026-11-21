@@ -1,10 +1,10 @@
 """Build the entry-path asset used by the combat renderer.
 
 Reads dump/entry_paths.json (extracted from the live sprite queue) and writes
-assets/data/combat_entry_paths.json with a normalised control path per unit
-class.  Offsets are in original queue units: the blitter scales them by 2 and
-the battle panel is 256 units wide, so the port maps them with
-`offset_px = queue_units * (panel_size / 128)`.
+assets/data/combat_entry_paths.json.  Paths are keyed by unit type (0..23) when
+a capture exists for that type, with per-class fallbacks.  Offsets are original
+queue units: the blitter scales them by 2 and the battle panel is 256 units
+wide, so the port maps them with `offset_px = units * panel_size / 128`.
 """
 import json
 import os
@@ -13,17 +13,19 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 SRC = os.path.join(ROOT, 'dump', 'entry_paths.json')
 DST = os.path.join(ROOT, 'assets', 'data', 'combat_entry_paths.json')
 
-# capture dir -> which palette groups are which class
-CLASSES = {
-    'battle_sprites_mem': {'left': 'ground', 'right': 'ground'},
-    'battle_sprites_mem_air': {'left': 'air', 'right': 'ground'},
-    'battle_sprites_mem_vsair2': {'left': 'ground', 'right': 'air'},
+# capture dir -> (left/attacker type, right/defender type)
+CAPTURE_TYPES = {
+    'battle_sprites_mem': (4, 6),
+    'battle_sprites_mem_air': (2, 6),
+    'battle_sprites_mem_vsair2': (9, 1),
+    'battle_sprites_mem_t18': (18, 6),
+    'battle_sprites_mem_t20': (20, 6),
+    'battle_sprites_mem_t15': (15, 1),
 }
 EFFECT_PALS = {5, 69, 65}
 
 
 def clean(path):
-    """Reject jumping/noisy paths (palette copies, effects)."""
     for t, dx, dy in path:
         if abs(dx) > 120 or abs(dy) > 60:
             return False
@@ -33,50 +35,59 @@ def clean(path):
     return True
 
 
+def p90(v):
+    if not v:
+        return 0.0
+    s = sorted(v)
+    return round(s[min(len(s) - 1, int(0.9 * (len(s) - 1)))], 1)
+
+
 def main():
     data = json.load(open(SRC, encoding='utf-8'))
-    acc = {}
+    per_type = {}
+    class_acc = {}
     for cap, entries in data.items():
-        sides = CLASSES.get(cap)
-        if not sides:
+        types = CAPTURE_TYPES.get(cap)
+        if not types:
             continue
         for e in entries:
             if e['pal'] in EFFECT_PALS or not clean(e['path']):
                 continue
-            # left groups have lower sprite bases than right groups in these captures
-            side = 'left' if e['sprite'] < 100 else 'right'
-            cls = sides[side]
+            side = 0 if e['pal'] < 64 else 1       # 0 = left/blue, 1 = right/green
+            utype = types[side]
             start = e['path'][0]
-            mid_i = min(len(e['path']) - 1, len(e['path']) // 2)
-            mid = e['path'][mid_i]
-            a = acc.setdefault(cls, {'sx': [], 'sy': [], 'mx': [], 'my': []})
+            mid = e['path'][min(len(e['path']) - 1, len(e['path']) // 2)]
+            a = per_type.setdefault(utype, {'sx': [], 'sy': [], 'mx': [], 'my': []})
             a['sx'].append(abs(start[1]))
             a['sy'].append(abs(start[2]))
             a['mx'].append(abs(mid[1]))
             a['my'].append(abs(mid[2]))
+            # class fallback buckets
+            cls = 'air' if utype in (1, 2, 3, 22) else ('bike' if utype == 20 else 'ground')
+            b = class_acc.setdefault(cls, {'sx': [], 'sy': [], 'mx': [], 'my': []})
+            b['sx'].append(abs(start[1]))
+            b['sy'].append(abs(start[2]))
+            b['mx'].append(abs(mid[1]))
+            b['my'].append(abs(mid[2]))
 
-    def avg(v):
-        return round(sum(v) / len(v), 1) if v else 0.0
+    types_out = {str(t): {'start': [p90(a['sx']), p90(a['sy'])],
+                          'mid': [p90(a['mx']), p90(a['my'])],
+                          'end': [0, 0]}
+                 for t, a in per_type.items()}
+    classes_out = {cls: {'start': [p90(a['sx']), p90(a['sy'])],
+                         'mid': [p90(a['mx']), p90(a['my'])],
+                         'end': [0, 0]}
+                   for cls, a in class_acc.items()}
+    for cls in ('ground', 'air', 'bike'):
+        classes_out.setdefault(cls, {'start': [35.0, 8.0], 'mid': [18.0, 6.0], 'end': [0, 0]})
 
-    def p90(v):
-        if not v:
-            return 0.0
-        s = sorted(v)
-        return round(s[min(len(s) - 1, int(0.9 * (len(s) - 1)))], 1)
-
-    classes = {}
-    for cls, a in acc.items():
-        classes[cls] = {
-            'start': [p90(a['sx']), p90(a['sy'])],
-            'mid': [p90(a['mx']), p90(a['my'])],
-            'end': [0, 0],
-        }
     out = {
         'note': 'Entry paths decoded from the live 0x4836f0 sprite queue. '
                 'Offsets are original queue units (blitter scales by 2; panel '
                 'is 256 units); x is mirrored for the right-side army.',
         'unit_scale': 128,
-        'classes': classes,
+        'types': types_out,
+        'classes': classes_out,
     }
     with open(DST, 'w', encoding='utf-8') as f:
         json.dump(out, f, indent=1)

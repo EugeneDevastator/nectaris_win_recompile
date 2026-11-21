@@ -278,19 +278,25 @@ static void loadData() {
     std::ifstream ep(gAssetDir + "data/combat_entry_paths.json");
     if (ep) {
         json ej = json::parse(ep);
-        if (ej.contains("classes")) {
-            for (auto it = ej["classes"].begin(); it != ej["classes"].end(); ++it) {
-                EntryPath p;
-                if (it.value().contains("start") && it.value()["start"].size() >= 2) {
-                    p.start[0] = it.value()["start"][0].get<float>();
-                    p.start[1] = it.value()["start"][1].get<float>();
-                }
-                if (it.value().contains("mid") && it.value()["mid"].size() >= 2) {
-                    p.mid[0] = it.value()["mid"][0].get<float>();
-                    p.mid[1] = it.value()["mid"][1].get<float>();
-                }
-                gEntryPaths[it.key()] = p;
+        auto readPath = [&](const json& v) {
+            EntryPath p;
+            if (v.contains("start") && v["start"].size() >= 2) {
+                p.start[0] = v["start"][0].get<float>();
+                p.start[1] = v["start"][1].get<float>();
             }
+            if (v.contains("mid") && v["mid"].size() >= 2) {
+                p.mid[0] = v["mid"][0].get<float>();
+                p.mid[1] = v["mid"][1].get<float>();
+            }
+            return p;
+        };
+        if (ej.contains("classes")) {
+            for (auto it = ej["classes"].begin(); it != ej["classes"].end(); ++it)
+                gEntryPaths[it.key()] = readPath(it.value());
+        }
+        if (ej.contains("types")) {
+            for (auto it = ej["types"].begin(); it != ej["types"].end(); ++it)
+                gEntryPaths["t" + it.key()] = readPath(it.value());
         }
     }
 }
@@ -1524,7 +1530,8 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
             const char* cls = utype.airborne() ? "air"
                             : (utype.moveClass == 2 ? "bike" : "ground");
             float sdx = 0.0f, sdy = 0.0f, mdx = 0.0f, mdy = 0.0f;
-            auto pit = gEntryPaths.find(cls);
+            auto pit = gEntryPaths.find("t" + std::to_string(type));
+            if (pit == gEntryPaths.end()) pit = gEntryPaths.find(cls);
             if (pit != gEntryPaths.end()) {
                 sdx = pit->second.start[0]; sdy = pit->second.start[1];
                 mdx = pit->second.mid[0];   mdy = pit->second.mid[1];

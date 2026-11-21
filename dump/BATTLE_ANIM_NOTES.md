@@ -90,23 +90,30 @@ settled slot and stores offsets from the slot over time 0..1 in
 `dump/entry_paths.json`.
 
 `tools/build_entry_path_asset.py` reduces those to the control points shipped
-in `assets/data/combat_entry_paths.json`:
+in `assets/data/combat_entry_paths.json`.  Paths are keyed by **unit type**
+when sampled, with class fallbacks:
 
 ```json
-"ground": { "start": [72, 13], "mid": [35, 12], "end": [0, 0] },
-"air":    { "start": [51, 21], "mid": [35, 11], "end": [0, 0] }
+"types": {
+  "4":  { "start": [51, 9],  "mid": [24, 9]  },   // T-79, horizontal
+  "2":  { "start": [58, 20], "mid": [37, 12] },   // AX-87, diagonal
+  "18": { "start": [107, 0], "mid": [40, 0]  },   // GX-77 infantry
+  "1":  { "start": [76, 0],  "mid": [24, 0]  }    // FX-1
+},
+"classes": { "ground": {...}, "air": {...}, "bike": {...} }
 ```
 
-Offsets are original queue units (the blitter scales by 2; the panel is
-256 units), so the port maps them with `offset_px = units * panelW / 128` and
-mirrors X for the right-hand army.  The renderer interpolates a quadratic
-curve through start → mid → slot, which reproduces the measured glide instead
-of a straight line.
+Sampled so far: types 1, 2, 4, 6, 9, 15, 18, 20 (FX-1, AX-87, T-79, S-61,
+HMB-2, AAG-4, GX-77, CBX-1) using `tools/sample_battle_sprites.py <atk> <def>
+<tag>`.  Offsets are original queue units (the blitter scales by 2; the panel
+is 256 units), so the port maps them with `offset_px = units * panelW / 128`
+and mirrors X for the right-hand army.  The renderer interpolates a quadratic
+curve through start → mid → slot, which reproduces the measured glide.
 
 ## Port implementation
 
 * per-slot perspective scale (`0.62 + 0.45 * depth`)
-* quadratic entry curves driven by `assets/data/combat_entry_paths.json`
-  (ground horizontal, aircraft diagonal/vertical, bikes shallow diagonal)
+* quadratic entry curves driven by `assets/data/combat_entry_paths.json`,
+  keyed by unit type (8 types sampled) with class fallbacks
 * staggered kill removal and staggered explosions/splats
 * palette-style damage flash only on the side that lost HP
