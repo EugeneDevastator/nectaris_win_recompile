@@ -82,6 +82,16 @@ struct EntryPath {
     float mid[2] = {0, 0};
 };
 static std::map<std::string, EntryPath> gEntryPaths;
+// Real per-slot entry curves captured from the live sprite-object table
+// (tools/build_entry_curves.py).  Positions are panel normalised 0..1.
+struct EntryCurve {
+    Vector2 slot = {0, 0};
+    Vector2 start = {0, 0};
+    float t0 = 0.0f;
+    float duration = 0.0f;
+    std::vector<Vector3> pts;   // x = time, y = u, z = v
+};
+static std::map<std::string, std::vector<EntryCurve>> gEntryCurves;
 static CombatUnitVfx gUnitVfx[24];
 static std::vector<int> gVfxProjectile[2], gVfxMuzzle[2], gVfxHit, gVfxMiss;
 static float gVfxDeathStep = 0.09f;
@@ -301,6 +311,34 @@ static void loadData() {
         if (ej.contains("terrain_types")) {
             for (auto it = ej["terrain_types"].begin(); it != ej["terrain_types"].end(); ++it)
                 gEntryPaths["t" + it.key()] = readPath(it.value());
+        }
+    }
+
+    // Real per-slot entry curves captured from the live object table.
+    gEntryCurves.clear();
+    std::ifstream ec(gAssetDir + "data/combat_entry_curves.json");
+    if (ec) {
+        json ej = json::parse(ec);
+        for (const char* side : {"left", "right"}) {
+            if (!ej.contains(side)) continue;
+            for (const auto& v : ej[side]) {
+                EntryCurve c;
+                if (v.contains("slot") && v["slot"].size() >= 2) {
+                    c.slot = {v["slot"][0].get<float>(), v["slot"][1].get<float>()};
+                }
+                if (v.contains("start") && v["start"].size() >= 2) {
+                    c.start = {v["start"][0].get<float>(), v["start"][1].get<float>()};
+                }
+                c.t0 = v.value("t0", 0.0f);
+                c.duration = v.value("duration", 0.0f);
+                if (v.contains("samples")) {
+                    for (const auto& s : v["samples"]) {
+                        if (s.size() >= 3)
+                            c.pts.push_back({s[0].get<float>(), s[1].get<float>(), s[2].get<float>()});
+                    }
+                }
+                if (!c.pts.empty()) gEntryCurves[side].push_back(c);
+            }
         }
     }
 }
@@ -1364,7 +1402,7 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
 
     float t = v.t;
     // Shooting is 1.2x slower than the original 0.35 s window.
-    float fireT = 2.15f, fireDur = 0.42f;
+    float fireT = 2.55f, fireDur = 0.42f;
     float impactT = fireT + fireDur + 0.10f;
     int hpL0 = v.left.hp0;
     int hpR0 = v.right.hp0;
@@ -1462,6 +1500,13 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
         {0.40f, 0.37f}, {0.23f, 0.34f}, {0.40f, 0.53f}, {0.19f, 0.47f},
         {0.36f, 0.72f}, {0.16f, 0.67f}, {0.31f, 0.89f}, {0.08f, 0.83f}
     };
+    // Settled slot position: measured entry curves when available, FORM otherwise.
+    auto slotPos = [&](bool right, int i) -> Vector2 {
+        const auto& cs = gEntryCurves[right ? "right" : "left"];
+        if (!cs.empty()) return cs[std::min<int>(i, (int)cs.size() - 1)].slot;
+        int k = std::clamp(i, 0, 7);
+        return {(right ? (1.0f - FORM[k][0]) : FORM[k][0]), FORM[k][1]};
+    };
     float us = std::min(panW, panH) * 0.125f;
 
     auto panelPoint = [&](float px, float slotX, float slotY) {
@@ -1515,43 +1560,45 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
             (unsigned char)flash.a
         };
         Rectangle src = {0, 0, (float)bt.width, (float)bt.height};
-        // Measured from the per-frame sprite-queue capture
-        // (dump/one_run/slotrun.json, tools/two_paths_shape.py): every slot is a
-        // horizontal slide at a fixed row; the motion is linear with only a
-        // short ease-out.  The first slot travels for ~2.0 s and later slots
-        // start later but all settle just before the firing phase.
-        const float arriveT = 2.02f;
-        const float stagger = 0.12f;
+        // Entry curves captured from the live sprite-object table
+        // (assets/data/combat_entry_curves.json): each slot is parked at the
+        // panel edge and slides in linearly at its own start time, all slots
+        // arriving together just before the firing phase.
+        const auto& curves = gEntryCurves[mirror ? "right" : "left"];
         for (int i = 0; i < count0; ++i) {
             if (i >= count1) {
                 float death = impactT + (i - count1) * 0.12f;
                 if (t >= death) continue;      // slot already exploded
             }
-            float start = 0.06f + i * stagger;
-            if (t < start) continue;
-            float dur = std::max(0.30f, arriveT - start);
-            float k = std::clamp((t - start) / dur, 0.0f, 1.0f);
-            float ease = k;
-            if (k > 0.82f) {
-                float u = (k - 0.82f) / 0.18f;
-                ease = 0.82f + (1.0f - (1.0f - u) * (1.0f - u)) * 0.18f;
+            Vector2 slotUv, posUv;
+            if (!curves.empty()) {
+                const EntryCurve& cv = curves[std::min<int>(i, (int)curves.size() - 1)];
+                slotUv = cv.slot;
+                float local = t - cv.t0;
+                if (local <= 0.0f || cv.pts.empty()) {
+                    posUv = cv.start;
+                } else if (local >= cv.duration) {
+                    posUv = cv.slot;
+                } else {
+                    size_t k = 0;
+                    while (k + 1 < cv.pts.size() && cv.pts[k + 1].x < local) ++k;
+                    const Vector3& a = cv.pts[k];
+                    const Vector3& b = cv.pts[std::min(k + 1, cv.pts.size() - 1)];
+                    float span = b.x - a.x;
+                    float f = span > 1e-6f ? (local - a.x) / span : 1.0f;
+                    posUv = {a.y + (b.y - a.y) * f, a.z + (b.z - a.z) * f};
+                }
+            } else {
+                float sx = mirror ? (1.0f - FORM[i][0]) : FORM[i][0];
+                slotUv = {sx, FORM[i][1]};
+                posUv = slotUv;
             }
-            float sx = mirror ? (1.0f - FORM[i][0]) : FORM[i][0];
-            Vector2 dest = panelPoint(px, sx, FORM[i][1]);
             // Rear slots (smaller panel y) sit farther away and are smaller.
-            float depth = std::clamp((FORM[i][1] - 0.30f) / 0.55f, 0.0f, 1.0f);
+            float depth = std::clamp((slotUv.y - 0.10f) / 0.65f, 0.0f, 1.0f);
             float slotScale = 0.62f + 0.45f * depth;
-            // Units enter from behind the panel edge along the panel's depth
-            // axis: mostly horizontal with a shallow downward drift (the
-            // capture shows ~0.4 of vertical per horizontal).  Later slots
-            // start closer so the line speed stays roughly constant, matching
-            // the measured simultaneous arrival.
-            float travel = panW * 0.55f * (dur / arriveT);
-            float psx = mirror ? (dest.x + travel) : (dest.x - travel);
-            float psy = dest.y - travel * 0.38f;
-            float x = psx + (dest.x - psx) * ease;
-            float y = psy + (dest.y - psy) * ease;
-            x += nudge;
+            Vector2 dest = panelPoint(px, posUv.x, posUv.y);
+            float x = dest.x + nudge;
+            float y = dest.y;
             float s = us * 1.3f * (bt.width / 32.0f) * slotScale;
             DrawTexturePro(bt, src, {x - s / 2, y - s / 2, s, s}, {0, 0}, 0, c);
         }
@@ -1654,19 +1701,23 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
     int killedR = std::max(0, nR0 - nR1);   // right-side (enemy) vehicles lost
     int killedL = std::max(0, nL0 - nL1);   // left-side (player) vehicles lost
     for (int i = 0; i < nL0; ++i) {
-        fromL[i] = panelPoint(axPanel, FORM[i][0], FORM[i][1]);
+        Vector2 s = slotPos(false, i);
+        fromL[i] = panelPoint(axPanel, s.x, s.y);
         if (i < killedR) {
             int slot = nR1 + i;
-            toL[i] = panelPoint(dxPanel, 1.0f - FORM[slot][0], FORM[slot][1]);
+            Vector2 t2 = slotPos(true, slot);
+            toL[i] = panelPoint(dxPanel, t2.x, t2.y);
         } else {
             toL[i] = scatter(0, i);
         }
     }
     for (int i = 0; i < nR0; ++i) {
-        fromR[i] = panelPoint(dxPanel, 1.0f - FORM[i][0], FORM[i][1]);
+        Vector2 s = slotPos(true, i);
+        fromR[i] = panelPoint(dxPanel, s.x, s.y);
         if (i < killedL) {
             int slot = nL1 + i;
-            toR[i] = panelPoint(axPanel, FORM[slot][0], FORM[slot][1]);
+            Vector2 t2 = slotPos(false, slot);
+            toR[i] = panelPoint(axPanel, t2.x, t2.y);
         } else {
             toR[i] = scatter(1, i);
         }

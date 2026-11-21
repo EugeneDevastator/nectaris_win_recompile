@@ -32,6 +32,8 @@ user32.GetWindowTextW.argtypes = [wt.HWND, wt.LPWSTR, ctypes.c_int]
 user32.GetWindowRect.argtypes = [wt.HWND, ctypes.POINTER(wt.RECT)]
 user32.SetForegroundWindow.argtypes = [wt.HWND]
 user32.ShowWindow.argtypes = [wt.HWND, ctypes.c_int]
+user32.SetWindowPos.argtypes = [wt.HWND, wt.HWND, ctypes.c_int, ctypes.c_int,
+                                ctypes.c_int, ctypes.c_int, wt.UINT]
 user32.PostMessageW.argtypes = [wt.HWND, wt.UINT, wt.WPARAM, wt.LPARAM]
 user32.MapVirtualKeyW.argtypes = [wt.UINT, wt.UINT]
 user32.SendInput.argtypes = [wt.UINT, ctypes.c_void_p, ctypes.c_int]
@@ -77,6 +79,9 @@ def find_window(pid):
 
 
 def focus_window(hwnd):
+    # Keep the real window off-screen so the test does not pop up on the user's
+    # display; it still receives input as the foreground window.
+    user32.SetWindowPos(hwnd, None, -3000, -2000, 0, 0, 0x0001 | 0x0004)
     user32.ShowWindow(hwnd, SW_RESTORE)
     user32.SetForegroundWindow(hwnd)
     time.sleep(0.25)

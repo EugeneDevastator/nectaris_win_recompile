@@ -54,3 +54,5 @@ _bak/*
 dump/battle_matrix/
 
 dump/one_run/
+
+dump/object_runs/

@@ -50,27 +50,52 @@ u16 sprite          (high byte + 0x40 base, low bits select the size path)
 
 Each 64x64 battle unit is four consecutive 16x16 sprite ids on a 16-unit
 grid.  **Several units share the same sprite base**, so grouping by
-`(palette, sprite & ~3)` merges them; group the four chunks by position
-instead (e.g. `tools/two_paths_shape.py`).
+`(palette, sprite & ~3)` merges them; group the four chunks by position.
 
-`tools/capture_one_run.py` records every distinct queue snapshot (one per game
-frame, ~50 Hz including the bank flip) into `dump/one_run/<tag>.json` together
-with the matching framebuffer.  `tools/two_paths_shape.py` tracks one unit per
-side:
+The queue is rebuilt every game frame from a live **sprite-object list** at
+`0x482c30` (66 nodes x 0x18 bytes).  That list is the authoritative source of
+the animation:
 
-* Entry is a **horizontal slide at a fixed row** in queue space; on screen the
-  perspective projection adds a shallow downward drift (~0.4 vertical per
-  horizontal), so units enter from behind the top-outer corner of their panel.
-* Motion is essentially **linear**, with a short ease-out over the final ~15%.
-* All slots **arrive together**: the first slot starts at t≈0 and travels for
-  ~2.2 s, later slots start up to ~1.9 s later and travel proportionally less.
-* Both sides use the same curve shape, so the port drives both panels from one
-  entry model (`port/src/main.cpp`, `arriveT = 2.02 s`, `stagger = 0.12 s`).
-* Units are staggered, and the formation is drawn in **perspective** (front
-  rows use larger sprite variants).
-* After entry the unit positions are **completely static** through the attack.
-  The groups that keep moving are effect/projectile sprites, not units.
-* No unit dodge or aircraft spin appears in this recording.
+```
++0x0c  int32  X (integer part in the low word)
++0x10  int16  Y
++0x09  u8     current animation script/frame
++0x14  u8     layer/side tag (1 = left units, 3 = right units)
+```
+
+The queue builder (`0x412f40`) adds the sprite-frame descriptor offsets
+(byte0 = dy, byte1 = dx, byte2 = sprite, byte3 = flags) to the object X/Y:
+the sprite position is literally `object position + frame offset`.
+
+Measured object -> screen mapping (640x480 frame, panels 256x256 at x=64/320,
+y=96):
+
+```
+screenX = 2 * objectX - 32
+screenY = 2 * objectY - 128
+```
+
+## Headless capture
+
+`tools/capture_battle_objects.py` runs the game on a **private Windows
+desktop** (nothing appears on screen) and records the object table, both
+sprite-queue banks and optionally the framebuffer for every distinct game
+frame.  `tools/build_entry_curves.py` turns a capture into
+`assets/data/combat_entry_curves.json`.
+
+Measured with `dump/object_runs/objraw.json`:
+
+* All units are **parked at the panel edge** (left X=16/24, right X=300-320)
+  when the battle scene opens.  They are invisible until they cross the edge.
+* Each slot starts at its own time (0.0 - 1.9 s after the scene opens) and
+  slides in **linearly**.  Durations vary 0.5 - 2.3 s and all slots **arrive
+  together** at ~2.3 s, so later slots travel shorter paths.
+* Left-side slots move (+X) and slightly vertically (their object Y changes);
+  right-side slots move (-X) at a constant Y.
+* After the entry the units sit still, then the fire phase adds a short
+  lunge/recoil before the final positions.
+* The port plays these recorded curves directly; the artificial
+  `arriveT/stagger` model and the quadratic curve are gone.
 
 ## Damage
 
