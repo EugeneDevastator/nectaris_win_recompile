@@ -1829,7 +1829,7 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
             // left-facing motion mirrors it horizontally.
             bool drawFlip = (flipMode < 0) ? autoFlip : (flipMode != 0);
             if (useFrames && drawFlip)
-                src = {(float)(ir.x + ir.w), (float)ir.y, -(float)ir.w, (float)ir.h};
+                src = {(float)ir.x, (float)ir.y, -(float)ir.w, (float)ir.h};
             Vector2 dest = panelPoint(px, posUv.x, posUv.y);
             Rectangle dr;
             if (useFrames) {

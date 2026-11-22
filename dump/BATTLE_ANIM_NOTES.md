@@ -154,7 +154,10 @@ up-right, 3 = 60° down-right, 4 = unused smaller variant.  The packer keeps
 hand edits to `dirs`/`flips` when it repacks.
 
 At the settled formation both sides use the **E** frame (the armies face each
-other); the right side is drawn horizontally mirrored.
+other); the right side is drawn horizontally mirrored.  For a mirrored draw
+with `DrawTexturePro`, pass `{rect.x, rect.y, -rect.w, rect.h}` — raylib negates
+the width internally, so the x must stay at the **left** edge (using the right
+edge samples the neighbouring atlas frame).
 
 `tools/measure_perspective.py` regenerates the defaults from the curves (it
 overwrites the file, so keep a copy of manual edits).
