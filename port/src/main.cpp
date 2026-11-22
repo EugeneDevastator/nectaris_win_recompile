@@ -1786,6 +1786,12 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
                 slotUv = {sx, FORM[i][1]};
                 posUv = slotUv;
             }
+            // Settled units face one another: both sides use the E frame, the
+            // right panel horizontally mirrored.
+            if (settled && frameCount > 0) {
+                autoDir = gImpostorDirs[type][0] % frameCount;
+                autoFlip = mirror;
+            }
             // Perspective/sprite settings are user-editable per slot; a slot
             // edit also shifts the whole recorded path by the same delta.
             int sprite = autoDir, spriteEnd = -1, flipMode = -1;

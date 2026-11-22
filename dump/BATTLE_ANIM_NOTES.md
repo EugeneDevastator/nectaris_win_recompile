@@ -153,6 +153,9 @@ Each unit entry also carries the compass mapping used by the runtime:
 up-right, 3 = 60° down-right, 4 = unused smaller variant.  The packer keeps
 hand edits to `dirs`/`flips` when it repacks.
 
+At the settled formation both sides use the **E** frame (the armies face each
+other); the right side is drawn horizontally mirrored.
+
 `tools/measure_perspective.py` regenerates the defaults from the curves (it
 overwrites the file, so keep a copy of manual edits).
 
