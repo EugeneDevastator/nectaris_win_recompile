@@ -1706,9 +1706,14 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
                 float local = t - cv.t0;
                 curveAt(cv, local, posUv);
                 settled = (local * speed >= cv.duration * speed);
-                Vector2 before;
-                curveAt(cv, std::max(0.0f, local - 0.10f), before);
-                autoDir = directionFrame(posUv.x - before.x, posUv.y - before.y, frameCount, autoFlip);
+                // Direction must come from the last movement, not from a
+                // zero-length window at the settled position, otherwise the
+                // side flip is lost the moment the unit stops.
+                float dirT = std::min(local, std::max(0.0f, cv.duration - 0.005f));
+                Vector2 before, at;
+                curveAt(cv, std::max(0.0f, dirT - 0.10f), before);
+                curveAt(cv, dirT, at);
+                autoDir = directionFrame(at.x - before.x, at.y - before.y, frameCount, autoFlip);
             } else {
                 float sx = mirror ? (1.0f - FORM[i][0]) : FORM[i][0];
                 slotUv = {sx, FORM[i][1]};
