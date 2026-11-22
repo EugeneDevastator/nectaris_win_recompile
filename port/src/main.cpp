@@ -67,6 +67,11 @@ static bool gDebugWire = false;     // F1: polygon wireframe / double-sided debu
 static Shader gUnitRecolor = {0};   // luminance recolor for enemy units
 static int gUnitTintLoc = -1;
 static int gUnitAmountLoc = -1;
+static int gUnitLutFromLoc = -1;
+static int gUnitLutToLoc = -1;
+static int gUnitLutCountLoc = -1;
+// Per unit type: exact blue -> green palette pairs taken from the game art.
+static std::vector<std::pair<Vector3, Vector3>> gUnitLut[24];
 
 // Combat VFX config (assets/data/combat_vfx.json).  Frames refer to resource-23
 // half frames; quads are groups of four consecutive halves assembled 2x2.
@@ -1745,6 +1750,23 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
             float amount = mirror ? 1.0f : 0.0f;
             SetShaderValue(gUnitRecolor, gUnitTintLoc, &tint, SHADER_UNIFORM_VEC4);
             SetShaderValue(gUnitRecolor, gUnitAmountLoc, &amount, SHADER_UNIFORM_FLOAT);
+            // Feed this unit's exact palette pairs (game green colours).
+            auto& lut = gUnitLut[type];
+            int n = (int)std::min<size_t>(lut.size(), 16);
+            if (n > 0) {
+                float fromv[48], tov[48];
+                for (int k = 0; k < n; ++k) {
+                    fromv[k * 3 + 0] = lut[k].first.x;
+                    fromv[k * 3 + 1] = lut[k].first.y;
+                    fromv[k * 3 + 2] = lut[k].first.z;
+                    tov[k * 3 + 0] = lut[k].second.x;
+                    tov[k * 3 + 1] = lut[k].second.y;
+                    tov[k * 3 + 2] = lut[k].second.z;
+                }
+                SetShaderValueV(gUnitRecolor, gUnitLutFromLoc, fromv, SHADER_UNIFORM_VEC3, n);
+                SetShaderValueV(gUnitRecolor, gUnitLutToLoc, tov, SHADER_UNIFORM_VEC3, n);
+            }
+            SetShaderValue(gUnitRecolor, gUnitLutCountLoc, &n, SHADER_UNIFORM_INT);
             BeginShaderMode(gUnitRecolor);
         }
         auto curveAt = [&](const EntryCurve& cv, float local, Vector2& out) {
@@ -2509,6 +2531,28 @@ int main(int argc, char** argv) {
     gFxFlash = LoadTexture((gAssetDir + "art/combat_effects/effect_193.png").c_str());
     gFxStreak = LoadTexture((gAssetDir + "art/combat_effects/effect_195.png").c_str());
 
+    // Exact blue -> green palette pairs from the game's own frame art.
+    {
+        std::ifstream lf(gAssetDir + "data/unit_palette_lut.json");
+        if (lf) {
+            json lj = json::parse(lf);
+            for (auto it = lj.begin(); it != lj.end(); ++it) {
+                int t = std::atoi(it.key().c_str());
+                if (t < 0 || t >= 24) continue;
+                for (const auto& e : it.value()) {
+                    if (e.size() < 2 || e[0].size() < 3 || e[1].size() < 3) continue;
+                    Vector3 a{e[0][0].get<float>() / 255.0f,
+                              e[0][1].get<float>() / 255.0f,
+                              e[0][2].get<float>() / 255.0f};
+                    Vector3 b{e[1][0].get<float>() / 255.0f,
+                              e[1][1].get<float>() / 255.0f,
+                              e[1][2].get<float>() / 255.0f};
+                    gUnitLut[t].push_back({a, b});
+                }
+            }
+        }
+    }
+
     // Luminance-based team recolor for unit sprites (replaces the flat vertex
     // tint): the art's own shading is preserved and ramped through the team
     // colour.  amount=0 keeps the original palette, amount=1 recolors fully.
@@ -2530,6 +2574,9 @@ int main(int argc, char** argv) {
             "uniform sampler2D texture0;\n"
             "uniform vec4 recolorTint;\n"
             "uniform float recolorAmount;\n"
+            "uniform vec3 lutFrom[16];\n"
+            "uniform vec3 lutTo[16];\n"
+            "uniform int lutCount;\n"
             "out vec4 finalColor;\n"
             "void main(){\n"
             "  vec4 tex = texture(texture0, fragTexCoord);\n"
@@ -2539,13 +2586,26 @@ int main(int argc, char** argv) {
             "  vec3 high = mix(recolorTint.rgb, vec3(1.0), 0.45);\n"
             "  vec3 ramp = l < 0.5 ? mix(shadow, mid, l*2.0)\n"
             "                      : mix(mid, high, (l-0.5)*2.0);\n"
-            "  vec3 col = mix(tex.rgb, ramp, recolorAmount);\n"
+            // Prefer the game's exact palette pair for this unit; fall back to
+            // the luminance ramp for colours outside the captured palette.
+            "  vec3 mapped = ramp;\n"
+            "  float bd = 1e9;\n"
+            "  for (int i = 0; i < 16; ++i) {\n"
+            "    if (i >= lutCount) break;\n"
+            "    float d = distance(tex.rgb, lutFrom[i]);\n"
+            "    if (d < bd) { bd = d; mapped = lutTo[i]; }\n"
+            "  }\n"
+            "  if (bd > 0.012) mapped = ramp;\n"
+            "  vec3 col = mix(tex.rgb, mapped, recolorAmount);\n"
             "  finalColor = vec4(col, tex.a) * fragColor;\n"
             "}\n";
         gUnitRecolor = LoadShaderFromMemory(vs, fs);
         if (gUnitRecolor.id) {
             gUnitTintLoc = GetShaderLocation(gUnitRecolor, "recolorTint");
             gUnitAmountLoc = GetShaderLocation(gUnitRecolor, "recolorAmount");
+            gUnitLutFromLoc = GetShaderLocation(gUnitRecolor, "lutFrom[0]");
+            gUnitLutToLoc = GetShaderLocation(gUnitRecolor, "lutTo[0]");
+            gUnitLutCountLoc = GetShaderLocation(gUnitRecolor, "lutCount");
         } else {
             std::cout << "unit recolor shader failed to load\n";
         }
