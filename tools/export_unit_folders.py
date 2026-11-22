@@ -8,7 +8,7 @@
 
 The person is treated like every other unit (no special gun palette).
 """
-import os, json, shutil
+import os, json, re, shutil
 from PIL import Image
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
@@ -58,7 +58,9 @@ for t in range(24):
     else:
         sprites = [p[2] + 512 for p in groups['255']]
 
-    folder = os.path.join(OUT, 'unit_%02d' % t)
+    suffix = re.sub(r'[^a-z0-9]', '', str(units[t].get('name', '')).lower())
+    dirname = ('unit_%02d_%s' % (t, suffix)) if suffix else ('unit_%02d' % t)
+    folder = os.path.join(OUT, dirname)
     os.makedirs(folder, exist_ok=True)
     blue = compose(sprites, 9)
     green = compose(sprites, 10)
@@ -69,7 +71,7 @@ for t in range(24):
 
     u = dict(units[t])
     u.update({
-        'folder': 'unit_%02d' % t,
+        'folder': dirname,
         'combat_chunks': sprites,
         'combat_sprite_group': 233 + t if t <= 22 and t not in (18, 19) else 'infantry',
         'world_map_base': 80 + (t % 14) * 8,

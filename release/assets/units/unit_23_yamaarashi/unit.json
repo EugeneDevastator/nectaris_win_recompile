@@ -1,0 +1,44 @@
+{
+ "id": 23,
+ "name": "ﾔﾏｱﾗｼ",
+ "attack_ground": 0,
+ "attack_air": 0,
+ "defense": 0,
+ "counter_ground": 0,
+ "counter_air": 0,
+ "movement": 0,
+ "movement_class": 0,
+ "ability_flags": 0,
+ "max_hp": 7,
+ "folder": "unit_23_yamaarashi",
+ "combat_chunks": [
+  664,
+  665,
+  666,
+  667
+ ],
+ "combat_sprite_group": "infantry",
+ "world_map_base": 152,
+ "sprites": [
+  "horizontal.png",
+  "vertical.png",
+  "combat_alive.png",
+  "combat_diagonal.png"
+ ],
+ "palette": "blue default; tint for enemy",
+ "guide_frames": {
+  "horizontal": "combat_alive.png",
+  "diagonal": "combat_diagonal.png"
+ },
+ "guide": {
+  "english_name": "DUMMY",
+  "movement": 0,
+  "defense": 0,
+  "attack_ground": 0,
+  "attack_air": 0,
+  "range_ground": 0,
+  "range_air": 0,
+  "frame_alive": "combat_alive.png",
+  "frame_wreck": "combat_wreck.png"
+ }
+}

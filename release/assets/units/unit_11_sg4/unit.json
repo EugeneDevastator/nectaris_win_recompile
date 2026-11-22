@@ -1,0 +1,44 @@
+{
+ "id": 11,
+ "name": "SG-4",
+ "attack_ground": 45,
+ "attack_air": 0,
+ "defense": 30,
+ "counter_ground": 5,
+ "counter_air": 1,
+ "movement": 4,
+ "movement_class": 0,
+ "ability_flags": 25,
+ "max_hp": 7,
+ "folder": "unit_11_sg4",
+ "combat_chunks": [
+  620,
+  621,
+  622,
+  623
+ ],
+ "combat_sprite_group": 244,
+ "world_map_base": 168,
+ "sprites": [
+  "horizontal.png",
+  "vertical.png",
+  "combat_alive.png",
+  "combat_diagonal.png"
+ ],
+ "palette": "blue default; tint for enemy",
+ "guide_frames": {
+  "horizontal": "combat_alive.png",
+  "diagonal": "combat_diagonal.png"
+ },
+ "guide": {
+  "english_name": "SG-4",
+  "movement": 4,
+  "defense": 30,
+  "attack_ground": 45,
+  "attack_air": 0,
+  "range_ground": 5,
+  "range_air": 0,
+  "frame_alive": "combat_alive.png",
+  "frame_wreck": "combat_wreck.png"
+ }
+}

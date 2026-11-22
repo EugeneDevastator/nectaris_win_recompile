@@ -1,0 +1,44 @@
+{
+ "id": 6,
+ "name": "S-61",
+ "attack_ground": 50,
+ "attack_air": 0,
+ "defense": 40,
+ "counter_ground": 1,
+ "counter_air": 1,
+ "movement": 6,
+ "movement_class": 0,
+ "ability_flags": 17,
+ "max_hp": 7,
+ "folder": "unit_06_s61",
+ "combat_chunks": [
+  600,
+  601,
+  602,
+  603
+ ],
+ "combat_sprite_group": 239,
+ "world_map_base": 128,
+ "sprites": [
+  "horizontal.png",
+  "vertical.png",
+  "combat_alive.png",
+  "combat_diagonal.png"
+ ],
+ "palette": "blue default; tint for enemy",
+ "guide_frames": {
+  "horizontal": "combat_alive.png",
+  "diagonal": "combat_diagonal.png"
+ },
+ "guide": {
+  "english_name": "S-61",
+  "movement": 6,
+  "defense": 40,
+  "attack_ground": 50,
+  "attack_air": 0,
+  "range_ground": 1,
+  "range_air": 0,
+  "frame_alive": "combat_alive.png",
+  "frame_wreck": "combat_wreck.png"
+ }
+}

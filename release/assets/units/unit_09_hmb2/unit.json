@@ -1,0 +1,44 @@
+{
+ "id": 9,
+ "name": "HMB-2",
+ "attack_ground": 90,
+ "attack_air": 40,
+ "defense": 80,
+ "counter_ground": 1,
+ "counter_air": 1,
+ "movement": 2,
+ "movement_class": 0,
+ "ability_flags": 17,
+ "max_hp": 7,
+ "folder": "unit_09_hmb2",
+ "combat_chunks": [
+  612,
+  613,
+  614,
+  615
+ ],
+ "combat_sprite_group": 242,
+ "world_map_base": 152,
+ "sprites": [
+  "horizontal.png",
+  "vertical.png",
+  "combat_alive.png",
+  "combat_diagonal.png"
+ ],
+ "palette": "blue default; tint for enemy",
+ "guide_frames": {
+  "horizontal": "combat_alive.png",
+  "diagonal": "combat_diagonal.png"
+ },
+ "guide": {
+  "english_name": "HMB-2",
+  "movement": 2,
+  "defense": 80,
+  "attack_ground": 90,
+  "attack_air": 40,
+  "range_ground": 1,
+  "range_air": 1,
+  "frame_alive": "combat_alive.png",
+  "frame_wreck": "combat_wreck.png"
+ }
+}

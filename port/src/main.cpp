@@ -64,6 +64,9 @@ static Texture2D gVfxHalf[64];
 static Texture2D gVfxQuad[16];
 static Texture2D gVfxSplat = {0};   // shared wreck: mine's dead sprite
 static bool gDebugWire = false;     // F1: polygon wireframe / double-sided debug
+static Shader gUnitRecolor = {0};   // luminance recolor for enemy units
+static int gUnitTintLoc = -1;
+static int gUnitAmountLoc = -1;
 
 // Combat VFX config (assets/data/combat_vfx.json).  Frames refer to resource-23
 // half frames; quads are groups of four consecutive halves assembled 2x2.
@@ -141,10 +144,29 @@ static bool gUiFontReady = false;
 
 static const char* kGameDir = nullptr;
 static std::string gAssetDir;
+// Resolved unit folder names, e.g. "unit_02_ax87" (id prefix + readable name).
+static std::string gUnitDirName[24];
+static void resolveUnitFolders() {
+    std::error_code ec;
+    for (auto& e : std::filesystem::directory_iterator(gAssetDir + "units", ec)) {
+        if (!e.is_directory()) continue;
+        std::string n = e.path().filename().string();
+        if (n.rfind("unit_", 0) != 0 || n.size() < 7) continue;
+        int id = std::atoi(n.c_str() + 5);
+        if (id >= 0 && id < 24) gUnitDirName[id] = n;
+    }
+}
+static std::string unitPath(int t, const char* file) {
+    if (t >= 0 && t < 24 && !gUnitDirName[t].empty())
+        return gAssetDir + "units/" + gUnitDirName[t] + "/" + file;
+    return gAssetDir + TextFormat("units/unit_%02d/%s", t, file);
+}
 static float gPanX = 0.0f, gPanY = 0.0f;
 static float gMapPixelW = 0.0f, gMapPixelH = 0.0f;
 static float gHexSize = 30.0f;
 static float gStepX = 45.0f, gStepY = 51.96f;
+// Map unit sprite size (0.85x the old 1.75-hex size).
+static inline float mapUnitSize() { return gHexSize * 1.75f * 0.85f; }
 static float gHexH = 51.96f;
 static float gOriginX = 20.0f, gOriginY = 20.0f;
 
@@ -886,6 +908,19 @@ static void drawTerrainColors(const Mission& m) {
         }
 }
 
+// Small filled 5-point star (experience rank marker).
+static void drawStar(float cx, float cy, float r, Color c) {
+    const float kPi = 3.14159265f;
+    Vector2 pts[10];
+    for (int i = 0; i < 10; ++i) {
+        float a = -kPi / 2.0f + i * kPi / 5.0f;
+        float rr = (i & 1) ? r * 0.45f : r;
+        pts[i] = {cx + std::cos(a) * rr, cy + std::sin(a) * rr};
+    }
+    for (int i = 0; i < 10; ++i)
+        DrawTriangle({cx, cy}, pts[(i + 1) % 10], pts[i], c);
+}
+
 static void drawUnitSprite(const Mission& m, const Unit& u, Texture2D playerTex, Texture2D enemyTex) {
     // The bank icons are left-facing side views.  The original map only turns
     // the icon in 45-degree sectors: straight left/right stay horizontal, the
@@ -899,7 +934,7 @@ static void drawUnitSprite(const Mission& m, const Unit& u, Texture2D playerTex,
     static const float turn[8] = {-30.0f, 0.0f, 30.0f, -90.0f, -30.0f, 0.0f, 30.0f, 90.0f};
     Texture2D& tex = mirror[sector] ? gUnitMapFlipTex[u.type] : gUnitMapTex[u.type];
     if (!tex.id) return;
-    float size = gHexSize * 1.75f;
+    float size = mapUnitSize();
     float hx, hy;
     hexCenter(u.x, u.y, hx, hy);
     // raylib subtracts `origin` from the destination, so pass the centre point
@@ -1319,7 +1354,7 @@ static void drawTargetingFrame(const Mission& m, int srcX, int srcY, int type,
     drawHexMap(m);
 
     // Existing units, same map presentation as the tactical view.
-    float usz = gHexSize * 1.75f;
+    float usz = mapUnitSize();
     for (const auto& u : m.units) {
         if (u.hp <= 0 || u.carried) continue;
         drawUnitSprite(m, u, Texture2D{0}, Texture2D{0});
@@ -1330,6 +1365,13 @@ static void drawTargetingFrame(const Mission& m, int srcX, int srcY, int type,
             DrawRectangle((int)(cx - u.hp * 4 + i * 8),
                           (int)(cy + gHexSize * 0.55f), 6, 5,
                           u.owner == 0 ? kGreen : kRed);
+        int stars = std::min(u.rank, 7);
+        if (stars > 0) {
+            float sy = cy + gHexSize * 0.55f + 9.0f;
+            float sx0 = cx - (stars - 1) * 5.0f;
+            for (int i = 0; i < stars; ++i)
+                drawStar(sx0 + i * 10.0f, sy, 3.6f, Color{255, 208, 60, 255});
+        }
     }
 
     // Source cell and legal target cells.
@@ -1386,7 +1428,9 @@ static void loadUnitFrames(int type, int color) {
 static Texture2D* combatUnitTexture(int type, int frame, bool rightSide) {
     if (type < 0 || type >= 24) return nullptr;
     if (frame >= 0) {
-        int color = rightSide ? 1 : 0;
+        // Always the blue frames; team recolouring is done by the shader so
+        // the original luminance/shading is preserved.
+        int color = 0;
         loadUnitFrames(type, color);
         const auto& list = gUnitFrameTex[type][color];
         if (!list.empty())
@@ -1397,10 +1441,10 @@ static Texture2D* combatUnitTexture(int type, int frame, bool rightSide) {
 }
 
 static int combatFrameCount(int type, bool rightSide) {
+    (void)rightSide;
     if (type < 0 || type >= 24) return 0;
-    int color = rightSide ? 1 : 0;
-    loadUnitFrames(type, color);
-    return (int)gUnitFrameTex[type][color].size();
+    loadUnitFrames(type, 0);
+    return (int)gUnitFrameTex[type][0].size();
 }
 
 static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D enemyTex) {    (void)playerTex;
@@ -1494,7 +1538,7 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
             fs = (float)gUiFont.baseSize * scale;
             float sp = std::max(1.0f, (float)scale);
             Vector2 m = MeasureTextEx(gUiFont, txt, fs, sp);
-            DrawTextEx(gUiFont, txt, {x + (s - m.x) * 0.5f, y + s * 0.27f},
+            DrawTextEx(gUiFont, txt, {x + (s - m.x) * 0.5f, y + (s - m.y) * 0.5f},
                        fs, sp, BORDER);
         } else {
             DrawText(txt, (int)(x + s * 0.33f), (int)(y + s * 0.12f),
@@ -1678,7 +1722,7 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
         if (type < 0 || type >= 24) return;
         Texture2D* baseTex = combatUnitTexture(type, -1, mirror);
         if (!baseTex || !baseTex->id) return;
-        Color team = mirror ? Color{150, 255, 150, 255} : WHITE;
+        Color team = WHITE;   // team recolour is done by the shader
         Color c = {
             (unsigned char)(team.r * flash.r / 255),
             (unsigned char)(team.g * flash.g / 255),
@@ -1693,6 +1737,16 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
         const auto& persp = gPersp[mirror ? "right" : "left"];
         float speed = (gEntrySpeed > 0.0f) ? gEntrySpeed : 1.0f;
         int frameCount = combatFrameCount(type, mirror);
+        if (gUnitRecolor.id) {
+            // Team tint via luminance ramp: blue art for both sides, enemy is
+            // recoloured green while keeping the original highlights/shadows.
+            Vector4 tint = mirror ? Vector4{0.42f, 0.95f, 0.52f, 1.0f}
+                                  : Vector4{1.0f, 1.0f, 1.0f, 1.0f};
+            float amount = mirror ? 1.0f : 0.0f;
+            SetShaderValue(gUnitRecolor, gUnitTintLoc, &tint, SHADER_UNIFORM_VEC4);
+            SetShaderValue(gUnitRecolor, gUnitAmountLoc, &amount, SHADER_UNIFORM_FLOAT);
+            BeginShaderMode(gUnitRecolor);
+        }
         auto curveAt = [&](const EntryCurve& cv, float local, Vector2& out) {
             float lt = local * speed;
             float dur = cv.duration * speed;
@@ -1794,6 +1848,7 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
                 }
             }
         }
+        if (gUnitRecolor.id) EndShaderMode();
     };
 
     drawArmy(axPanel, nL0, impact ? nL1 : nL0, L.type, false, recoilA, flashA);
@@ -1812,7 +1867,11 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
         float bx = boxX, by = panY + 6.0f;
         DrawRectangleRounded({bx, by, bw, bh}, 0.12f, 6, Color{0, 0, 0, 170});
         if (surrounded) DrawRectangleLinesEx({bx, by, bw, bh}, 2.0f, kRed);
-        smallText(bx + 4, by + 2, attacker ? "ATK" : "DEF", BORDER);
+        const char* tag = attacker ? "ATK" : "DEF";
+        float tagW = gUiFontReady
+                         ? MeasureTextEx(gUiFont, tag, (float)gUiFont.baseSize, 1.0f).x
+                         : (float)MeasureText(tag, 16);
+        smallText(bx + (bw - tagW) * 0.5f, by + 2, tag, BORDER);
         if (surrounded) smallText(bx + bw - 26.0f, by + 2, "SURR", kRed);
         Vector2 center = {bx + bw * 0.5f, by + 12.0f + 2.64f * r};
         const float d = 1.72f * r;
@@ -2096,9 +2155,13 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
     float colR = colC + wC + colGap;
     float y0 = botY + std::max(6.0f, (botH - 5.0f * lh) * 0.35f);
 
-    line(colL, y0, "PLAYER", BORDER);
-    line(colC, y0, "SIMULATION", BORDER);
-    line(colR, y0, "ENEMY", BORDER);
+    auto lineW = [&](const char* s) {
+        return gUiFontReady ? MeasureTextEx(gUiFont, s, rfs, rsp).x
+                            : (float)MeasureText(s, (int)rfs);
+    };
+    line(colL + (wL - lineW("PLAYER")) * 0.5f, y0, "PLAYER", BORDER);
+    line(colC + (wC - lineW("SIMULATION")) * 0.5f, y0, "SIMULATION", BORDER);
+    line(colR + (wR - lineW("ENEMY")) * 0.5f, y0, "ENEMY", BORDER);
     y0 += lh;
 
     line(colL, y0, l1, TXT);
@@ -2409,10 +2472,11 @@ int main(int argc, char** argv) {
     gFxBoom = LoadTexture((gAssetDir + "art/combat_effects/effect_194.png").c_str());
     gFxDebris = LoadTexture((gAssetDir + "art/combat_effects/effect_196.png").c_str());
     gEnemyFlipTex = LoadTexture((gAssetDir + "art/units_bank10_flip.png").c_str());
+    resolveUnitFolders();
     for (int t = 0; t < 24; ++t) {
-        std::string p = gAssetDir + TextFormat("units/unit_%02d/combat_alive.png", t);
+        std::string p = unitPath(t, "combat_alive.png");
         if (!FileExists(p.c_str()))
-            p = gAssetDir + TextFormat("units/unit_%02d/horizontal.png", t);
+            p = unitPath(t, "horizontal.png");
         gUnitSprite[t] = LoadTexture(p.c_str());
         Image im = LoadImage(p.c_str());
         if (im.data) {
@@ -2420,9 +2484,9 @@ int main(int argc, char** argv) {
             gUnitSpriteFlip[t] = LoadTextureFromImage(im);
             UnloadImage(im);
         }
-        std::string v = gAssetDir + TextFormat("units/unit_%02d/horizontal.png", t);
+        std::string v = unitPath(t, "horizontal.png");
         if (!FileExists(v.c_str()))
-            v = gAssetDir + TextFormat("units/unit_%02d/vertical.png", t);
+            v = unitPath(t, "vertical.png");
         gUnitMapTex[t] = LoadTexture(v.c_str());
         Image vm = LoadImage(v.c_str());
         if (vm.data) {
@@ -2444,6 +2508,48 @@ int main(int argc, char** argv) {
     gFxShell = LoadTexture((gAssetDir + "art/combat_effects/effect_195.png").c_str());
     gFxFlash = LoadTexture((gAssetDir + "art/combat_effects/effect_193.png").c_str());
     gFxStreak = LoadTexture((gAssetDir + "art/combat_effects/effect_195.png").c_str());
+
+    // Luminance-based team recolor for unit sprites (replaces the flat vertex
+    // tint): the art's own shading is preserved and ramped through the team
+    // colour.  amount=0 keeps the original palette, amount=1 recolors fully.
+    {
+        const char* vs =
+            "#version 330\n"
+            "in vec3 vertexPosition;\n"
+            "in vec2 vertexTexCoord;\n"
+            "in vec4 vertexColor;\n"
+            "uniform mat4 mvp;\n"
+            "out vec2 fragTexCoord;\n"
+            "out vec4 fragColor;\n"
+            "void main(){ fragTexCoord=vertexTexCoord; fragColor=vertexColor;"
+            " gl_Position=mvp*vec4(vertexPosition,1.0); }\n";
+        const char* fs =
+            "#version 330\n"
+            "in vec2 fragTexCoord;\n"
+            "in vec4 fragColor;\n"
+            "uniform sampler2D texture0;\n"
+            "uniform vec4 recolorTint;\n"
+            "uniform float recolorAmount;\n"
+            "out vec4 finalColor;\n"
+            "void main(){\n"
+            "  vec4 tex = texture(texture0, fragTexCoord);\n"
+            "  float l = dot(tex.rgb, vec3(0.299,0.587,0.114));\n"
+            "  vec3 shadow = recolorTint.rgb * 0.30;\n"
+            "  vec3 mid = recolorTint.rgb;\n"
+            "  vec3 high = mix(recolorTint.rgb, vec3(1.0), 0.45);\n"
+            "  vec3 ramp = l < 0.5 ? mix(shadow, mid, l*2.0)\n"
+            "                      : mix(mid, high, (l-0.5)*2.0);\n"
+            "  vec3 col = mix(tex.rgb, ramp, recolorAmount);\n"
+            "  finalColor = vec4(col, tex.a) * fragColor;\n"
+            "}\n";
+        gUnitRecolor = LoadShaderFromMemory(vs, fs);
+        if (gUnitRecolor.id) {
+            gUnitTintLoc = GetShaderLocation(gUnitRecolor, "recolorTint");
+            gUnitAmountLoc = GetShaderLocation(gUnitRecolor, "recolorAmount");
+        } else {
+            std::cout << "unit recolor shader failed to load\n";
+        }
+    }
 
     if (unitshot) {
         int W = GetScreenWidth(), H = GetScreenHeight();
@@ -2741,7 +2847,7 @@ int main(int argc, char** argv) {
         float sx, sy, tx, ty;
         hexCenter(c.x, c.y, sx, sy);
         hexCenter(t.x, t.y, tx, ty);
-        float usz = gHexSize * 1.75f;
+        float usz = mapUnitSize();
         boardSX = (c.px >= 0) ? c.px : sx - usz / 2;
         boardSY = (c.py >= 0) ? c.py : sy - usz / 2;
         boardTX = (t.px >= 0) ? t.px : tx - usz / 2;
@@ -2766,7 +2872,7 @@ int main(int argc, char** argv) {
         Unit& u = gMission.units[aiSlot];
         float hx, hy;
         hexCenter(aiPath[aiPathIdx].first, aiPath[aiPathIdx].second, hx, hy);
-        float usz = gHexSize * 1.75f;
+        float usz = mapUnitSize();
         aiFromX = (u.px >= 0) ? u.px : hx - usz / 2;
         aiFromY = (u.py >= 0) ? u.py : hy - usz / 2;
         aiToX = hx - usz / 2;
@@ -2829,7 +2935,7 @@ int main(int argc, char** argv) {
         if (cell >= 0) {
             int tx = cell % gMission.w, ty = cell / gMission.w;
             aiPath = movementPath(gMission, slot, dist, tx, ty);
-            float usz = gHexSize * 1.75f;
+            float usz = mapUnitSize();
             if (u.px < 0) {
                 float hx, hy;
                 hexCenter(u.x, u.y, hx, hy);
@@ -2905,7 +3011,7 @@ int main(int argc, char** argv) {
                         float sx, sy, tx, ty;
                         hexCenter(f.x, f.y, sx, sy);
                         hexCenter(gMission.units[ts].x, gMission.units[ts].y, tx, ty);
-                        float usz = gHexSize * 1.75f;
+                        float usz = mapUnitSize();
                         u.x = f.x;
                         u.y = f.y;
                         boardSX = sx - usz / 2;
@@ -2983,7 +3089,7 @@ int main(int argc, char** argv) {
                     float sx, sy, tx, ty;
                     hexCenter(t.x, t.y, sx, sy);
                     hexCenter(target->x, target->y, tx, ty);
-                    float usz = gHexSize * 1.75f;
+                    float usz = mapUnitSize();
                     // Dedicated slide-out animation from the transport cell to
                     // the chosen target hex.
                     unloadSX = (t.px >= 0) ? t.px : sx - usz / 2;
@@ -3290,7 +3396,7 @@ int main(int argc, char** argv) {
         }
 
         // smooth movement + effect timers
-        float usz = gHexSize * 1.75f;
+        float usz = mapUnitSize();
         for (int ui = 0; ui < (int)gMission.units.size(); ++ui) {
             Unit& u = gMission.units[ui];
             float hx, hy;
@@ -3367,6 +3473,13 @@ int main(int argc, char** argv) {
             for (int i = 0; i < u.hp; ++i)
                 DrawRectangle((int)(cx - u.hp * 4 + i * 8), (int)(cy + gHexSize * 0.55f),
                               6, 5, u.owner == 0 ? kGreen : kRed);
+            int stars = std::min(u.rank, 7);
+            if (stars > 0) {
+                float sy = cy + gHexSize * 0.55f + 9.0f;
+                float sx0 = cx - (stars - 1) * 5.0f;
+                for (int i = 0; i < stars; ++i)
+                    drawStar(sx0 + i * 10.0f, sy, 3.6f, Color{255, 208, 60, 255});
+            }
             if (u.cargo >= 0) {   // loaded transport marker
                 DrawCircleV({cx + gHexSize * 0.62f, cy - gHexSize * 0.55f}, 4.5f, SKYBLUE);
                 DrawCircleLines((int)(cx + gHexSize * 0.62f),
@@ -3475,8 +3588,9 @@ int main(int argc, char** argv) {
             const Unit& u = gMission.units[infoSlot];
             const UnitType& t = gTypes[u.type];
             bool mine = (u.owner == currentPlayer);
-            uiText(TextFormat("%s  HP %d  MOV %d", t.name.c_str(), u.hp, t.movePts), px, 290,
-                     18, mine ? YELLOW : kRed);
+            uiText(TextFormat("%s  HP %d  MOV %d  R%d", t.name.c_str(), u.hp, t.movePts,
+                              u.rank),
+                   px, 290, 18, mine ? YELLOW : kRed);
             uiText(TextFormat("ATK G/A %d/%d  DEF %d", t.atkGround, t.atkAir, t.def), px, 330,
                      16, LIGHTGRAY);
             if (!mine) {

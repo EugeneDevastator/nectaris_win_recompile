@@ -1,0 +1,44 @@
+{
+ "id": 17,
+ "name": "SS-80",
+ "attack_ground": 90,
+ "attack_air": 0,
+ "defense": 20,
+ "counter_ground": 6,
+ "counter_air": 1,
+ "movement": 0,
+ "movement_class": 0,
+ "ability_flags": 153,
+ "max_hp": 7,
+ "folder": "unit_17_ss80",
+ "combat_chunks": [
+  644,
+  645,
+  646,
+  647
+ ],
+ "combat_sprite_group": 250,
+ "world_map_base": 104,
+ "sprites": [
+  "horizontal.png",
+  "vertical.png",
+  "combat_alive.png",
+  "combat_diagonal.png"
+ ],
+ "palette": "blue default; tint for enemy",
+ "guide_frames": {
+  "horizontal": "combat_alive.png",
+  "diagonal": "combat_diagonal.png"
+ },
+ "guide": {
+  "english_name": "SS-80",
+  "movement": 0,
+  "defense": 20,
+  "attack_ground": 90,
+  "attack_air": 0,
+  "range_ground": 6,
+  "range_air": 0,
+  "frame_alive": "combat_alive.png",
+  "frame_wreck": "combat_wreck.png"
+ }
+}

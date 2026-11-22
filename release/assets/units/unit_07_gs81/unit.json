@@ -1,0 +1,44 @@
+{
+ "id": 7,
+ "name": "GS-81",
+ "attack_ground": 50,
+ "attack_air": 0,
+ "defense": 50,
+ "counter_ground": 1,
+ "counter_air": 1,
+ "movement": 7,
+ "movement_class": 0,
+ "ability_flags": 17,
+ "max_hp": 7,
+ "folder": "unit_07_gs81",
+ "combat_chunks": [
+  604,
+  605,
+  606,
+  607
+ ],
+ "combat_sprite_group": 240,
+ "world_map_base": 136,
+ "sprites": [
+  "horizontal.png",
+  "vertical.png",
+  "combat_alive.png",
+  "combat_diagonal.png"
+ ],
+ "palette": "blue default; tint for enemy",
+ "guide_frames": {
+  "horizontal": "combat_alive.png",
+  "diagonal": "combat_diagonal.png"
+ },
+ "guide": {
+  "english_name": "GS-81",
+  "movement": 7,
+  "defense": 50,
+  "attack_ground": 50,
+  "attack_air": 0,
+  "range_ground": 1,
+  "range_air": 0,
+  "frame_alive": "combat_alive.png",
+  "frame_wreck": "combat_wreck.png"
+ }
+}
