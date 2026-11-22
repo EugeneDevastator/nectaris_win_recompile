@@ -283,3 +283,7 @@ python tools/analyze_matrix.py                   # refresh motion.json
 Long-run capture: `tools/capture_battle_matrix.py` (resumable, 210
 type/terrain jobs) + `tools/analyze_matrix.py` (per-position motion and sprite
 orientation index for impostor mapping).
+
+See `dump/PORT_HANDOFF.md` for the consolidated notes on the impostor atlas and
+per-unit compass tables, the blue->green palette LUT, raylib's negative-width
+flip convention, headless capture, unit-folder naming and the world-map UI.
