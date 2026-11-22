@@ -40,5 +40,12 @@
   "range_air": 1,
   "frame_alive": "combat_alive.png",
   "frame_wreck": "combat_wreck.png"
- }
+ },
+ "impostor_frames": [
+  "frames/impostor_00.png",
+  "frames/impostor_01.png",
+  "frames/impostor_02.png",
+  "frames/impostor_03.png"
+ ],
+ "impostor_count": 4
 }

@@ -72,6 +72,12 @@ static int gUnitLutToLoc = -1;
 static int gUnitLutCountLoc = -1;
 // Per unit type: exact blue -> green palette pairs taken from the game art.
 static std::vector<std::pair<Vector3, Vector3>> gUnitLut[24];
+// Packed impostor frames (all directional frames in one atlas).
+struct ImpostorRect {
+    int x = 0, y = 0, w = 0, h = 0;
+};
+static Texture2D gImpostorAtlas = {0};
+static std::vector<ImpostorRect> gImpostorRects[24];
 
 // Combat VFX config (assets/data/combat_vfx.json).  Frames refer to resource-23
 // half frames; quads are groups of four consecutive halves assembled 2x2.
@@ -114,10 +120,6 @@ struct PerspSlot {
 };
 static std::map<std::string, std::vector<PerspSlot>> gPersp;
 static float gEntrySpeed = 1.0f;
-// Directional combat frames extracted from the unit art streams:
-// assets/art/unit_frames/unit_XX_frame_NN_combat_{blue,green}.png
-static std::vector<Texture2D> gUnitFrameTex[24][2];
-static bool gUnitFrameLoaded[24][2] = {};
 
 // Hex direction order of the unit frames: 0=E, 1=NE, 2=N, 5=SE.  The sheet only
 // contains the forward/right-facing angles, so left-facing movement uses the
@@ -1415,32 +1417,12 @@ static void drawTargetingFrame(const Mission& m, int srcX, int srcY, int type,
     EndDrawing();
 }
 
-// Combat sprite texture for a unit type. Prefers the captured directional
-// frames (blue for the player, green for the enemy); frame -1 means the base
-// combat_alive sprite.
-static void loadUnitFrames(int type, int color) {
-    if (type < 0 || type >= 24 || color < 0 || color > 1) return;
-    if (gUnitFrameLoaded[type][color]) return;
-    gUnitFrameLoaded[type][color] = true;
-    for (int f = 0; f < 16; ++f) {
-        std::string p = gAssetDir + TextFormat("art/unit_frames/unit_%02d_frame_%02d_combat_%s.png",
-                                               type, f, color ? "green" : "blue");
-        if (!FileExists(p.c_str())) break;
-        gUnitFrameTex[type][color].push_back(LoadTexture(p.c_str()));
-    }
-}
-
+// Combat sprite texture for a unit type.  Frames come from the packed atlas
+// (assets/art/unit_impostors_atlas.png); frame -1 uses the base sprite.
 static Texture2D* combatUnitTexture(int type, int frame, bool rightSide) {
     if (type < 0 || type >= 24) return nullptr;
-    if (frame >= 0) {
-        // Always the blue frames; team recolouring is done by the shader so
-        // the original luminance/shading is preserved.
-        int color = 0;
-        loadUnitFrames(type, color);
-        const auto& list = gUnitFrameTex[type][color];
-        if (!list.empty())
-            return const_cast<Texture2D*>(&list[frame % (int)list.size()]);
-    }
+    if (frame >= 0 && gImpostorAtlas.id && !gImpostorRects[type].empty())
+        return &gImpostorAtlas;
     Texture2D& base = rightSide ? gUnitSprite[type] : gUnitSpriteFlip[type];
     return base.id ? &base : nullptr;
 }
@@ -1448,8 +1430,7 @@ static Texture2D* combatUnitTexture(int type, int frame, bool rightSide) {
 static int combatFrameCount(int type, bool rightSide) {
     (void)rightSide;
     if (type < 0 || type >= 24) return 0;
-    loadUnitFrames(type, 0);
-    return (int)gUnitFrameTex[type][0].size();
+    return (int)gImpostorRects[type].size();
 }
 
 static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D enemyTex) {    (void)playerTex;
@@ -1830,15 +1811,19 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
             float depthNow = std::clamp(posUv.y, 0.0f, 1.0f);
             float cfgScale = std::max(0.2f, (0.72f + 0.80f * depthNow) * scaleMul);
             if (settled && spriteEnd >= 0) sprite = spriteEnd;
-            bool useFrames = (frameCount > 0);
-            Texture2D* tex = combatUnitTexture(type, useFrames ? sprite : -1, mirror);
+            bool useFrames = (frameCount > 0) && gImpostorAtlas.id;
+            ImpostorRect ir = {0, 0, baseTex ? (int)baseTex->width : 0,
+                               baseTex ? (int)baseTex->height : 0};
+            if (useFrames) ir = gImpostorRects[type][sprite % frameCount];
+            Texture2D* tex = useFrames ? &gImpostorAtlas : baseTex;
             if (!tex || !tex->id) tex = baseTex;
-            Rectangle src = {0, 0, (float)tex->width, (float)tex->height};
+            if (!tex || !tex->id) continue;
+            Rectangle src = {(float)ir.x, (float)ir.y, (float)ir.w, (float)ir.h};
             // The impostor sheet only has the forward/right-facing angles;
             // left-facing motion mirrors it horizontally.
             bool drawFlip = (flipMode < 0) ? autoFlip : (flipMode != 0);
             if (useFrames && drawFlip)
-                src = {(float)tex->width, 0, -(float)tex->width, (float)tex->height};
+                src = {(float)(ir.x + ir.w), (float)ir.y, -(float)ir.w, (float)ir.h};
             Vector2 dest = panelPoint(px, posUv.x, posUv.y);
             Rectangle dr;
             if (useFrames) {
@@ -1846,7 +1831,7 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
                 // them 1:1 with the original panel scale and centre them in the
                 // recorded 64x64 slot cell.
                 float ps = (panW / 256.0f) * cfgScale;
-                float fw = tex->width * ps, fh = tex->height * ps;
+                float fw = ir.w * ps, fh = ir.h * ps;
                 float cx = dest.x + nudge + 32.0f * ps;
                 float cy = dest.y + 32.0f * ps;
                 dr = {cx - fw / 2, cy - fh / 2, fw, fh};
@@ -2548,6 +2533,27 @@ int main(int argc, char** argv) {
                               e[1][1].get<float>() / 255.0f,
                               e[1][2].get<float>() / 255.0f};
                     gUnitLut[t].push_back({a, b});
+                }
+            }
+        }
+    }
+
+    // Packed impostor frame atlas (all directional unit frames).
+    {
+        std::ifstream imf(gAssetDir + "data/unit_impostors.json");
+        if (imf) {
+            json ij = json::parse(imf);
+            std::string atlas = gAssetDir +
+                ij.value("atlas", std::string("art/unit_impostors_atlas.png"));
+            gImpostorAtlas = LoadTexture(atlas.c_str());
+            if (gImpostorAtlas.id && ij.contains("units")) {
+                for (auto it = ij["units"].begin(); it != ij["units"].end(); ++it) {
+                    int t = std::atoi(it.key().c_str());
+                    if (t < 0 || t >= 24) continue;
+                    for (const auto& r : it.value()) {
+                        if (r.size() >= 4)
+                            gImpostorRects[t].push_back({r[0], r[1], r[2], r[3]});
+                    }
                 }
             }
         }
@@ -3715,6 +3721,7 @@ int main(int argc, char** argv) {
         if (gUnitMapTex[t].id) UnloadTexture(gUnitMapTex[t]);
         if (gUnitMapFlipTex[t].id) UnloadTexture(gUnitMapFlipTex[t]);
     }
+    if (gImpostorAtlas.id) UnloadTexture(gImpostorAtlas);
     for (int i = 0; i < 16; ++i) if (gVfx[i].id) UnloadTexture(gVfx[i]);
     for (int i = 0; i < 64; ++i) if (gVfxHalf[i].id) UnloadTexture(gVfxHalf[i]);
     for (int i = 0; i < 16; ++i) if (gVfxQuad[i].id) UnloadTexture(gVfxQuad[i]);

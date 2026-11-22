@@ -129,10 +129,14 @@ Measured with `dump/object_runs/objraw.json`:
   recorded path by the same offset.
 * `speed` — multiplies the playback speed of the captured entry curves.
 
-The frames themselves come from the extracted unit art streams in
-`assets/art/unit_frames/unit_XX_frame_NN_combat_blue.png` (player) and
-`..._combat_green.png` (enemy), so they are original art and are recoloured
-variants of the same source. Edit/replace those PNGs to change a pose.
+The frames themselves come from the extracted unit art streams, packed into:
+
+* **`assets/units/<unit folder>/frames/impostor_NN.png`** — editable per-unit
+  source frames (copied from `assets/art/unit_frames/`)
+* **`assets/art/unit_impostors_atlas.png`** — one packed atlas used at runtime
+* **`assets/data/unit_impostors.json`** — atlas rectangles per unit type
+
+Regenerate after editing frames with `python tools/pack_unit_impostors.py`.
 
 `tools/measure_perspective.py` regenerates the defaults from the curves (it
 overwrites the file, so keep a copy of manual edits).
