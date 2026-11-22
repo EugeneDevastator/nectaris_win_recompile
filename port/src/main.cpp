@@ -78,6 +78,9 @@ struct ImpostorRect {
 };
 static Texture2D gImpostorAtlas = {0};
 static std::vector<ImpostorRect> gImpostorRects[24];
+// Compass frame table per unit: E, SE, S, SW, W, NW, N, NE.
+static int gImpostorDirs[24][8] = {};
+static int gImpostorFlips[24][8] = {};
 
 // Combat VFX config (assets/data/combat_vfx.json).  Frames refer to resource-23
 // half frames; quads are groups of four consecutive halves assembled 2x2.
@@ -124,22 +127,13 @@ static float gEntrySpeed = 1.0f;
 // Hex direction order of the unit frames: 0=E, 1=NE, 2=N, 5=SE.  The sheet only
 // contains the forward/right-facing angles, so left-facing movement uses the
 // mirrored frame with flip=true and the sprite is drawn horizontally mirrored.
-static int directionFrame(float dx, float dy, int count, bool& flip) {
-    flip = false;
-    if (count <= 0) return 0;
-    if (dx < 0.0f) {
-        dx = -dx;
-        flip = true;
-    }
-    float ax = std::fabs(dx), ay = std::fabs(dy);
-    if (ax < 1e-4f && ay < 1e-4f) return 0;
-    int idx;
-    if (ay > ax * 1.2f) {
-        idx = (dy < 0) ? 2 : 1;          // steep: front / down
-    } else {
-        idx = 0;                          // horizontal / shallow diagonal
-    }
-    return std::clamp(idx, 0, count - 1);
+// Compass sector used by the impostor tables:
+// 0=E, 1=SE, 2=S, 3=SW, 4=W, 5=NW, 6=N, 7=NE  (screen coordinates, +y down).
+static int compassSector(float dx, float dy) {
+    if (std::fabs(dx) < 1e-5f && std::fabs(dy) < 1e-5f) return 4;
+    float ang = std::atan2(dy, dx) * 180.0f / PI;
+    int s = (int)std::lround(ang / 45.0f);
+    return (s % 8 + 8) % 8;
 }
 static CombatUnitVfx gUnitVfx[24];
 static std::vector<int> gVfxProjectile[2], gVfxMuzzle[2], gVfxHit, gVfxMiss;
@@ -1780,11 +1774,13 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
                 curveAt(cv, local, posUv);
                 settled = (local * speed >= cv.duration * speed);
                 // Use the whole recorded displacement for the facing so the
-                // flip never changes once the unit stops (and cannot be
-                // disturbed by the small settle jitter at the end).
-                autoDir = directionFrame(cv.slot.x - cv.start.x,
-                                         cv.slot.y - cv.start.y,
-                                         frameCount, autoFlip);
+                // flip never changes once the unit stops; the per-unit table
+                // maps compass sectors to atlas frames.
+                int sec = compassSector(cv.slot.x - cv.start.x,
+                                        cv.slot.y - cv.start.y);
+                autoDir = (frameCount > 0)
+                              ? (gImpostorDirs[type][sec] % frameCount) : 0;
+                autoFlip = gImpostorFlips[type][sec] != 0;
             } else {
                 float sx = mirror ? (1.0f - FORM[i][0]) : FORM[i][0];
                 slotUv = {sx, FORM[i][1]};
@@ -2540,6 +2536,14 @@ int main(int argc, char** argv) {
 
     // Packed impostor frame atlas (all directional unit frames).
     {
+        for (int t = 0; t < 24; ++t) {
+            static const int defDirs[8] = {0, 1, 1, 1, 0, 2, 2, 2};
+            static const int defFlips[8] = {0, 0, 0, 1, 1, 1, 0, 0};
+            for (int k = 0; k < 8; ++k) {
+                gImpostorDirs[t][k] = defDirs[k];
+                gImpostorFlips[t][k] = defFlips[k];
+            }
+        }
         std::ifstream imf(gAssetDir + "data/unit_impostors.json");
         if (imf) {
             json ij = json::parse(imf);
@@ -2550,9 +2554,26 @@ int main(int argc, char** argv) {
                 for (auto it = ij["units"].begin(); it != ij["units"].end(); ++it) {
                     int t = std::atoi(it.key().c_str());
                     if (t < 0 || t >= 24) continue;
-                    for (const auto& r : it.value()) {
-                        if (r.size() >= 4)
-                            gImpostorRects[t].push_back({r[0], r[1], r[2], r[3]});
+                    const json& u = it.value();
+                    const json* rects = nullptr;
+                    if (u.is_array()) {
+                        rects = &u;
+                    } else if (u.contains("frames")) {
+                        rects = &u["frames"];
+                        if (u.contains("dirs")) {
+                            for (int k = 0; k < 8 && k < (int)u["dirs"].size(); ++k)
+                                gImpostorDirs[t][k] = u["dirs"][k].get<int>();
+                        }
+                        if (u.contains("flips")) {
+                            for (int k = 0; k < 8 && k < (int)u["flips"].size(); ++k)
+                                gImpostorFlips[t][k] = u["flips"][k].get<int>();
+                        }
+                    }
+                    if (rects) {
+                        for (const auto& r : *rects) {
+                            if (r.size() >= 4)
+                                gImpostorRects[t].push_back({r[0], r[1], r[2], r[3]});
+                        }
                     }
                 }
             }

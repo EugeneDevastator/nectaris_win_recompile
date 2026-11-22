@@ -138,6 +138,21 @@ The frames themselves come from the extracted unit art streams, packed into:
 
 Regenerate after editing frames with `python tools/pack_unit_impostors.py`.
 
+Each unit entry also carries the compass mapping used by the runtime:
+
+```json
+"6": {
+  "frames": [[x,y,w,h], ...],
+  "dirs":  [0, 1, 3, 1, 0, 2, 2, 2],
+  "flips": [0, 0, 0, 1, 1, 1, 0, 0]
+}
+```
+
+`dirs`/`flips` are indexed by compass sector **E, SE, S, SW, W, NW, N, NE**
+(screen coordinates).  For S-61: 0 = right, 1 = 45° down-right, 2 = 45°
+up-right, 3 = 60° down-right, 4 = unused smaller variant.  The packer keeps
+hand edits to `dirs`/`flips` when it repacks.
+
 `tools/measure_perspective.py` regenerates the defaults from the curves (it
 overwrites the file, so keep a copy of manual edits).
 
