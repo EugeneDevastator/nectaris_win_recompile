@@ -1459,6 +1459,20 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
                             : (float)MeasureText(TR.name.c_str(), nameSize * 2);
     float nxL = playX + playW * 0.03f;
     float nxR = playX + playW * 0.97f - rw;
+    // Keep the name and its HP box from overlapping even for long names: the
+    // name is allowed at most the half-width minus the box and a margin.
+    const float hpS0 = topH * 0.32f;
+    const float hpGap0 = playW * 0.018f;
+    const float maxNameW = playW * 0.5f - hpS0 - hpGap0 - playW * 0.04f;
+    while (nameSize > 8 && (lw > maxNameW || rw > maxNameW)) {
+        --nameSize;
+        nfs = uiFontPixels(nameSize);
+        lw = gUiFontReady ? MeasureTextEx(gUiFont, TL.name.c_str(), nfs, uiSpacing(nameSize)).x
+                          : (float)MeasureText(TL.name.c_str(), nameSize * 2);
+        rw = gUiFontReady ? MeasureTextEx(gUiFont, TR.name.c_str(), nfs, uiSpacing(nameSize)).x
+                          : (float)MeasureText(TR.name.c_str(), nameSize * 2);
+        nxR = playX + playW * 0.97f - rw;
+    }
     uiText(TL.name.c_str(), (int)nxL, (int)nameY, nameSize, TXT);
     uiText(TR.name.c_str(), (int)nxR, (int)nameY, nameSize, TXT);
 
@@ -1774,18 +1788,28 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
             hexNeighbor(side.unit >= 0 ? gMission.units[side.unit].x : 0,
                         side.unit >= 0 ? gMission.units[side.unit].y : 0, k, nx, ny);
             int occ = unitAt(gMission, nx, ny);
-            bool friendly = occ >= 0 && gMission.units[occ].owner == side.team;
-            bool enemy = occ >= 0 && !friendly;
-            // Participating units only: membership of this side's support list.
+            // Active = the two combatants plus everyone in either support list.
             bool sup = false;
             for (const SupportContribution& c : list)
                 if (occ >= 0 && c.slot == occ) { sup = true; break; }
+            bool participant = false;
+            int ownerTeam = -1;
+            if (occ >= 0) {
+                ownerTeam = gMission.units[occ].owner;
+                participant = sup || occ == v.r.atkSlot || occ == v.r.defSlot;
+                for (const SupportContribution& c : v.r.supportAtkUnits)
+                    if (c.slot == occ) participant = true;
+                for (const SupportContribution& c : v.r.supportDefUnits)
+                    if (c.slot == occ) participant = true;
+            }
             float a = (-90.0f + 60.0f * k) * 3.14159265f / 180.0f;
             Vector2 p = {center.x + std::cos(a) * d, center.y + std::sin(a) * d};
-            Color fill = sup ? Color{255, 170, 40, 235}
-                        : friendly ? teamCol
-                        : enemy ? Color{190, 55, 55, 210}
-                        : Color{45, 48, 60, 170};
+            // Team colour for units taking part in the combat, grey for the
+            // rest, dark for empty cells.
+            Color fill = (occ < 0) ? Color{45, 48, 60, 170}
+                        : participant ? (ownerTeam == 0 ? Color{60, 120, 220, 230}
+                                                      : Color{60, 180, 90, 230})
+                        : Color{105, 105, 112, 210};
             DrawPoly(p, 6, r * 0.92f, 0, fill);
             DrawPolyLinesEx(p, 6, r * 0.92f, 0, sup ? 2.2f : 1.0f,
                             sup ? Color{255, 230, 150, 255}
@@ -1822,7 +1846,7 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
             }
             ++shown;
         }
-        if (shown == 0) smallText(bx + 4, iy + 2, "no support", DIM);
+        if (shown == 0) smallText(bx + 4, iy + 2, "none", DIM);
     };    {
         float r = std::max(6.5f, panW * 0.030f);
         float bw = 5.4f * r + 10.0f;
@@ -1993,20 +2017,26 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
     std::snprintf(m4, sizeof(m4), "TER %d/%d", r.terrainDefA, r.terrainDefD);
     std::snprintf(m5, sizeof(m5), "MODE %s", v.ranged ? "RANGED" : "DIRECT");
 
-    float colW = playW * 0.30f;
-    auto widest = [&](int scale) {
-        float fs = basePx * scale;
-        float sp = std::max(1.0f, (float)scale);
-        float w = 0.0f;
-        for (const char* s : {l1, l2, l3, l4, r1, r2, r3, r4, m1, m2, m3, m4, m5})
-            w = std::max(w, gUiFontReady ? MeasureTextEx(gUiFont, s, fs, sp).x
-                                         : (float)MeasureText(s, (int)fs));
-        return w;
+    const float colGap = playW * 0.025f;
+    const float avail = playW * 0.96f;
+    float wL = 0, wC = 0, wR = 0;
+    auto measureCols = [&](int s) {
+        float fs = basePx * s;
+        float sp = std::max(1.0f, (float)s);
+        auto tw = [&](const char* str) {
+            return gUiFontReady ? MeasureTextEx(gUiFont, str, fs, sp).x
+                                : (float)MeasureText(str, (int)fs);
+        };
+        wL = std::max(std::max(tw(l1), tw(l2)), std::max(tw(l3), tw(l4)));
+        wC = std::max(std::max(tw(m1), tw(m2)), std::max(tw(m3), tw(m4)));
+        wC = std::max(wC, tw(m5));
+        wR = std::max(std::max(tw(r1), tw(r2)), std::max(tw(r3), tw(r4)));
     };
     int rscale = 1;
     for (int s = wantScale; s >= 1; --s) {
         float lh = basePx * s * 1.12f;
-        if (5.0f * lh + 10.0f <= botH && widest(s) <= colW) {
+        measureCols(s);
+        if (5.0f * lh + 10.0f <= botH && wL + wC + wR + 2.0f * colGap <= avail) {
             rscale = s;
             break;
         }
@@ -2019,9 +2049,12 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
         else DrawText(s, (int)x, (int)y, (int)rfs, c);
     };
 
+    // Columns are laid out from their measured widths, never from fixed
+    // fractions, so long values cannot run into the next group.
+    measureCols(rscale);
     float colL = playX + playW * 0.02f;
-    float colC = playX + playW * 0.36f;
-    float colR = playX + playW * 0.68f;
+    float colC = colL + wL + colGap;
+    float colR = colC + wC + colGap;
     float y0 = botY + std::max(6.0f, (botH - 5.0f * lh) * 0.35f);
 
     line(colL, y0, "PLAYER", BORDER);
