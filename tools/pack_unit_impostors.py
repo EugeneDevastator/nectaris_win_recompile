@@ -33,6 +33,9 @@ DIR_OVERRIDES = {
     # S-61: 0=E, 1=SE(45), 2=NE(45), 3=SE(60), 4=unused smaller variant
     '6': {'dirs': [0, 1, 3, 1, 0, 2, 2, 2],
           'flips': [0, 0, 0, 1, 1, 1, 0, 0]},
+    # HMB-2's only frame is a full 64x64 cell (2x the other units) - draw it
+    # at half size so it fits the formation.
+    '9': {'frame_scale': 0.5},
 }
 
 
@@ -104,10 +107,12 @@ def main():
         old = prev.get(str(t), {})
         old_dirs = old.get('dirs') if isinstance(old, dict) else None
         old_flips = old.get('flips') if isinstance(old, dict) else None
+        old_scale = old.get('frame_scale', 1.0) if isinstance(old, dict) else 1.0
         units_manifest[str(t)] = {
             'frames': rects,
             'dirs': ov.get('dirs', old_dirs or DEFAULT_DIRS),
             'flips': ov.get('flips', old_flips or DEFAULT_FLIPS),
+            'frame_scale': ov.get('frame_scale', old_scale),
         }
     total_h = y + row_h + PAD
     atlas = Image.new('RGBA', (MAX_W, total_h), (0, 0, 0, 0))

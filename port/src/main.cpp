@@ -81,6 +81,7 @@ static std::vector<ImpostorRect> gImpostorRects[24];
 // Compass frame table per unit: E, SE, S, SW, W, NW, N, NE.
 static int gImpostorDirs[24][8] = {};
 static int gImpostorFlips[24][8] = {};
+static float gImpostorScale[24] = {};
 
 // Combat VFX config (assets/data/combat_vfx.json).  Frames refer to resource-23
 // half frames; quads are groups of four consecutive halves assembled 2x2.
@@ -1767,6 +1768,7 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
             bool settled = true;
             bool autoFlip = false;
             int autoDir = std::min(3, std::max(0, frameCount - 1));
+            int dbgSec = -1;
             if (!curves.empty()) {
                 const EntryCurve& cv = curves[std::min<int>(i, (int)curves.size() - 1)];
                 slotUv = cv.slot;
@@ -1778,6 +1780,7 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
                 // maps compass sectors to atlas frames.
                 int sec = compassSector(cv.slot.x - cv.start.x,
                                         cv.slot.y - cv.start.y);
+                dbgSec = sec;
                 autoDir = (frameCount > 0)
                               ? (gImpostorDirs[type][sec] % frameCount) : 0;
                 autoFlip = gImpostorFlips[type][sec] != 0;
@@ -1791,6 +1794,7 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
             if (settled && frameCount > 0) {
                 autoDir = gImpostorDirs[type][0] % frameCount;
                 autoFlip = mirror;
+                dbgSec = 0;
             }
             // Perspective/sprite settings are user-editable per slot; a slot
             // edit also shifts the whole recorded path by the same delta.
@@ -1832,11 +1836,12 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
                 // Directional frames are cropped to their opaque bounds; draw
                 // them 1:1 with the original panel scale and centre them in the
                 // recorded 64x64 slot cell.
-                float ps = (panW / 256.0f) * cfgScale;
-                float fw = ir.w * ps, fh = ir.h * ps;
-                float cx = dest.x + nudge + 32.0f * ps;
-                float cy = dest.y + 32.0f * ps;
-                dr = {cx - fw / 2, cy - fh / 2, fw, fh};
+                float cellPs = (panW / 256.0f) * cfgScale;
+                float fs = cellPs * gImpostorScale[type];
+                float fw = ir.w * fs, fh = ir.h * fs;
+                float cx = dest.x + nudge + 32.0f * cellPs;
+                float cy = dest.y + 32.0f * cellPs;
+                dr = {std::round(cx - fw / 2), std::round(cy - fh / 2), fw, fh};
             } else {
                 float s = panW * 0.25f * cfgScale;
                 dr = {dest.x + nudge, dest.y, s, s};
@@ -1855,6 +1860,9 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
                     float my = dr.y + dr.height * 0.5f;
                     DrawLineEx({dr.x + 2, my}, {dr.x + 14, my}, 2.0f, MAGENTA);
                 }
+                const char* tag = TextFormat("%c f%d%s s%d", mirror ? 'R' : 'L',
+                                             sprite, drawFlip ? "<" : "", dbgSec);
+                DrawText(tag, (int)dr.x, (int)(dr.y - 13.0f), 12, LIME);
             }
         }
         if (gUnitRecolor.id) EndShaderMode();
@@ -2198,7 +2206,7 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
         DrawRectangleLinesEx({colL, botY, wL, botH}, 1.0f, ORANGE);
         DrawRectangleLinesEx({colC, botY, wC, botH}, 1.0f, ORANGE);
         DrawRectangleLinesEx({colR, botY, wR, botH}, 1.0f, ORANGE);
-        DrawText(TextFormat("F1 WIRE  double-sided  drawn L%d R%d",
+        DrawText(TextFormat("F1 WIRE  f=frame  <flipped  s=sector  L%d R%d",
                             dbgDrawn[0], dbgDrawn[1]),
                  6, H - 18, 12, LIME);
     }
@@ -2549,6 +2557,7 @@ int main(int argc, char** argv) {
                 gImpostorDirs[t][k] = defDirs[k];
                 gImpostorFlips[t][k] = defFlips[k];
             }
+            gImpostorScale[t] = 1.0f;
         }
         std::ifstream imf(gAssetDir + "data/unit_impostors.json");
         if (imf) {
@@ -2574,6 +2583,7 @@ int main(int argc, char** argv) {
                             for (int k = 0; k < 8 && k < (int)u["flips"].size(); ++k)
                                 gImpostorFlips[t][k] = u["flips"][k].get<int>();
                         }
+                        gImpostorScale[t] = u.value("frame_scale", 1.0f);
                     }
                     if (rects) {
                         for (const auto& r : *rects) {
