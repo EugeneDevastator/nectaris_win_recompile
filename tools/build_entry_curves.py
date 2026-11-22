@@ -70,6 +70,21 @@ def main():
         print('no parked frame')
         return
 
+    # A couple of slots are allocated a little later than the first snapshot;
+    # pick their parked edge position from the first frame where they appear.
+    for f in frames:
+        if f['t'] < 4.88:
+            continue
+        if f['t'] > 6.0:
+            break
+        for o in f['objs']:
+            if o[0] < 2 or o[0] in park:
+                continue
+            x, y = parse_obj(bytes.fromhex(o[8]))
+            if (x <= 40 or x >= 290) and y:
+                park[o[0]] = (x, y)
+    print('slots after late park fill:', len(park), sorted(park))
+
     series = {}
     for f in frames:
         if f['t'] > ENTRY_LIMIT:

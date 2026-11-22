@@ -13,6 +13,7 @@
 // Controls: LMB select / move / attack, RMB pan, ESC cancel, SPACE end turn, R restart, F1 debug.
 
 #include "raylib.h"
+#include "rlgl.h"
 #include <nlohmann/json.hpp>
 
 #include "combat.h"
@@ -62,6 +63,7 @@ static Texture2D gVfx[16];
 static Texture2D gVfxHalf[64];
 static Texture2D gVfxQuad[16];
 static Texture2D gVfxSplat = {0};   // shared wreck: mine's dead sprite
+static bool gDebugWire = false;     // F1: polygon wireframe / double-sided debug
 
 // Combat VFX config (assets/data/combat_vfx.json).  Frames refer to resource-23
 // half frames; quads are groups of four consecutive halves assembled 2x2.
@@ -1410,6 +1412,7 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
     const Color TXT = {236, 236, 240, 255};
     const Color DIM = {168, 168, 178, 255};
     ClearBackground(BLACK);
+    if (gDebugWire) rlDisableBackfaceCulling();
 
     // Original layout: a 512x480 playfield centred in the 640x480 screen.
     // Two square panels fill the width; the report bar takes what is left.
@@ -1669,6 +1672,7 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
     // Original rhythm: arrival at 0.05 + i*0.235 s; rear formation rows are
     // drawn smaller (perspective), and destroyed slots vanish one by one as
     // their explosions play instead of all at once.
+    int dbgDrawn[2] = {0, 0};
     auto drawArmy = [&](float px, int count0, int count1, int type, bool mirror,
                         float nudge, Color flash) {
         if (type < 0 || type >= 24) return;
@@ -1760,6 +1764,7 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
             if (useFrames && drawFlip)
                 src = {(float)tex->width, 0, -(float)tex->width, (float)tex->height};
             Vector2 dest = panelPoint(px, posUv.x, posUv.y);
+            Rectangle dr;
             if (useFrames) {
                 // Directional frames are cropped to their opaque bounds; draw
                 // them 1:1 with the original panel scale and centre them in the
@@ -1768,10 +1773,25 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
                 float fw = tex->width * ps, fh = tex->height * ps;
                 float cx = dest.x + nudge + 32.0f * ps;
                 float cy = dest.y + 32.0f * ps;
-                DrawTexturePro(*tex, src, {cx - fw / 2, cy - fh / 2, fw, fh}, {0, 0}, 0, c);
+                dr = {cx - fw / 2, cy - fh / 2, fw, fh};
             } else {
                 float s = panW * 0.25f * cfgScale;
-                DrawTexturePro(*tex, src, {dest.x + nudge, dest.y, s, s}, {0, 0}, 0, c);
+                dr = {dest.x + nudge, dest.y, s, s};
+            }
+            DrawTexturePro(*tex, src, dr, {0, 0}, 0, c);
+            dbgDrawn[mirror ? 1 : 0]++;
+            if (gDebugWire) {
+                // Double-sided wireframe of the sprite quad (diagonals show the
+                // two triangles); the magenta tick marks mirrored sprites.
+                DrawRectangleLinesEx(dr, 1.0f, Color{90, 255, 255, 220});
+                DrawLineEx({dr.x, dr.y}, {dr.x + dr.width, dr.y + dr.height}, 1.0f,
+                           Color{90, 255, 255, 120});
+                DrawLineEx({dr.x + dr.width, dr.y}, {dr.x, dr.y + dr.height}, 1.0f,
+                           Color{90, 255, 255, 120});
+                if (drawFlip) {
+                    float my = dr.y + dr.height * 0.5f;
+                    DrawLineEx({dr.x + 2, my}, {dr.x + 14, my}, 2.0f, MAGENTA);
+                }
             }
         }
     };
@@ -1829,9 +1849,14 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
             DrawPolyLinesEx(p, 6, r * 0.92f, 0, sup ? 2.2f : 1.0f,
                             sup ? Color{255, 230, 150, 255}
                                 : Color{120, 120, 130, 220});
+            if (gDebugWire) {
+                DrawPolyLinesEx(p, 6, r * 0.92f, 0, 1.0f, MAGENTA);
+                DrawCircleV(p, 1.5f, MAGENTA);
+            }
         }
         DrawPoly(center, 6, r * 0.98f, 0, teamCol);
         DrawPolyLinesEx(center, 6, r * 0.98f, 0, 1.5f, WHITE);
+        if (gDebugWire) DrawPolyLinesEx(center, 6, r * 0.98f, 0, 1.0f, LIME);
         if (side.unit >= 0) {
             int type = gMission.units[side.unit].type;
             Texture2D& icon = gUnitMapTex[type];
@@ -2091,6 +2116,20 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
     line(colL, y0 + lh * 3, l4, DIM);
     line(colC, y0 + lh * 3, m5, DIM);
     line(colR, y0 + lh * 3, r4, DIM);
+
+    if (gDebugWire) {
+        // Layout group bounds: header, panels, report and its columns.
+        DrawRectangleLinesEx({playX, 0, playW, topH}, 1.0f, LIME);
+        DrawRectangleLinesEx({axPanel, panY, panW, panH}, 1.0f, LIME);
+        DrawRectangleLinesEx({dxPanel, panY, panW, panH}, 1.0f, LIME);
+        DrawRectangleLinesEx({playX, botY, playW, botH}, 1.0f, LIME);
+        DrawRectangleLinesEx({colL, botY, wL, botH}, 1.0f, ORANGE);
+        DrawRectangleLinesEx({colC, botY, wC, botH}, 1.0f, ORANGE);
+        DrawRectangleLinesEx({colR, botY, wR, botH}, 1.0f, ORANGE);
+        DrawText(TextFormat("F1 WIRE  double-sided  drawn L%d R%d",
+                            dbgDrawn[0], dbgDrawn[1]),
+                 6, H - 18, 12, LIME);
+    }
 }
 
 static std::string resolveAssets(int argc, char** argv) {
@@ -2146,6 +2185,7 @@ int main(int argc, char** argv) {
     bool inspectionshot = (argc > 3 && std::string(argv[3]) == "--inspectshot");
     bool previewshot = (argc > 3 && std::string(argv[3]) == "--previewshot");
     if (inspectionshot || previewshot) shotMode = true;   // reuse the hidden-window shot path
+    if (std::getenv("NECTARIS_DEBUG_WIRE")) gDebugWire = true;
     std::string shotPath = (argc > 4) ? argv[4] : "port_shot.png";
     bool selftest = (argc > 3 && std::string(argv[3]) == "--selftest");
 
@@ -2813,6 +2853,7 @@ int main(int argc, char** argv) {
     while (!WindowShouldClose()) {
         if (gCv.active) {
             gCv.t += GetFrameTime();
+            if (IsKeyPressed(KEY_F1)) gDebugWire = !gDebugWire;
             BeginDrawing();
             drawCombatScreen(gCv, playerTex, enemyTex);
             EndDrawing();
