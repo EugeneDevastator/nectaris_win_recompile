@@ -56,11 +56,16 @@ def main():
 
     if os.path.exists(ZIP):
         os.remove(ZIP)
+    # Only the documented payload: the exe, map16.png and assets/.  Anything
+    # else in release/ (stale or locked files) must never leak into the zip.
     with zipfile.ZipFile(ZIP, 'w', zipfile.ZIP_DEFLATED) as z:
         for base, _dirs, files in os.walk(RELEASE):
             for name in files:
                 path = os.path.join(base, name)
-                z.write(path, os.path.relpath(path, RELEASE))
+                rel = os.path.relpath(path, RELEASE).replace('\\', '/')
+                if rel != 'nectaris.exe' and rel != 'map16.png' and not rel.startswith('assets/'):
+                    continue
+                z.write(path, rel)
     size = os.path.getsize(ZIP)
     print('wrote %s (%.2f MB)' % (ZIP, size / (1024.0 * 1024.0)))
     return 0

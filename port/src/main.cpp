@@ -1622,6 +1622,18 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
     auto panelPoint = [&](float px, float slotX, float slotY) {
         return Vector2{px + slotX * panW, panY + slotY * panH};
     };
+    // Visual centre of a settled slot: matches how drawArmy places the sprite
+    // (the recorded slot is the 64x64 cell origin; frames are centred in it).
+    auto slotVisualCenter = [&](bool right, int idx) -> Vector2 {
+        Vector2 s = slotPos(right, idx);
+        float mul = 1.0f;
+        const auto& ps = gPersp[right ? "right" : "left"];
+        if (!ps.empty()) mul = ps[std::min<int>(idx, (int)ps.size() - 1)].scale;
+        float cfg = std::max(0.2f, (0.72f + 0.80f * std::clamp(s.y, 0.0f, 1.0f)) * mul);
+        float pxs = (panW / 256.0f) * cfg;
+        Vector2 dest = panelPoint(right ? dxPanel : axPanel, s.x, s.y);
+        return {dest.x + 32.0f * pxs, dest.y + 32.0f * pxs};
+    };
 
     auto drawPanel = [&](int idx, float x, float w) {
         if (gCombatPanels.empty() || !gCombatPanels[idx].id) return;
@@ -1706,14 +1718,12 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
                 float local = t - cv.t0;
                 curveAt(cv, local, posUv);
                 settled = (local * speed >= cv.duration * speed);
-                // Direction must come from the last movement, not from a
-                // zero-length window at the settled position, otherwise the
-                // side flip is lost the moment the unit stops.
-                float dirT = std::min(local, std::max(0.0f, cv.duration - 0.005f));
-                Vector2 before, at;
-                curveAt(cv, std::max(0.0f, dirT - 0.10f), before);
-                curveAt(cv, dirT, at);
-                autoDir = directionFrame(at.x - before.x, at.y - before.y, frameCount, autoFlip);
+                // Use the whole recorded displacement for the facing so the
+                // flip never changes once the unit stops (and cannot be
+                // disturbed by the small settle jitter at the end).
+                autoDir = directionFrame(cv.slot.x - cv.start.x,
+                                         cv.slot.y - cv.start.y,
+                                         frameCount, autoFlip);
             } else {
                 float sx = mirror ? (1.0f - FORM[i][0]) : FORM[i][0];
                 slotUv = {sx, FORM[i][1]};
@@ -1873,23 +1883,19 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
     int killedR = std::max(0, nR0 - nR1);   // right-side (enemy) vehicles lost
     int killedL = std::max(0, nL0 - nL1);   // left-side (player) vehicles lost
     for (int i = 0; i < nL0; ++i) {
-        Vector2 s = slotPos(false, i);
-        fromL[i] = panelPoint(axPanel, s.x, s.y);
+        fromL[i] = slotVisualCenter(false, i);
         if (i < killedR) {
             int slot = nR1 + i;
-            Vector2 t2 = slotPos(true, slot);
-            toL[i] = panelPoint(dxPanel, t2.x, t2.y);
+            toL[i] = slotVisualCenter(true, slot);
         } else {
             toL[i] = scatter(0, i);
         }
     }
     for (int i = 0; i < nR0; ++i) {
-        Vector2 s = slotPos(true, i);
-        fromR[i] = panelPoint(dxPanel, s.x, s.y);
+        fromR[i] = slotVisualCenter(true, i);
         if (i < killedL) {
             int slot = nL1 + i;
-            Vector2 t2 = slotPos(false, slot);
-            toR[i] = panelPoint(axPanel, t2.x, t2.y);
+            toR[i] = slotVisualCenter(false, slot);
         } else {
             toR[i] = scatter(1, i);
         }
@@ -1940,20 +1946,23 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
     // ground for the result view.  One per unit destroyed in THIS exchange,
     // staggered with its explosion.
     if (gVfxSplat.id && t > impactT) {
-        float sw = us * 1.60f;
+        // 0.7x the previous crater size, centred on the destroyed unit's old
+        // visual position (not the 64x64 cell origin).
+        float sw = us * 1.60f * 0.7f;
         float sh = sw * (float)gVfxSplat.height / (float)gVfxSplat.width;
-        auto wreck = [&](Vector2* pos, int killed) {
+        auto wreck = [&](bool rightSide, int baseSlot, int killed) {
             if (killed <= 0) return;
             for (int i = 0; i < killed; ++i) {
                 if (t < impactT + i * 0.12f) continue;
+                Vector2 c = slotVisualCenter(rightSide, baseSlot + i);
                 DrawTexturePro(gVfxSplat,
                                {0, 0, (float)gVfxSplat.width, (float)gVfxSplat.height},
-                               {pos[i].x - sw * 0.5f, pos[i].y - sh * 0.5f, sw, sh},
+                               {c.x - sw * 0.5f, c.y - sh * 0.5f, sw, sh},
                                {0, 0}, 0, WHITE);
             }
         };
-        wreck(toL, killedR);   // enemy vehicles lost to the left side
-        wreck(toR, killedL);   // left vehicles lost to the right side
+        wreck(true, nR1, killedR);    // enemy vehicles lost to the left side
+        wreck(false, nL1, killedL);   // left vehicles lost to the right side
     }
 
     if (t > impactT && t < impactT + 1.10f) {

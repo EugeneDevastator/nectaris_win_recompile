@@ -25,7 +25,7 @@ cmake_install.cmake
 *.ilk
 
 # Release binaries are build artifacts published through GitHub Releases.
-release/nectaris.exe
+release/*.exe
 
 # ------------------------------------------------------------------ Python
 __pycache__/
