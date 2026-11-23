@@ -513,7 +513,8 @@
     0,
     0
    ],
-   "frame_scale": 1.0
+   "frame_scale": 1.0,
+   "side_facing": true
   },
   "10": {
    "frames": [
@@ -947,7 +948,8 @@
     0,
     0
    ],
-   "frame_scale": 1.0
+   "frame_scale": 1.0,
+   "side_facing": true
   },
   "18": {
    "frames": [

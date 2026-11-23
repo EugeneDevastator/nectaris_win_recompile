@@ -85,6 +85,9 @@ The packer preserves hand-edited `dirs` / `flips` / `frame_scale` entries.
   is a full 64x64 cell.  Frames taller than the normal 32 px source are shifted
   up by half their extra height so the Giant keeps the same ground line as the
   other units and does not hang over the bottom report.
+* Giant (HMB-2) and Atlas (SS-80) have `"side_facing": true`.  They ignore the
+  entry sector and always use frame 0 with the side mirror, so they roll in
+  horizontally from their own side instead of turning toward the slot.
 * `NECTARIS_DEBUG_WIRE=1` (or F1 in combat) draws the wireframe, group bounds
   and per-unit labels:
   `L f0   s0` / `R f0<  s4` = side, frame, mirrored, compass sector.
@@ -119,29 +122,33 @@ groups, which determine the clean export in `assets/art/combat_effects/`:
 
 * **small** - cells `0..31` of resource 23.  These are complete 32x32 effects
   used directly by the queue: projectiles (frames 4 / 18), muzzle flashes
-  (14-17, 19, 21-23), hit (25) and miss (27), plus small bursts.
+  (14-17, 19, 21-23), hit (25) and small bursts.
   Export: `small/vfx_small_00..31.png`.
-* **big** - cells `32..63` form eight 64x64 frames from four consecutive cells
-  in row-major order (TL, TR, BL, BR), starting at 32, 36, 40, 44, 48, 52, 56,
-  60.  These are the double-size explosion / debris animation.
-  Export: `big/vfx_big_32..60.png`.
-  The death sequence used by `assets/data/combat_vfx.json` is
-  `32, 36, 44, 48, 52, 56`.
+* **big** - true double-size 64x64 frames: `32, 36, 40, 48, 52`, composed from
+  four consecutive cells in row-major TL, TR, BL, BR order.
+  Export: `big/vfx_big_32..52.png`.
+  The killed-unit explosion sequence is `32, 36, 40` (set in
+  `assets/data/combat_vfx.json`).
+* **packed** - `44, 56, 60` are 64x64 groups that are actually four separate
+  32x32 sprites packed in a 2x2 square.  `44` is the **miss** burst; `56` and
+  `60` are particle/shard sheets.  Export: `packed/vfx_packed_44..60.png`.
+  `combat_vfx.json` selects the miss with `"miss_quad": 44`.
 
 The old `vfx_00..15` sheets composed each group as
 `[(32,0), (0,0), (32,32), (0,32)]`, i.e. rolled 50% along U; `vfx_08` was the
 same cells as `vfx_quad_32` with that roll.  Those exports, the intermediate
 `vfx_pair_*`, the legacy sheets and contact sheets have been pruned.
 
-`vfx_atlas.png` is the single reference atlas (512x512 at 2x): the eight big
-64x64 frames in 4x2 on top, the 32 small 32x32 cells in 8x4 below.
-`vfx_atlas.json` holds the rects; `manifest.json` describes the groups.
-`tools/export_combat_vfx.py` regenerates all three mirrors from resource 23 and
-the captured fire palette (`dump/attack2/palette_explosion_02.bin`, bank 13).
+`vfx_atlas.png` is the single reference atlas (640x512 at 2x): one row of the
+five big frames, one row of the three packed sheets, then the 32 small 32x32
+cells in 8x4.  `vfx_atlas.json` holds the rects; `manifest.json` lists the
+groups and roles.  `tools/export_combat_vfx.py` regenerates all three mirrors
+from resource 23 and the captured fire palette
+(`dump/attack2/palette_explosion_02.bin`, bank 13).
 
-Runtime paths: `art/combat_effects/small/vfx_small_%02d.png` and
-`art/combat_effects/big/vfx_big_%02d.png` (start-frame name).  The named
-`effect_192..199.png` files and `splat.png` stay at the root.
+Runtime paths: `art/combat_effects/small/vfx_small_%02d.png`,
+`big/vfx_big_%02d.png` and `packed/vfx_packed_%02d.png` (start-frame name).
+The named `effect_192..199.png` files and `splat.png` stay at the root.
 
 ---
 

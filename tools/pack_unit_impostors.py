@@ -38,9 +38,10 @@ DIR_OVERRIDES = {
     # S-61: 0=E, 1=SE(45), 2=NE(45), 3=SE(60), 4=unused smaller variant
     '6': {'dirs': [0, 1, 3, 1, 0, 2, 2, 2],
           'flips': [0, 0, 0, 1, 1, 1, 0, 0]},
-    # HMB-2 Giant is a 64x64 combat sprite and is drawn at 2x the normal
-    # unit size (the perspective slot is a full 64x64 cell).
-    '9': {'frame_scale': 1.0},
+    # HMB-2 Giant is a 64x64 combat sprite drawn at 2x and always enters
+    # side-on; SS-80 Atlas is also side-on.
+    '9': {'frame_scale': 1.0, 'side_facing': True},
+    '17': {'side_facing': True},
     # FX-1, AX-87, EF-88, C-61 (all movement-class 4 / airborne).
     '1': {'dirs': AIR_DIRS, 'flips': AIR_FLIPS},
     '2': {'dirs': AIR_DIRS, 'flips': AIR_FLIPS},
@@ -118,11 +119,13 @@ def main():
         old_dirs = old.get('dirs') if isinstance(old, dict) else None
         old_flips = old.get('flips') if isinstance(old, dict) else None
         old_scale = old.get('frame_scale', 1.0) if isinstance(old, dict) else 1.0
+        old_side = old.get('side_facing', False) if isinstance(old, dict) else False
         units_manifest[str(t)] = {
             'frames': rects,
             'dirs': ov.get('dirs', old_dirs or DEFAULT_DIRS),
             'flips': ov.get('flips', old_flips or DEFAULT_FLIPS),
             'frame_scale': ov.get('frame_scale', old_scale),
+            'side_facing': ov.get('side_facing', old_side),
         }
     total_h = y + row_h + PAD
     atlas = Image.new('RGBA', (MAX_W, total_h), (0, 0, 0, 0))

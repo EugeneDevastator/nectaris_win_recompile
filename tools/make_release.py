@@ -32,6 +32,30 @@ ZIP = os.path.join(ROOT, 'nectaris_port.zip')
 ASSETS = os.path.join(ROOT, 'assets')
 
 
+def _mirror_merge(src, dst):
+    """Copy src over dst, then delete files under dst that no longer exist."""
+    for base, _dirs, files in os.walk(src):
+        rel = os.path.relpath(base, src)
+        target = dst if rel == '.' else os.path.join(dst, rel)
+        os.makedirs(target, exist_ok=True)
+        for name in files:
+            shutil.copy2(os.path.join(base, name), os.path.join(target, name))
+    for base, _dirs, files in os.walk(dst, topdown=False):
+        rel = os.path.relpath(base, dst)
+        for name in files:
+            srel = os.path.normpath(os.path.join(rel, name))
+            if not os.path.exists(os.path.join(src, srel)):
+                try:
+                    os.remove(os.path.join(base, name))
+                except OSError:
+                    pass
+        if rel != '.':
+            try:
+                os.rmdir(base)
+            except OSError:
+                pass
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--jobs', type=int, default=8)
@@ -50,8 +74,16 @@ def main():
 
     dst_assets = os.path.join(RELEASE, 'assets')
     if os.path.isdir(dst_assets):
-        shutil.rmtree(dst_assets)
-    shutil.copytree(ASSETS, dst_assets)
+        try:
+            shutil.rmtree(dst_assets)
+            shutil.copytree(ASSETS, dst_assets)
+        except PermissionError:
+            # A preview/AV handle can keep a stale directory open.  Mirror over
+            # the existing tree instead: copy current files, then prune files
+            # that no longer exist in assets/.
+            _mirror_merge(ASSETS, dst_assets)
+    else:
+        shutil.copytree(ASSETS, dst_assets)
     print('mirrored assets ->', dst_assets)
 
     if os.path.exists(ZIP):

@@ -1,5 +1,5 @@
 {
-  "note": "Combat VFX per unit. Frame numbers are resource-23 half frames (0..63); death lists are 64x64 quad frames (start index of four consecutive halves). Projectiles/muzzles are side-based in the original: left player shots use frame 4 / muzzle 14,15,16,23; right computer shots use frame 18 / muzzle 17,19,21,22.",
+  "note": "Combat VFX per unit. Frame numbers are resource-23 half frames (0..63); death lists are 64x64 frames; the killed-unit explosion is 32,36,40 and the miss burst uses the packed sheet 44 (four sprites packed 2x2). Projectiles/muzzles are side-based in the original: left player shots use frame 4 / muzzle 14,15,16,23; right computer shots use frame 18 / muzzle 17,19,21,22.",
   "frames": {
     "projectile_left": [4],
     "projectile_right": [18],
@@ -7,15 +7,16 @@
     "muzzle_right": [17, 19, 21, 22],
     "hit": [25],
     "miss": [27],
+    "miss_quad": 44,
     "death_step_seconds": 0.09
   },
   "classes": {
-    "air":       {"death": [32, 36],                   "scale": 0.90},
-    "infantry":  {"death": [32, 36, 44],               "scale": 0.85},
-    "bike":      {"death": [32, 36, 44],               "scale": 0.90},
-    "vehicle":   {"death": [32, 36, 44, 48, 52, 56],   "scale": 1.00},
-    "artillery": {"death": [32, 36, 44, 48, 52, 56],   "scale": 1.00},
-    "heavy":     {"death": [32, 36, 44, 48, 52, 56],   "scale": 1.15}
+    "air":       {"death": [32, 36, 40],                   "scale": 0.90},
+    "infantry":  {"death": [32, 36, 40],               "scale": 0.85},
+    "bike":      {"death": [32, 36, 40],               "scale": 0.90},
+    "vehicle":   {"death": [32, 36, 40],   "scale": 1.00},
+    "artillery": {"death": [32, 36, 40],   "scale": 1.00},
+    "heavy":     {"death": [32, 36, 40],   "scale": 1.15}
   },
   "units": {
     "0":  {"name": "M-77",   "class": "vehicle"},

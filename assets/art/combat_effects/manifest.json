@@ -20,9 +20,18 @@
     32,
     36,
     40,
-    44,
     48,
-    52,
+    52
+   ],
+   "cell": [
+    64,
+    64
+   ],
+   "note": "true double-size frames; TL,TR,BL,BR from four consecutive cells"
+  },
+  "packed": {
+   "starts": [
+    44,
     56,
     60
    ],
@@ -30,20 +39,30 @@
     64,
     64
    ],
-   "note": "double-size frames composed TL,TR,BL,BR from four consecutive cells"
+   "note": "four separate 32x32 sprites packed in a 2x2 square"
   }
  },
- "death_sequence": [
-  32,
-  36,
-  44,
-  48,
-  52,
-  56
- ],
+ "roles": {
+  "death_explosion": [
+   32,
+   36,
+   40
+  ],
+  "miss": 44,
+  "other_big": [
+   48,
+   52
+  ],
+  "packed_sheets": [
+   44,
+   56,
+   60
+  ]
+ },
  "frames": {
   "small": 32,
-  "big": 8
+  "big": 5,
+  "packed": 3
  },
  "named_effects": {
   "192": 33,

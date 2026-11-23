@@ -81,6 +81,9 @@ static std::vector<ImpostorRect> gImpostorRects[24];
 static int gImpostorDirs[24][8] = {};
 static int gImpostorFlips[24][8] = {};
 static float gImpostorScale[24] = {};
+// Heavy ground units that always enter side-on (Giant, Atlas) instead of
+// turning toward the slot.
+static bool gImpostorSide[24] = {};
 
 // Combat VFX config (assets/data/combat_vfx.json).  Frames refer to resource-23
 // half frames; quads are groups of four consecutive halves assembled 2x2.
@@ -137,6 +140,7 @@ static int compassSector(float dx, float dy) {
 }
 static CombatUnitVfx gUnitVfx[24];
 static std::vector<int> gVfxProjectile[2], gVfxMuzzle[2], gVfxHit, gVfxMiss;
+static int gVfxMissQuad = -1;   // packed 64x64 miss sheet (44 in the original)
 static float gVfxDeathStep = 0.09f;
 static Texture2D gBackdrop = {0};
 static bool gBackdropDirty = true;
@@ -313,6 +317,7 @@ static void loadData() {
             if (f.contains("muzzle_right")) gVfxMuzzle[1] = ints(f["muzzle_right"]);
             if (f.contains("hit")) gVfxHit = ints(f["hit"]);
             if (f.contains("miss")) gVfxMiss = ints(f["miss"]);
+            if (f.contains("miss_quad")) gVfxMissQuad = f.value("miss_quad", -1);
             gVfxDeathStep = f.value("death_step_seconds", gVfxDeathStep);
         }
         if (vj.contains("classes")) {
@@ -1803,6 +1808,13 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
                 autoFlip = mirror;
                 dbgSec = 0;
             }
+            // Giant and Atlas always roll in from the side horizontally; they
+            // never turn toward the slot during the entry.
+            if (gImpostorSide[type]) {
+                autoDir = 0;
+                autoFlip = mirror;
+                dbgSec = mirror ? 4 : 0;
+            }
             // Perspective/sprite settings are user-editable per slot; a slot
             // edit also shifts the whole recorded path by the same delta.
             int sprite = autoDir, spriteEnd = -1, flipMode = -1;
@@ -2105,6 +2117,12 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
                     int frame = hit[(int)(dt / 0.10f) % (int)hit.size()];
                     float a = 1.0f - std::clamp((dt - 0.40f) / 0.40f, 0.0f, 1.0f);
                     drawVfxHalf(frame, to[i], us * 1.55f, Fade(WHITE, a));
+                } else if (gVfxMissQuad >= 0 &&
+                           gVfxQuad[gVfxMissQuad / 4].id) {
+                    // Packed miss sheet (44): four small sprites in one 2x2
+                    // square, used as a short ground burst.
+                    float a = 1.0f - std::clamp((dt - 0.30f) / 0.30f, 0.0f, 1.0f);
+                    drawVfxQuad(gVfxMissQuad, to[i], us * 1.60f, Fade(WHITE, a));
                 } else if (!miss.empty()) {
                     // Missed shot: small, short-lived ground burst (clearly not
                     // the multi-frame destruction explosion).
@@ -2530,9 +2548,14 @@ int main(int argc, char** argv) {
         gVfxHalf[i] = LoadTexture((gAssetDir +
             TextFormat("art/combat_effects/small/vfx_small_%02d.png", i)).c_str());
     }
-    for (int i = 8; i < 16; ++i) {
-        gVfxQuad[i] = LoadTexture((gAssetDir +
-            TextFormat("art/combat_effects/big/vfx_big_%02d.png", i * 4)).c_str());
+    for (int start : {32, 36, 40, 48, 52}) {
+        gVfxQuad[start / 4] = LoadTexture((gAssetDir +
+            TextFormat("art/combat_effects/big/vfx_big_%02d.png", start)).c_str());
+    }
+    // 44/56/60 are 2x2 sheets of four separate sprites, not explosion frames.
+    for (int start : {44, 56, 60}) {
+        gVfxQuad[start / 4] = LoadTexture((gAssetDir +
+            TextFormat("art/combat_effects/packed/vfx_packed_%02d.png", start)).c_str());
     }
     gVfxSplat = LoadTexture((gAssetDir + "art/combat_effects/splat.png").c_str());
     gFxShell = LoadTexture((gAssetDir + "art/combat_effects/effect_195.png").c_str());
@@ -2571,6 +2594,7 @@ int main(int argc, char** argv) {
                 gImpostorFlips[t][k] = defFlips[k];
             }
             gImpostorScale[t] = 1.0f;
+            gImpostorSide[t] = false;
         }
         std::ifstream imf(gAssetDir + "data/unit_impostors.json");
         if (imf) {
@@ -2596,6 +2620,8 @@ int main(int argc, char** argv) {
                             for (int k = 0; k < 8 && k < (int)u["flips"].size(); ++k)
                                 gImpostorFlips[t][k] = u["flips"][k].get<int>();
                         }
+                        if (u.contains("side_facing"))
+                            gImpostorSide[t] = u["side_facing"].get<bool>();
                         gImpostorScale[t] = u.value("frame_scale", 1.0f);
                     }
                     if (rects) {

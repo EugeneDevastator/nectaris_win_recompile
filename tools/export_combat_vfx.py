@@ -17,11 +17,14 @@ removed.
 
 Outputs (assets/, release/ and port/build mirrors):
   small/vfx_small_00..31.png   32x32 single-cell effects
-  big/vfx_big_32..60.png       64x64 double-size frames (starts 32,36,...)
-  vfx_atlas.png                512x512 reference atlas: big 4x2 at 2x on top,
-                               small 8x4 at 2x below
+  big/vfx_big_32..52.png       64x64 explosion frames: 32,36,40,48,52
+  packed/vfx_packed_44.png     64x64 sheet of four 32x32 sprites (miss)
+  packed/vfx_packed_56.png     particle sheet (4 sprites packed 2x2)
+  packed/vfx_packed_60.png     shard sheet (4 sprites packed 2x2)
+  vfx_atlas.png                640x512 reference atlas: big row, packed row,
+                               small 8x4 grid below (all at 2x)
   vfx_atlas.json               frame rectangles
-  manifest.json                organization + animation sequence
+  manifest.json                roles + death/miss sequence
   effect_192..199.png          named 32x32 effects used by the port
 """
 import json
@@ -39,7 +42,11 @@ OUTS = [os.path.join(ROOT, 'assets', 'art', 'combat_effects'),
 BANK = 13
 N = 64
 SMALL_COUNT = 32
-BIG_STARTS = list(range(32, 64, 4))
+# True double-size frames used by the killed-unit explosion.
+BIG_STARTS = [32, 36, 40, 48, 52]
+# 64x64 groups that are actually four separate 32x32 sprites packed 2x2.
+# 44 is the miss burst in the live queues; 56/60 are other particle sheets.
+PACKED_STARTS = [44, 56, 60]
 
 raw = open(RAW, 'rb').read()
 pal = open(PALFILE, 'rb').read()
@@ -72,9 +79,11 @@ def quad(start):
 for d in OUTS:
     small_dir = os.path.join(d, 'small')
     big_dir = os.path.join(d, 'big')
+    packed_dir = os.path.join(d, 'packed')
     os.makedirs(small_dir, exist_ok=True)
     os.makedirs(big_dir, exist_ok=True)
-    for sub in (small_dir, big_dir):
+    os.makedirs(packed_dir, exist_ok=True)
+    for sub in (small_dir, big_dir, packed_dir):
         for f in os.listdir(sub):
             os.remove(os.path.join(sub, f))
     # Drop the old mixed/rolled exports.
@@ -94,17 +103,26 @@ for i in range(SMALL_COUNT):
 for start in BIG_STARTS:
     for d in OUTS:
         quad(start).save(os.path.join(d, 'big', 'vfx_big_%02d.png' % start))
+for start in PACKED_STARTS:
+    for d in OUTS:
+        quad(start).save(os.path.join(d, 'packed', 'vfx_packed_%02d.png' % start))
 
-# Reference atlas at 2x.  Big frames 4x2, small cells 8x4, separated vertically.
-ATLAS_W, ATLAS_H = 512, 512
+# Reference atlas at 2x: big row, packed row, then the small 8x4 grid.
+ATLAS_W, ATLAS_H = 640, 512
 atlas = Image.new('RGBA', (ATLAS_W, ATLAS_H), (0, 0, 0, 0))
-big_rects, small_rects = [], []
+big_rects, packed_rects, small_rects = [], [], []
 for n, start in enumerate(BIG_STARTS):
-    x = (n % 4) * 128
-    y = (n // 4) * 128
+    x = n * 128
+    y = 0
     im = quad(start).resize((128, 128), Image.NEAREST)
     atlas.alpha_composite(im, (x, y))
     big_rects.append({'index': start, 'x': x, 'y': y, 'w': 128, 'h': 128})
+for n, start in enumerate(PACKED_STARTS):
+    x = n * 128
+    y = 128
+    im = quad(start).resize((128, 128), Image.NEAREST)
+    atlas.alpha_composite(im, (x, y))
+    packed_rects.append({'index': start, 'x': x, 'y': y, 'w': 128, 'h': 128})
 for i in range(SMALL_COUNT):
     x = (i % 8) * 64
     y = 256 + (i // 8) * 64
@@ -116,8 +134,9 @@ for d in OUTS:
     atlas.save(os.path.join(d, 'vfx_atlas.png'))
 json.dump({
     'image': 'vfx_atlas.png',
-    'layout': '512x512 at 2x; big 64x64 frames in 4x2 on top, small 32x32 cells in 8x4 below',
+    'layout': '640x512 at 2x; big row, packed row, small 8x4 grid below',
     'big': big_rects,
+    'packed': packed_rects,
     'small': small_rects,
 }, open(os.path.join(OUTS[0], 'vfx_atlas.json'), 'w'), indent=1)
 
@@ -141,13 +160,24 @@ json.dump({
         'big': {
             'starts': BIG_STARTS,
             'cell': [64, 64],
-            'note': 'double-size frames composed TL,TR,BL,BR from four consecutive cells',
+            'note': 'true double-size frames; TL,TR,BL,BR from four consecutive cells',
+        },
+        'packed': {
+            'starts': PACKED_STARTS,
+            'cell': [64, 64],
+            'note': 'four separate 32x32 sprites packed in a 2x2 square',
         },
     },
-    'death_sequence': [32, 36, 44, 48, 52, 56],
-    'frames': {'small': SMALL_COUNT, 'big': len(BIG_STARTS)},
+    'roles': {
+        'death_explosion': [32, 36, 40],
+        'miss': 44,
+        'other_big': [48, 52],
+        'packed_sheets': PACKED_STARTS,
+    },
+    'frames': {'small': SMALL_COUNT, 'big': len(BIG_STARTS),
+               'packed': len(PACKED_STARTS)},
     'named_effects': named,
 }, open(os.path.join(OUTS[0], 'manifest.json'), 'w'), indent=1)
 
-print('wrote %d small cells, %d big frames, atlas %dx%d' %
-      (SMALL_COUNT, len(BIG_STARTS), ATLAS_W, ATLAS_H))
+print('wrote %d small cells, %d big, %d packed, atlas %dx%d' %
+      (SMALL_COUNT, len(BIG_STARTS), len(PACKED_STARTS), ATLAS_W, ATLAS_H))

@@ -143,15 +143,18 @@ not the stretched map sprites.
   `1=white 2=yellow 3=gold 4=orange 5..7=grey`; index 0 = transparent.
   `tools/capture_explosion_palette.py` polls the palette during a forced attack
   and saves snapshots; `palette_explosion_02.bin` is the explosion frame.
-  Live queues split the 64 cells into two clean groups:
-  - **small** cells `0..31`: projectiles, muzzle flashes, hit/miss and small
-    bursts -> `small/vfx_small_00..31.png` (32x32).
-  - **big** cells `32..63`: eight 64x64 frames (starts `32,36,40,44,48,52,56,60`)
-    -> `big/vfx_big_32..60.png`.
+  Live queues split the 64 cells into three clean groups:
+  - **small** cells `0..31`: projectiles, muzzle flashes, hit and small bursts
+    -> `small/vfx_small_00..31.png` (32x32).
+  - **big** true 64x64 frames `32,36,40,48,52` -> `big/vfx_big_32..52.png`.
+    Killed-unit explosion is `32,36,40`.
+  - **packed** 64x64 sheets `44,56,60` (four separate 32x32 sprites in a 2x2
+    square) -> `packed/vfx_packed_44..60.png`.  `44` is the miss burst
+    (`"miss_quad": 44` in `combat_vfx.json`).
   `tools/export_combat_vfx.py` writes:
-  - `vfx_atlas.png` + `vfx_atlas.json` (512x512 at 2x: big frames 4x2 on top,
+  - `vfx_atlas.png` + `vfx_atlas.json` (640x512 at 2x: big row, packed row,
     small cells 8x4 below)
-  - `manifest.json` (organization + death sequence `32,36,44,48,52,56`)
+  - `manifest.json` (groups + roles + death/miss sequence)
   - `effect_192..199.png` (named single effects)
   - `splat.png`, `palette_fire.bin`
   The old `vfx_00..15` sheets composed four cells as
