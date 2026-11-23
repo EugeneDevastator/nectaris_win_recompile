@@ -1,29 +1,34 @@
-"""Export the combat-simulation VFX with the live combat fire palette.
+"""Export combat VFX in the game's native organization.
 
-Source art: resource 23 (expanded sprite bank res_23_sprites.bin, 64 x 32x32
-4bpp sprites = 32 frames of 64x32, stored as left/right halves).
+Resource 23 contains 64 x 32x32 cells (4bpp, fire palette bank 13).
 
-During firing the game loads a dedicated fire ramp into palette bank 13
-(captured as dump/attack2/palette_explosion_02.bin):
+Live combat queues show two distinct groups:
 
-    index 1 white, 2 yellow, 3 gold, 4 orange, 5-7 greys
+  cells  0..31 : single-cell effects - projectiles, muzzle flashes, hit/miss
+                 flashes and small bursts.  These are drawn 1:1 as 32x32.
+  cells 32..63 : eight 64x64 frames, each composed from four consecutive
+                 cells in row-major order (TL, TR, BL, BR).  These are the
+                 double-size explosion/debris animation.
 
-so the sprites must be rendered with bank 13, not with a team bank.  Index 0 is
-transparent; the whole ramp 1..7 is used.
+The old `vfx_00..15` exports composed cells in the order
+[(32,0), (0,0), (32,32), (0,32)] - a 50% roll along U - which is why they did
+not match `vfx_quad_32`.  The legacy, pair, sheet and contact exports are now
+removed.
 
-Outputs:
-  vfx_half_00..63.png     individual 32x32 halves
-  vfx_pair_00..31.png     assembled 64x32 animation frames
-  vfx_00..15.png          legacy 64x64 2x2 sheets (port's drawProjectile/drawExplosion)
-  vfx_atlas.png           16x2 grid at 2x (same layout as vfx_sheet_x2), 2048x128
-  vfx_atlas_1x.png        same layout at 1x, 1024x64
-  vfx_sheet.png           32 pair frames in a row
-  vfx_sheet_x2.png
-  vfx_contact.png         8x4 contact sheet of pairs
-  effect_192..199.png     single named effects used by the port
+Outputs (assets/, release/ and port/build mirrors):
+  small/vfx_small_00..31.png   32x32 single-cell effects
+  big/vfx_big_32..60.png       64x64 double-size frames (starts 32,36,...)
+  vfx_atlas.png                512x512 reference atlas: big 4x2 at 2x on top,
+                               small 8x4 at 2x below
+  vfx_atlas.json               frame rectangles
+  manifest.json                organization + animation sequence
+  effect_192..199.png          named 32x32 effects used by the port
 """
-import os, json
-from PIL import Image, ImageDraw
+import json
+import os
+import shutil
+
+from PIL import Image
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 RAW = os.path.join(ROOT, 'dump', 'art_resources', 'res_23_sprites.bin')
@@ -33,6 +38,8 @@ OUTS = [os.path.join(ROOT, 'assets', 'art', 'combat_effects'),
         os.path.join(ROOT, 'port', 'build', 'assets', 'art', 'combat_effects')]
 BANK = 13
 N = 64
+SMALL_COUNT = 32
+BIG_STARTS = list(range(32, 64, 4))
 
 raw = open(RAW, 'rb').read()
 pal = open(PALFILE, 'rb').read()
@@ -52,99 +59,95 @@ def sprite(t):
     return im
 
 
-def pair(k):
-    im = Image.new('RGBA', (64, 32), (0, 0, 0, 0))
-    im.alpha_composite(sprite(2 * k), (0, 0))
-    im.alpha_composite(sprite(2 * k + 1), (32, 0))
+sprites = [sprite(t) for t in range(N)]
+
+
+def quad(start):
+    im = Image.new('RGBA', (64, 64), (0, 0, 0, 0))
+    for j, dst in enumerate([(0, 0), (32, 0), (0, 32), (32, 32)]):
+        im.alpha_composite(sprites[start + j], dst)
     return im
 
 
-sprites = [sprite(t) for t in range(N)]
-pairs = [pair(k) for k in range(N // 2)]
+for d in OUTS:
+    small_dir = os.path.join(d, 'small')
+    big_dir = os.path.join(d, 'big')
+    os.makedirs(small_dir, exist_ok=True)
+    os.makedirs(big_dir, exist_ok=True)
+    for sub in (small_dir, big_dir):
+        for f in os.listdir(sub):
+            os.remove(os.path.join(sub, f))
+    # Drop the old mixed/rolled exports.
+    keep = {'manifest.json', 'vfx_atlas.png', 'vfx_atlas.json', 'splat.png',
+            'palette_fire.bin'}
+    for f in os.listdir(d):
+        if os.path.isdir(os.path.join(d, f)):
+            continue
+        if f.startswith('effect_') or f in keep:
+            continue
+        if f.startswith(('vfx_', 'strip')):
+            os.remove(os.path.join(d, f))
+
+for i in range(SMALL_COUNT):
+    for d in OUTS:
+        sprites[i].save(os.path.join(d, 'small', 'vfx_small_%02d.png' % i))
+for start in BIG_STARTS:
+    for d in OUTS:
+        quad(start).save(os.path.join(d, 'big', 'vfx_big_%02d.png' % start))
+
+# Reference atlas at 2x.  Big frames 4x2, small cells 8x4, separated vertically.
+ATLAS_W, ATLAS_H = 512, 512
+atlas = Image.new('RGBA', (ATLAS_W, ATLAS_H), (0, 0, 0, 0))
+big_rects, small_rects = [], []
+for n, start in enumerate(BIG_STARTS):
+    x = (n % 4) * 128
+    y = (n // 4) * 128
+    im = quad(start).resize((128, 128), Image.NEAREST)
+    atlas.alpha_composite(im, (x, y))
+    big_rects.append({'index': start, 'x': x, 'y': y, 'w': 128, 'h': 128})
+for i in range(SMALL_COUNT):
+    x = (i % 8) * 64
+    y = 256 + (i // 8) * 64
+    im = sprites[i].resize((64, 64), Image.NEAREST)
+    atlas.alpha_composite(im, (x, y))
+    small_rects.append({'index': i, 'x': x, 'y': y, 'w': 64, 'h': 64})
 
 for d in OUTS:
-    os.makedirs(d, exist_ok=True)
-for i, im in enumerate(sprites):
-    for d in OUTS:
-        im.save(os.path.join(d, 'vfx_half_%02d.png' % i))
-for k, im in enumerate(pairs):
-    for d in OUTS:
-        im.save(os.path.join(d, 'vfx_pair_%02d.png' % k))
+    atlas.save(os.path.join(d, 'vfx_atlas.png'))
+json.dump({
+    'image': 'vfx_atlas.png',
+    'layout': '512x512 at 2x; big 64x64 frames in 4x2 on top, small 32x32 cells in 8x4 below',
+    'big': big_rects,
+    'small': small_rects,
+}, open(os.path.join(OUTS[0], 'vfx_atlas.json'), 'w'), indent=1)
 
-# 64x64 explosion cells: four consecutive 32x32 halves in row-major order
-# (TL, TR, BL, BR; verified against a live combat frame).
-for start in range(0, N, 4):
-    quad = Image.new('RGBA', (64, 64), (0, 0, 0, 0))
-    for j, dst in enumerate([(0, 0), (32, 0), (0, 32), (32, 32)]):
-        quad.alpha_composite(sprites[start + j], dst)
-    for d in OUTS:
-        quad.save(os.path.join(d, 'vfx_quad_%02d.png' % start))
-
-# legacy 64x64 2x2 sheets, four sprites each, same layout the port already uses
-for i in range(16):
-    sheet2 = Image.new('RGBA', (64, 64), (0, 0, 0, 0))
-    for k, dst in enumerate([(32, 0), (0, 0), (32, 32), (0, 32)]):
-        t = i * 4 + k
-        if t < N:
-            sheet2.alpha_composite(sprites[t], dst)
-    for d in OUTS:
-        sheet2.save(os.path.join(d, 'vfx_%02d.png' % i))
-
-def make_grid(scale):
-    """16 columns x 2 rows of 64x32 pair frames, on a 32px cell grid."""
-    cols = 16
-    cw, ch = 64 * scale, 32 * scale
-    rows = (len(pairs) + cols - 1) // cols
-    im = Image.new('RGBA', (cols * cw, rows * ch), (0, 0, 0, 0))
-    frames = []
-    for k, p in enumerate(pairs):
-        big = p if scale == 1 else p.resize((cw, ch), Image.NEAREST)
-        x = (k % cols) * cw
-        y = (k // cols) * ch
-        im.alpha_composite(big, (x, y))
-        frames.append({'index': k, 'x': x, 'y': y, 'w': cw, 'h': ch})
-    return im, frames
-
-
-sheet1, frames1 = make_grid(1)
-sheet2, frames2 = make_grid(2)
-for d in OUTS:
-    sheet1.save(os.path.join(d, 'vfx_sheet.png'))
-    sheet2.save(os.path.join(d, 'vfx_sheet_x2.png'))
-    sheet2.save(os.path.join(d, 'vfx_atlas.png'))
-    sheet1.save(os.path.join(d, 'vfx_atlas_1x.png'))
-json.dump({'image': 'vfx_atlas.png',
-           'layout': '16 columns x 2 rows at 2x (same layout as vfx_sheet_x2)',
-           'cell': [128, 64], 'palette': 'combat fire (bank 13)',
-           'transparent_index': 0, 'frames': frames2},
-          open(os.path.join(OUTS[0], 'vfx_atlas.json'), 'w'), indent=1)
-json.dump({'image': 'vfx_atlas_1x.png', 'layout': '16 columns x 2 rows at 1x',
-           'cell': [64, 32], 'frames': frames1},
-          open(os.path.join(OUTS[0], 'vfx_atlas_1x.json'), 'w'), indent=1)
-
-cols = 8
-cw, ch = 140, 90
-rows = (len(pairs) + cols - 1) // cols
-sheet = Image.new('RGB', (cols * cw, rows * ch + 18), (10, 10, 20))
-d = ImageDraw.Draw(sheet)
-for k, im in enumerate(pairs):
-    x = (k % cols) * cw + 4
-    y = (k // cols) * ch + 16
-    big = im.resize((128, 64), Image.NEAREST)
-    sheet.paste(big, (x, y), big)
-    d.text((x, y - 12), 'pair %02d' % k, fill=(220, 220, 220))
-sheet.save(os.path.join(OUTS[0], 'vfx_contact.png'))
-
-# named single effects used by the port (32x32 halves)
+# Named effects used by the port (32x32 source cells).
 named = {192: 33, 193: 16, 194: 25, 195: 0, 196: 34, 197: 27, 198: 45, 199: 55}
 for n, t in named.items():
     for d in OUTS:
         sprites[t].save(os.path.join(d, 'effect_%d.png' % n))
 
-json.dump({'source': 'Nec.exe resource 23 (64 x 32x32 halves = 32 x 64x32 frames)',
-           'palette': 'dump/attack2/palette_explosion_02.bin (live combat fire ramp)',
-           'bank': BANK, 'transparent_index': 0,
-           'frames': {'halves': N, 'pairs': len(pairs)},
-           'named_effects': named},
-          open(os.path.join(OUTS[0], 'manifest.json'), 'w'), indent=1)
-print('wrote', N, 'halves,', len(pairs), 'pair frames to', OUTS[0])
+json.dump({
+    'source': 'Nec.exe resource 23 (64 x 32x32 cells, live combat fire palette)',
+    'palette': 'dump/attack2/palette_explosion_02.bin (bank 13)',
+    'bank': BANK,
+    'transparent_index': 0,
+    'organization': {
+        'small': {
+            'range': [0, 31],
+            'cell': [32, 32],
+            'note': 'single-cell projectiles, muzzle flashes, hit/miss and small bursts',
+        },
+        'big': {
+            'starts': BIG_STARTS,
+            'cell': [64, 64],
+            'note': 'double-size frames composed TL,TR,BL,BR from four consecutive cells',
+        },
+    },
+    'death_sequence': [32, 36, 44, 48, 52, 56],
+    'frames': {'small': SMALL_COUNT, 'big': len(BIG_STARTS)},
+    'named_effects': named,
+}, open(os.path.join(OUTS[0], 'manifest.json'), 'w'), indent=1)
+
+print('wrote %d small cells, %d big frames, atlas %dx%d' %
+      (SMALL_COUNT, len(BIG_STARTS), ATLAS_W, ATLAS_H))

@@ -28,6 +28,11 @@ MAX_W = 1024
 # Default: forward / 45-down / steep-down / mirrored left.
 DEFAULT_DIRS = [0, 1, 1, 1, 0, 2, 2, 2]
 DEFAULT_FLIPS = [0, 0, 0, 1, 1, 1, 0, 0]
+# Aircraft share one frame pattern: 0=E, 1=SE(45 down), 2=SE(60 down),
+# 3=NE(45 up), 4=NE(60 up), 5=roll (unused).  Left-facing sectors use the
+# right-facing frame mirrored.
+AIR_DIRS = [0, 1, 2, 1, 0, 3, 4, 3]
+AIR_FLIPS = [0, 0, 0, 1, 1, 1, 0, 0]
 # Per-unit overrides (frame meaning supplied by the artist).
 DIR_OVERRIDES = {
     # S-61: 0=E, 1=SE(45), 2=NE(45), 3=SE(60), 4=unused smaller variant
@@ -36,6 +41,11 @@ DIR_OVERRIDES = {
     # HMB-2 Giant is a 64x64 combat sprite and is drawn at 2x the normal
     # unit size (the perspective slot is a full 64x64 cell).
     '9': {'frame_scale': 1.0},
+    # FX-1, AX-87, EF-88, C-61 (all movement-class 4 / airborne).
+    '1': {'dirs': AIR_DIRS, 'flips': AIR_FLIPS},
+    '2': {'dirs': AIR_DIRS, 'flips': AIR_FLIPS},
+    '3': {'dirs': AIR_DIRS, 'flips': AIR_FLIPS},
+    '22': {'dirs': AIR_DIRS, 'flips': AIR_FLIPS},
 }
 
 

@@ -59,7 +59,6 @@ static Texture2D gFxShell = {0}, gFxFlash = {0}, gFxStreak = {0};
 static Texture2D gUnitSprite[24];
 static Texture2D gUnitSpriteFlip[24];
 static Texture2D gUnitMapTex[24], gUnitMapFlipTex[24];
-static Texture2D gVfx[16];
 static Texture2D gVfxHalf[64];
 static Texture2D gVfxQuad[16];
 static Texture2D gVfxSplat = {0};   // shared wreck: mine's dead sprite
@@ -1145,9 +1144,10 @@ static void drawHpBar(float x, float y, float w, float h, int hp0, int hp1, floa
 static void drawExplosion(float x, float y, float r, float phase, float alpha = 1.0f) {
     // Tuned VFX: a single explosion frame with a simple fade-out.
     alpha = std::clamp(alpha, 0.0f, 1.0f);
-    if (gVfx[7].id) {
+    if (gVfxQuad[8].id) {   // first double-size frame (start 32)
         float s = r * 2.6f;
-        DrawTexturePro(gVfx[7], {0, 0, (float)gVfx[7].width, (float)gVfx[7].height},
+        DrawTexturePro(gVfxQuad[8], {0, 0, (float)gVfxQuad[8].width,
+                                    (float)gVfxQuad[8].height},
                        {x - s / 2, y - s / 2, s, s}, {0, 0}, 0, Fade(WHITE, alpha));
         return;
     }
@@ -1170,14 +1170,16 @@ static void drawExplosion(float x, float y, float r, float phase, float alpha = 
     }
 }
 
-// vfx_00 is a 2x2 sheet; cell (0,0) is a missile pointing right.
+// Fallback shell when a unit has no configured projectile frames: cell 01 is
+// the right-facing missile from the single-cell set.
 static void drawProjectile(float x, float y, float s, float angle) {
-    if (!gVfx[0].id) {
+    Texture2D& tex = gVfxHalf[1];
+    if (!tex.id) {
         DrawCircleV({x, y}, s * 0.18f, ORANGE);
         return;
     }
-    Rectangle src{0, 0, gVfx[0].width * 0.5f, gVfx[0].height * 0.5f};
-    DrawTexturePro(gVfx[0], src, {x, y, s, s}, {s / 2, s / 2}, angle, WHITE);
+    DrawTexturePro(tex, {0, 0, (float)tex.width, (float)tex.height},
+                   {x, y, s, s}, {s / 2, s / 2}, angle, WHITE);
 }
 
 static void drawEffect(Texture2D& tex, float x, float y, float s, float rot, Color tint) {
@@ -2522,14 +2524,15 @@ int main(int argc, char** argv) {
             UnloadImage(vm);
         }
     }
-    for (int i = 0; i < 16; ++i) {
-        gVfx[i] = LoadTexture((gAssetDir + TextFormat("art/combat_effects/vfx_%02d.png", i)).c_str());
+    // VFX organization taken from the live queues: cells 0..31 are complete
+    // single-cell effects; cells 32..63 form eight double-size 64x64 frames.
+    for (int i = 0; i < 32; ++i) {
+        gVfxHalf[i] = LoadTexture((gAssetDir +
+            TextFormat("art/combat_effects/small/vfx_small_%02d.png", i)).c_str());
     }
-    for (int i = 0; i < 64; ++i) {
-        gVfxHalf[i] = LoadTexture((gAssetDir + TextFormat("art/combat_effects/vfx_half_%02d.png", i)).c_str());
-    }
-    for (int i = 0; i < 16; ++i) {
-        gVfxQuad[i] = LoadTexture((gAssetDir + TextFormat("art/combat_effects/vfx_quad_%02d.png", i * 4)).c_str());
+    for (int i = 8; i < 16; ++i) {
+        gVfxQuad[i] = LoadTexture((gAssetDir +
+            TextFormat("art/combat_effects/big/vfx_big_%02d.png", i * 4)).c_str());
     }
     gVfxSplat = LoadTexture((gAssetDir + "art/combat_effects/splat.png").c_str());
     gFxShell = LoadTexture((gAssetDir + "art/combat_effects/effect_195.png").c_str());
@@ -3977,7 +3980,6 @@ int main(int argc, char** argv) {
         if (gUnitMapFlipTex[t].id) UnloadTexture(gUnitMapFlipTex[t]);
     }
     if (gImpostorAtlas.id) UnloadTexture(gImpostorAtlas);
-    for (int i = 0; i < 16; ++i) if (gVfx[i].id) UnloadTexture(gVfx[i]);
     for (int i = 0; i < 64; ++i) if (gVfxHalf[i].id) UnloadTexture(gVfxHalf[i]);
     for (int i = 0; i < 16; ++i) if (gVfxQuad[i].id) UnloadTexture(gVfxQuad[i]);
     if (gVfxSplat.id) UnloadTexture(gVfxSplat);

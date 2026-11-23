@@ -117,9 +117,10 @@ not the stretched map sprites.
 - Quad layout is row-major (TL,TR,BL,BR), verified against live frame f027.
 - Editable config: `assets/data/combat_vfx.json` (global side frames + classes +
   per-unit overrides). The port loads it in `loadData()` and uses
-  `vfx_half_XX.png` / `vfx_quad_XX.png` in `drawCombatScreen`.
-- `tools/export_combat_vfx.py` now also exports the 64x64 `vfx_quad_XX.png`
-  cells.
+  `small/vfx_small_XX.png` / `big/vfx_big_XX.png` in `drawCombatScreen`.
+- `tools/export_combat_vfx.py` exports the clean 32-cell / 8-big-frame split;
+  the old rolled `vfx_00..15` sheets are gone (so `vfx_08` no longer exists as
+  a bad copy of `vfx_quad_32`).
 
 ## Combat backgrounds + VFX palette (Nov 9)
 - Backgrounds: the 24 terrain close-ups are 16x16 tilemaps (256x256) at the
@@ -142,15 +143,22 @@ not the stretched map sprites.
   `1=white 2=yellow 3=gold 4=orange 5..7=grey`; index 0 = transparent.
   `tools/capture_explosion_palette.py` polls the palette during a forced attack
   and saves snapshots; `palette_explosion_02.bin` is the explosion frame.
+  Live queues split the 64 cells into two clean groups:
+  - **small** cells `0..31`: projectiles, muzzle flashes, hit/miss and small
+    bursts -> `small/vfx_small_00..31.png` (32x32).
+  - **big** cells `32..63`: eight 64x64 frames (starts `32,36,40,44,48,52,56,60`)
+    -> `big/vfx_big_32..60.png`.
   `tools/export_combat_vfx.py` writes:
-  - `vfx_atlas.png` + `vfx_atlas.json` (16x2 grid at 2x = 2048x128, same layout as `vfx_sheet_x2`; 32px source cells)
-  - `vfx_atlas_1x.png` + `vfx_atlas_1x.json` (same layout at 1x = 1024x64)
-  - `vfx_half_00..63.png` (32x32 halves)
-  - `vfx_pair_00..31.png` (assembled 64x32 frames)
-  - `vfx_sheet.png`, `vfx_contact.png`
-  - `vfx_00..15.png` (legacy 64x64 2x2 sheets for the port)
+  - `vfx_atlas.png` + `vfx_atlas.json` (512x512 at 2x: big frames 4x2 on top,
+    small cells 8x4 below)
+  - `manifest.json` (organization + death sequence `32,36,44,48,52,56`)
   - `effect_192..199.png` (named single effects)
-  All mirrored to release/port build `assets/art/combat_effects/`.
+  - `splat.png`, `palette_fire.bin`
+  The old `vfx_00..15` sheets composed four cells as
+  `[(32,0),(0,0),(32,32),(0,32)]` - a 50% U roll - so `vfx_08` did not match
+  `vfx_quad_32`; those, `vfx_pair_*`, `vfx_sheet*`, `vfx_contact` and the
+  invalid quads before 32 have been removed.  All mirrored to release/port
+  build `assets/art/combat_effects/`.
 
 ## Combat sprites decoded (Nov 9, earlier)
 - Correction: the `count` field in a command is `(cmd>>5)+1` and runs **1..8**, not 1..4.

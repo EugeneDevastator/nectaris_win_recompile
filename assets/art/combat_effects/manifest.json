@@ -1,25 +1,58 @@
 {
-  "source": "Nec.exe resource 23 (64 x 32x32 halves = 32 x 64x32 frames)",
-  "palette": "dump/attack2/palette_explosion_02.bin (live combat fire ramp)",
-  "bank": 13,
-  "transparent_index": 0,
-  "frames": {
-    "halves": 64,
-    "pairs": 32
+ "source": "Nec.exe resource 23 (64 x 32x32 cells, live combat fire palette)",
+ "palette": "dump/attack2/palette_explosion_02.bin (bank 13)",
+ "bank": 13,
+ "transparent_index": 0,
+ "organization": {
+  "small": {
+   "range": [
+    0,
+    31
+   ],
+   "cell": [
+    32,
+    32
+   ],
+   "note": "single-cell projectiles, muzzle flashes, hit/miss and small bursts"
   },
-  "named_effects": {
-    "192": 33,
-    "193": 16,
-    "194": 25,
-    "195": 0,
-    "196": 34,
-    "197": 27,
-    "198": 45,
-    "199": 55
-  },
-  "wrecks": {
-    "splat": "splat.png",
-    "source": "unit_frames/unit_00_frame_01.png (M-77 mine dead frame)",
-    "use": "one splat per unit destroyed in the current combat exchange"
+  "big": {
+   "starts": [
+    32,
+    36,
+    40,
+    44,
+    48,
+    52,
+    56,
+    60
+   ],
+   "cell": [
+    64,
+    64
+   ],
+   "note": "double-size frames composed TL,TR,BL,BR from four consecutive cells"
   }
+ },
+ "death_sequence": [
+  32,
+  36,
+  44,
+  48,
+  52,
+  56
+ ],
+ "frames": {
+  "small": 32,
+  "big": 8
+ },
+ "named_effects": {
+  "192": 33,
+  "193": 16,
+  "194": 25,
+  "195": 0,
+  "196": 34,
+  "197": 27,
+  "198": 45,
+  "199": 55
+ }
 }
