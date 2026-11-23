@@ -33,9 +33,9 @@ DIR_OVERRIDES = {
     # S-61: 0=E, 1=SE(45), 2=NE(45), 3=SE(60), 4=unused smaller variant
     '6': {'dirs': [0, 1, 3, 1, 0, 2, 2, 2],
           'flips': [0, 0, 0, 1, 1, 1, 0, 0]},
-    # HMB-2's only frame is a full 64x64 cell (2x the other units) - draw it
-    # at half size so it fits the formation.
-    '9': {'frame_scale': 0.5},
+    # HMB-2 Giant is a 64x64 combat sprite and is drawn at 2x the normal
+    # unit size (the perspective slot is a full 64x64 cell).
+    '9': {'frame_scale': 1.0},
 }
 
 

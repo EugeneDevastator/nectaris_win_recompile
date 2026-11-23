@@ -1845,7 +1845,12 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
                 float fs = cellPs * gImpostorScale[type];
                 float fw = ir.w * fs, fh = ir.h * fs;
                 float cx = dest.x + nudge + 32.0f * cellPs;
-                float cy = dest.y + 32.0f * cellPs;
+                // Normal frames occupy up to 32 source pixels in the 64 px
+                // slot.  Larger sprites (HMB-2 Giant) keep the same ground
+                // line by shifting up by half their extra height, instead of
+                // hanging over the bottom report.
+                float extraH = std::max(0.0f, fh - 32.0f * cellPs);
+                float cy = dest.y + 32.0f * cellPs - extraH * 0.5f;
                 dr = {std::round(cx - fw / 2), std::round(cy - fh / 2), fw, fh};
             } else {
                 float s = panW * 0.25f * cfgScale;
@@ -3730,18 +3735,8 @@ int main(int argc, char** argv) {
                        ? MeasureTextEx(gUiFont, t, uiFontPixels(size), uiSpacing(size)).x
                        : (float)MeasureText(t, size * 2);
         };
-        // The mock's lettering is heavier than the native BDF weight.  A
-        // one-pixel cross offset thickens strokes by about one pixel at every
-        // size while keeping the crisp pixel edges.
-        auto uiText = [&](const char* t, int x, int y, int size, Color c) {
-            ::uiText(t, x, y, size, c);
-            ::uiText(t, x + 1, y, size, c);
-            ::uiText(t, x - 1, y, size, c);
-            ::uiText(t, x, y + 1, size, c);
-            ::uiText(t, x, y - 1, size, c);
-        };
         auto rightText = [&](const char* t, int size, float rx, float ry, Color c) {
-            uiText(t, (int)(rx - textW(t, size) - 1.0f), (int)ry, size, c);
+            uiText(t, (int)(rx - textW(t, size)), (int)ry, size, c);
         };
 
         if (inMap) {

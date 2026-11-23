@@ -74,8 +74,11 @@ The packer preserves hand-edited `dirs` / `flips` / `frame_scale` entries.
   sector -> frame table (`dirs`) and mirror flags (`flips`).
 * When the formation settles, both armies use the **E** frame and the right
   side is drawn mirrored, so they face each other.
-* HMB-2 (type 9) uses full 64x64 cells; its manifest entry has
-  `"frame_scale": 0.5`.
+* HMB-2 Giant (type 9) is a 64x64 combat sprite drawn at **2x** normal unit
+  size; its manifest entry uses `"frame_scale": 1.0` and its perspective slot
+  is a full 64x64 cell.  Frames taller than the normal 32 px source are shifted
+  up by half their extra height so the Giant keeps the same ground line as the
+  other units and does not hang over the bottom report.
 * `NECTARIS_DEBUG_WIRE=1` (or F1 in combat) draws the wireframe, group bounds
   and per-unit labels:
   `L f0   s0` / `R f0<  s4` = side, frame, mirrored, compass sector.
@@ -162,11 +165,9 @@ All values are logical screen pixels at 1468x720 (the window is created from
 The UI deliberately uses only 10 (small), 15 (`32 px` values/titles) and 20
 (48 px masthead).
 
-The world-map text uses a five-pass bold (`+/-1 px` cross offsets) to match the
-mock's heavier pixel weight.  `rightText` compensates by one pixel so bold runs
-still terminate on the intended right edge.  Unit properties (labels *and*
-values) are set at **32 px**, double the old 16 px block; ATK/CTR use compact
-`a/b` values so each column stays aligned.
+The world-map text uses the native regular weight (no synthetic bold pass).
+Unit properties (labels *and* values) are set at **32 px**, double the old
+16 px block; ATK/CTR use compact `a/b` values so each column stays aligned.
 
 ### Components
 
@@ -202,8 +203,8 @@ values) are set at **32 px**, double the old 16 px block; ATK/CTR use compact
 * `assets/maps/<mission>.json` - `background` points at the original map art
 * `assets/art/map_tiles/background.png` - generic fallback map background
 
-Reference renders: `port/build/final_empty2_crop.png` (REVOLT, empty card) and
-`port/build/final_card2_crop.png` (all-units map, enemy card with the 32 px
+Reference renders: `port/build/nobold_crop.png` (REVOLT, empty card) and
+`port/build/nobold_card_crop.png` (all-units map, enemy card with the 32 px
 property grid).
 
 ## Debug / test switches
