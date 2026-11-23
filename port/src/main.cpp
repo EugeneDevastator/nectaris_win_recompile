@@ -3285,12 +3285,10 @@ int main(int argc, char** argv) {
         const int scrW = GetScreenWidth(), scrH = GetScreenHeight();
         const int sideW = std::clamp((int)(scrW * 0.27f), 360, 520);
         const int mapAreaW = scrW - sideW;
-        const int frameInset = 5;
-        Rectangle mapFrame{(float)frameInset, (float)frameInset,
-                           (float)(mapAreaW - frameInset * 2 - 8),
-                           (float)(scrH - frameInset * 2)};
-        Rectangle mapView{mapFrame.x + 5, mapFrame.y + 5,
-                          mapFrame.width - 10, mapFrame.height - 38};
+        Rectangle mapFrame{6.0f, 6.0f, (float)(mapAreaW - 12),
+                           (float)(scrH - 12)};
+        Rectangle mapView{mapFrame.x + 4, mapFrame.y + 4,
+                          mapFrame.width - 8, mapFrame.height - 8 - 34};
         // Centre the mission map inside the viewport when the mission is loaded
         // (initial load, N/B, R) or the window changes.  Panning afterwards is
         // left alone.
@@ -3572,24 +3570,24 @@ int main(int argc, char** argv) {
         if (noticeT > 0) noticeT -= dt;
 
         BeginDrawing();
-        ClearBackground(Color{4, 8, 20, 255});
+        ClearBackground(Color{19, 33, 45, 255});
 
         // Deep-space backdrop: only the margins around the map art are visible,
         // the rest sits behind the opaque map backdrop.
         DrawCircleV({mapView.x + mapView.width * 0.12f,
                      mapView.y + mapView.height * 0.34f}, 230.0f,
-                    Color{18, 36, 78, 24});
+                    Color{34, 70, 120, 16});
         DrawCircleV({mapView.x + mapView.width * 0.86f,
                      mapView.y + mapView.height * 0.72f}, 190.0f,
-                    Color{26, 30, 70, 20});
+                    Color{40, 50, 100, 14});
         for (int i = 0; i < 1500; ++i) {
             int sx = (int)mapView.x + (i * 197 + 53) % std::max(1, (int)mapView.width);
             int sy2 = (int)mapView.y + (i * 131 + 17) % std::max(1, (int)mapView.height);
             int b = i % 13;
-            Color sc = (b == 0) ? Color{205, 220, 245, 255}
-                     : (b < 4) ? Color{130, 155, 205, 255}
-                     : (b < 8) ? Color{72, 92, 135, 255}
-                               : Color{36, 50, 80, 255};
+            Color sc = (b == 0) ? Color{230, 238, 250, 255}
+                     : (b < 4) ? Color{160, 185, 220, 255}
+                     : (b < 8) ? Color{105, 130, 175, 255}
+                               : Color{70, 92, 130, 255};
             DrawPixel(sx, sy2, sc);
             if (b == 0) {
                 DrawPixel(sx + 1, sy2, sc);
@@ -3712,17 +3710,20 @@ int main(int argc, char** argv) {
             }
         }
 
-        // ----- map frame: teal bezel, orange corner brackets, terrain strip
-        const Color kInk{4, 20, 36, 255};
-        const Color kPanelBG{57, 90, 90, 255};
-        const Color kPanelHi{90, 123, 123, 255};
-        const Color kPanelLo{8, 57, 90, 255};
-        const Color kSteel{156, 156, 156, 255};
-        const Color kPale{222, 222, 222, 255};
-        const Color kOrange{222, 90, 0, 255};
-        const Color kPeach{255, 189, 123, 255};
-        const Color kBlueUI{123, 189, 255, 255};
-        const Color kGreenUI{140, 210, 140, 255};
+        // ----- palette / frame: clean navy with a slate-blue rule, matching
+        // the UI mock.  The map viewport keeps the original game art.
+        const Color kInk{8, 16, 26, 255};
+        const Color kFrame{75, 100, 122, 255};
+        const Color kText{185, 193, 202, 255};
+        const Color kLabel{160, 171, 182, 255};
+        const Color kWhite{245, 248, 252, 255};
+        const Color kTitle{245, 221, 158, 255};
+        const Color kGold{255, 232, 140, 255};
+        const Color kCyan{64, 255, 255, 255};
+        const Color kGreen{110, 246, 92, 255};
+        const Color kStatus{90, 210, 110, 255};
+        const Color kBlue{61, 172, 252, 255};
+        const Color kDim{130, 143, 156, 255};
 
         auto textW = [&](const char* t, int size) -> float {
             return gUiFontReady
@@ -3737,287 +3738,201 @@ int main(int argc, char** argv) {
             float hcx, hcy;
             hexCenter(mx, my, hcx, hcy);
             DrawPolyLinesEx({hcx, hcy}, 6, gHexSize - 1.0f, 0, 1.5f,
-                            Fade(kPeach, 0.55f));
+                            Fade(kGold, 0.55f));
         }
         EndScissorMode();
 
-        DrawRectangleLinesEx({mapFrame.x - 1, mapFrame.y - 1,
-                              mapFrame.width + 2, mapFrame.height + 2}, 1, kInk);
-        // Only the bezel bands are painted: the viewport already holds the map.
-        DrawRectangle((int)mapFrame.x, (int)mapFrame.y,
-                      (int)mapFrame.width, 5, kPanelLo);
-        DrawRectangle((int)mapFrame.x, (int)(mapFrame.y + mapFrame.height) - 5,
-                      (int)mapFrame.width, 5, kPanelLo);
-        DrawRectangle((int)mapFrame.x, (int)mapFrame.y,
-                      5, (int)mapFrame.height, kPanelLo);
-        DrawRectangle((int)(mapFrame.x + mapFrame.width) - 5, (int)mapFrame.y,
-                      5, (int)mapFrame.height, kPanelLo);
-        // Orange studs along the long edges, as on the original map bezel.
-        for (int i = 1; i < 4; ++i) {
-            int tx = (int)(mapFrame.x + mapFrame.width * i / 4.0f) - 8;
-            DrawRectangle(tx, (int)mapFrame.y, 16, 3, kOrange);
-            DrawRectangle(tx, (int)(mapFrame.y + mapFrame.height) - 3, 16, 3, kOrange);
-        }
-        DrawRectangle((int)mapFrame.x, (int)mapFrame.y,
-                      (int)mapFrame.width, 2, kPanelHi);
-        DrawRectangle((int)mapFrame.x, (int)mapFrame.y,
-                      2, (int)mapFrame.height, kPanelHi);
-        DrawRectangle((int)mapFrame.x, (int)(mapFrame.y + mapFrame.height) - 2,
-                      (int)mapFrame.width, 2, kInk);
-        DrawRectangle((int)(mapFrame.x + mapFrame.width) - 2, (int)mapFrame.y,
-                      2, (int)mapFrame.height, kInk);
-        DrawRectangleLinesEx({mapView.x - 1, mapView.y - 1,
-                              mapView.width + 2, mapView.height + 2}, 2, kInk);
+        // Window and map-area rules.
+        DrawRectangleLinesEx({1, 1, (float)scrW - 2, (float)scrH - 2}, 2, kFrame);
+        DrawRectangleLinesEx({mapFrame.x, mapFrame.y,
+                              mapFrame.width, mapFrame.height}, 2, kFrame);
 
-        // Orange L-brackets at the four corners, as on the original map screen.
-        auto bracket = [&](float bx, float by, int sx, int sy) {
-            const float len = 30.0f;
-            float hx = (sx > 0) ? bx : bx - len;
-            float vy = (sy > 0) ? by : by - len;
-            DrawRectangle((int)hx, (int)by, (int)len, 4, kOrange);
-            DrawRectangle((int)bx, (int)vy, 4, (int)len, kOrange);
-            DrawRectangle((int)hx, (int)(by + (sy > 0 ? 4 : -1)), (int)len, 1, kPeach);
-            DrawRectangle((int)(bx + (sx > 0 ? 4 : -1)), (int)vy, 1, (int)len, kPeach);
-        };
-        bracket(mapFrame.x, mapFrame.y, +1, +1);
-        bracket(mapFrame.x + mapFrame.width - 4, mapFrame.y, -1, +1);
-        bracket(mapFrame.x, mapFrame.y + mapFrame.height - 4, +1, -1);
-        bracket(mapFrame.x + mapFrame.width - 4,
-                mapFrame.y + mapFrame.height - 4, -1, -1);
-
-        // Terrain read-out along the bottom of the map frame.
-        Rectangle strip{mapFrame.x + 3, mapFrame.y + mapFrame.height - 31,
-                        mapFrame.width - 6, 28};
-        DrawRectangleRec(strip, kPanelLo);
-        DrawRectangle((int)strip.x, (int)strip.y, (int)strip.width, 1, kPeach);
-        DrawRectangle((int)strip.x, (int)strip.y + 1, (int)strip.width, 1, kPanelHi);
+        // ----- bottom terrain strip inside the map frame
+        Rectangle strip{mapView.x, mapView.y + mapView.height,
+                        mapView.width, 34.0f};
+        DrawRectangle((int)strip.x - 2, (int)strip.y, (int)strip.width + 4, 2, kFrame);
         int terr = inMap ? terrainAt(gMission, mx, my) : -1;
-        Rectangle swatch{strip.x + 5, strip.y + 5, 18, 18};
-        DrawRectangleRec(swatch, terr >= 0 ? kTerrainCols[terr] : kInk);
-        DrawRectangleLinesEx(swatch, 1, kPeach);
         if (terr >= 0) {
-            uiText(gTerrainNames[terr].c_str(), (int)strip.x + 30,
-                   (int)strip.y + 5, 10, kPale);
+            Rectangle sw{strip.x + 10, strip.y + 9, 16, 16};
+            DrawRectangleRec(sw, kTerrainCols[terr]);
+            DrawRectangleLinesEx(sw, 1, kFrame);
+            uiText(gTerrainNames[terr].c_str(), (int)strip.x + 34,
+                   (int)strip.y + 9, 10, kText);
             rightText(TextFormat("DEF %+d%%", gTerrain[terr].def), 10,
-                      strip.x + strip.width - 12, strip.y + 5, kPeach);
+                      strip.x + strip.width - 12, strip.y + 9, kTitle);
             rightText(TextFormat("%d,%d", mx, my), 10,
-                      strip.x + strip.width - 96, strip.y + 7, kSteel);
+                      strip.x + strip.width - 108, strip.y + 9, kDim);
         } else {
-            uiText("MOVE CURSOR OVER MAP", (int)strip.x + 30,
-                   (int)strip.y + 5, 10, kSteel);
+            uiText("MOVE CURSOR OVER MAP", (int)strip.x + 14,
+                   (int)strip.y + 9, 10, kText);
         }
 
         // ----- sidebar
         const int panelX = mapAreaW;
         const int sideWpx = scrW - mapAreaW;
-        DrawRectangle(panelX, 0, sideWpx, scrH, kPanelBG);
-        for (int yy = 1; yy < scrH; yy += 3)
-            DrawRectangle(panelX, yy, sideWpx, 1, Color{64, 99, 99, 255});
-        DrawRectangle(panelX, 0, 4, scrH, kOrange);
-        DrawRectangle(panelX + 4, 0, 1, scrH, kPeach);
-        DrawRectangle(panelX + 5, 0, 1, scrH, kInk);
-        DrawRectangle(panelX, 0, sideWpx, 1, kPanelHi);
-        DrawRectangle(scrW - 1, 0, 1, scrH, kInk);
-        DrawRectangle(panelX, scrH - 2, sideWpx, 2, kPanelLo);
-
-        const int px = panelX + 18;
-        const int innerW = sideWpx - 36;
-        auto band = [&](int by, const char* label, const char* right) {
-            DrawRectangle(px, by, innerW, 20, kOrange);
-            DrawRectangle(px, by, innerW, 1, kPeach);
-            DrawRectangle(px, by + 19, innerW, 1, kInk);
-            uiText(label, px + 6, by + 2, 10, kInk);
-            if (right && *right)
-                rightText(right, 10, (float)(px + innerW - 10), (float)(by + 2), kInk);
-        };
-        auto well = [&](Rectangle r) {
-            DrawRectangleRec(r, kPanelLo);
-            DrawRectangle((int)r.x, (int)r.y, (int)r.width, 1, kInk);
-            DrawRectangle((int)r.x, (int)r.y, 1, (int)r.height, kInk);
-            DrawRectangle((int)r.x, (int)(r.y + r.height) - 1,
-                          (int)r.width, 1, kPanelHi);
-            DrawRectangle((int)(r.x + r.width) - 1, (int)r.y,
-                          1, (int)r.height, kPanelHi);
-        };
+        const int px = panelX + 26;
+        const int innerW = sideWpx - 52;
 
         int alive0 = 0, alive1 = 0;
         for (auto& u : gMission.units) {
             if (u.hp > 0 && !u.carried) (u.owner == 0 ? alive0 : alive1)++;
         }
 
-        int y = 8;
-        // Title plate.
-        DrawRectangle(px - 4, y, innerW + 8, 52, kOrange);
-        DrawRectangle(px - 4, y, innerW + 8, 2, kPeach);
-        DrawRectangle(px - 4, y + 50, innerW + 8, 2, kInk);
-        uiText("NECTARIS", px + 2, y + 2, 20, kInk);
-        if (gMission.number > 0) {
-            Rectangle nb{(float)(px + innerW - 52), (float)(y + 8), 50.0f, 36.0f};
-            DrawRectangleRec(nb, kPanelLo);
-            DrawRectangleLinesEx(nb, 1, kPeach);
-            rightText(TextFormat("%02d", gMission.number), 15,
-                      nb.x + nb.width - 8, nb.y + 4, kPale);
+        int y = 16;
+        float titleW = textW("NECTARIS", 20);
+        uiText("NECTARIS", (int)(px + (innerW - titleW) * 0.5f), y, 20, kTitle);
+        y += 62;
+        DrawRectangle(px, y, innerW, 2, kFrame);
+        y += 14;
+
+        // Mission / campaign.
+        std::string mname = gMission.name;
+        for (char& c : mname) {
+            c = (char)std::toupper((unsigned char)c);
+            if (c == '_') c = ' ';
         }
-        y += 60;
+        uiText(mname.c_str(), px, y, 15, kText);
+        if (!campaign.empty()) {
+            const char* num = TextFormat("%02d / %02d", campaignIdx + 1,
+                                         (int)campaign.size());
+            // Keep the large mock-style number when it fits; long test-map
+            // names fall back to the small size instead of overlapping.
+            bool fits = textW(mname.c_str(), 15) + textW(num, 15) + 20.0f <= innerW;
+            rightText(num, fits ? 15 : 10, (float)(px + innerW),
+                      (float)(y + (fits ? 0 : 7)), kText);
+        }
+        y += 42;
 
-        // Mission.
-        band(y, "MISSION",
-             campaign.empty() ? ""
-                              : TextFormat("%d / %d", campaignIdx + 1,
-                                           (int)campaign.size()));
-        y += 22;
-        well({(float)px, (float)y, (float)innerW, 48.0f});
-        uiText(gMission.name.c_str(), px + 8, y + 6, 15, kPale);
-        y += 54;
-
-        // Turn.
-        band(y, "TURN", gMission.garrison.empty()
-                            ? ""
-                            : TextFormat("GARRISON %d", (int)gMission.garrison.size()));
-        y += 22;
-        well({(float)px, (float)y, (float)innerW, 46.0f});
-        uiText(currentPlayer == 0 ? "PLAYER" : "ENEMY", px + 10, y + 6, 18,
-               currentPlayer == 0 ? kBlueUI : kGreenUI);
-        y += 54;
+        uiText(currentPlayer == 0 ? "PLAYER ACTIVE" : "ENEMY ACTIVE",
+               px, y, 15, currentPlayer == 0 ? kCyan : kGreen);
+        y += 44;
 
         // Forces.
-        band(y, "FORCES", TextFormat("%d", alive0 + alive1));
-        y += 22;
         auto forceRow = [&](int ry, Color mark, const char* label, int count) {
-            well({(float)px, (float)ry, (float)innerW, 30.0f});
-            DrawRectangle(px + 6, ry + 10, 10, 10, mark);
-            DrawRectangleLines(px + 6, ry + 10, 10, 10, kInk);
-            uiText(label, px + 22, ry + 7, 10, kPale);
+            DrawRectangle(px, ry + 8, 14, 14, mark);
+            uiText(label, px + 26, ry, 15, kText);
             rightText(TextFormat("%d", count), 15,
-                      (float)(px + innerW - 12), (float)(ry + 3), kPale);
+                      (float)(px + innerW), (float)ry, kWhite);
         };
-        forceRow(y, kBlueUI, "PLAYER", alive0);
-        y += 32;
-        forceRow(y, kGreenUI, "ENEMY", alive1);
+        forceRow(y, kBlue, "PLAYER", alive0);
+        y += 34;
+        forceRow(y, kGreen, "ENEMY", alive1);
         y += 40;
+        DrawRectangle(px, y, innerW, 2, kFrame);
+        y += 18;
 
         // Unit card.
         int infoSlot = (selected >= 0) ? selected : inspect;
         bool haveInfo = infoSlot >= 0 && infoSlot < (int)gMission.units.size() &&
                         gMission.units[infoSlot].hp > 0 &&
                         !gMission.units[infoSlot].carried;
-        band(y, "UNIT", haveInfo ? (gMission.units[infoSlot].owner == 0 ? "ALLIED"
-                                                                       : "ENEMY")
-                                 : "NONE");
-        y += 22;
-        well({(float)px, (float)y, (float)innerW, 190.0f});
         if (haveInfo) {
             const Unit& u = gMission.units[infoSlot];
             const UnitType& t = gTypes[u.type];
             bool mine = (u.owner == currentPlayer);
-            Color accent = (u.owner == 0) ? kBlueUI : kGreenUI;
-            DrawRectangle(px + 8, y + 8, 56, 56, kInk);
-            DrawRectangleLinesEx({(float)px + 8, (float)y + 8, 56, 56}, 1, kPanelHi);
+            Color accent = (u.owner == 0) ? kBlue : kGreen;
+
+            DrawRectangle(px, y, 66, 66, kInk);
+            DrawRectangleLinesEx({(float)px, (float)y, 66, 66}, 2, kFrame);
             Texture2D& icon = gUnitMapTex[u.type];
             if (icon.id) {
                 DrawTexturePro(icon, {0, 0, (float)icon.width, (float)icon.height},
-                               {(float)px + 12, (float)y + 12, 48, 48}, {0, 0}, 0,
+                               {(float)px + 2, (float)y + 2, 62, 62}, {0, 0}, 0,
                                u.owner == 0 ? WHITE : Color{150, 255, 150, 255});
             }
-            uiText(t.name.c_str(), px + 72, y + 8, 15, mine ? kPale : kPeach);
-            uiText(TextFormat("%s  %s", u.owner == 0 ? "ALLIED" : "ENEMY",
+            uiText(t.name.c_str(), px + 82, y - 2, 15, kGold);
+            uiText(TextFormat("%s / %s", u.owner == 0 ? "ALLIED" : "ENEMY",
                               u.acted ? "ACTED" : "READY"),
-                   px + 72, y + 42, 10, u.acted ? kSteel : accent);
+                   px + 82, y + 34, 10, u.acted ? kDim : kStatus);
             for (int i = 0; i < u.hp; ++i)
-                DrawRectangle(px + 10 + i * 10, y + 73, 8, 6, accent);
-            for (int i = 0; i < std::min(u.rank, 7); ++i)
-                drawStar((float)px + 88.0f + i * 10.0f, (float)y + 77, 3.6f,
-                         Color{255, 208, 60, 255});
-            auto stat = [&](int sx, int sy2, const char* label, const char* value) {
-                uiText(label, sx, sy2, 10, kSteel);
-                rightText(value, 10, (float)(sx + innerW / 2 - 12), (float)sy2, kPale);
+                DrawRectangle(px + 82 + i * 10, y + 58, 8, 7, accent);
+            rightText(TextFormat("%d / 7", u.hp), 10,
+                      (float)(px + innerW), (float)(y + 54), kWhite);
+
+            int sy = y + 88;
+            int half = innerW / 2;
+            auto stat = [&](int sx, int ry, const char* label, const char* value) {
+                uiText(label, sx, ry, 10, kLabel);
+                rightText(value, 10, (float)(sx + half - 18), (float)ry, kWhite);
             };
-            int c1 = px + 6, c2 = px + innerW / 2 + 6;
-            stat(c1, y + 96, "ATK G/A",
-                 TextFormat("%d / %d", t.atkGround, t.atkAir));
-            stat(c2, y + 96, "CTR G/A",
-                 TextFormat("%d / %d", t.ctrGround, t.ctrAir));
-            stat(c1, y + 114, "DEFENCE", TextFormat("%d", t.def));
-            stat(c2, y + 114, "MOVE", TextFormat("%d", t.movePts));
-            stat(c1, y + 132, "RANK", TextFormat("%d", u.rank));
-            stat(c2, y + 132, "HP", TextFormat("%d / 7", u.hp));
-            DrawRectangle(px + 6, y + 154, innerW - 12, 1, kPanelHi);
+            int c1 = px + 4, c2 = px + half + 8;
+            stat(c1, sy, "ATK", TextFormat("%d / %d", t.atkGround, t.atkAir));
+            stat(c2, sy, "CTR", TextFormat("%d / %d", t.ctrGround, t.ctrAir));
+            stat(c1, sy + 26, "DEF", TextFormat("%d", t.def));
+            stat(c2, sy + 26, "MOVE", TextFormat("%d", t.movePts));
+            stat(c1, sy + 52, "RANK", TextFormat("%d", u.rank));
+            stat(c2, sy + 52, "XP", TextFormat("%d", u.xp));
+            int terrU = t.airborne()
+                            ? 0
+                            : gTerrain[terrainAt(gMission, u.x, u.y)].def;
+            stat(c1, sy + 78, "TERRAIN", TextFormat("%+d%%", terrU));
+            stat(c2, sy + 78, "TYPE", t.airborne() ? "AIR" : "GROUND");
+
+            const char* hint1;
+            const char* hint2;
             if (!mine) {
-                uiText("INFO ONLY - SELECT YOUR UNIT", px + 6, y + 161, 10, kPeach);
-                uiText("ENEMY ORDERS ARE NOT AVAILABLE", px + 6, y + 175, 10, kSteel);
+                hint1 = "INFO ONLY - SELECT YOUR UNIT";
+                hint2 = "ENEMY ORDERS ARE NOT AVAILABLE";
             } else if (u.cargo >= 0) {
                 const Unit& c = gMission.units[u.cargo];
-                uiText(TextFormat("CARGO  %s  HP %d", gTypes[c.type].name.c_str(), c.hp),
-                       px + 6, y + 161, 10, kPeach);
-                uiText("U  CHOOSE UNLOAD HEX", px + 6, y + 175, 10, kSteel);
+                hint1 = TextFormat("CARGO %s  HP %d",
+                                   gTypes[c.type].name.c_str(), c.hp);
+                hint2 = "U  CHOOSE UNLOAD HEX";
             } else if (isTransport(t)) {
-                uiText("EMPTY TRANSPORT", px + 6, y + 161, 10, kPeach);
-                uiText("SELECT A UNIT, THEN THIS TRANSPORT", px + 6, y + 175, 10, kSteel);
+                hint1 = "EMPTY TRANSPORT";
+                hint2 = "SELECT A UNIT, THEN THIS TRANSPORT";
             } else {
-                uiText("LMB  MOVE / ATTACK", px + 6, y + 161, 10, kPeach);
-                uiText("CLICK A TRANSPORT TO LOAD", px + 6, y + 175, 10, kSteel);
+                hint1 = "LMB  MOVE / ATTACK";
+                hint2 = "CLICK A TRANSPORT TO LOAD";
             }
+            uiText(hint1, px + 4, y + 188, 10, kText);
+            uiText(hint2, px + 4, y + 204, 10, kDim);
         } else {
-            DrawRectangle(px + 8, y + 8, 56, 56, kInk);
-            DrawRectangleLinesEx({(float)px + 8, (float)y + 8, 56, 56}, 1,
-                                 Fade(kPeach, 0.45f));
-            uiText("-", px + 32, y + 24, 18, kSteel);
-            uiText("NO UNIT SELECTED", px + 72, y + 22, 15, kSteel);
-            uiText(gMission.factories.empty() ? "Click a unit to inspect it"
-                                              : "Click a unit or a factory",
-                   px + 72, y + 58, 10, kSteel);
-            uiText("SELECT A UNIT FOR ORDERS AND STATS", px + 6, y + 161, 10, kSteel);
+            DrawRectangle(px, y, 66, 66, kInk);
+            DrawRectangleLinesEx({(float)px, (float)y, 66, 66}, 2, kFrame);
+            uiText("NO UNIT SELECTED", px + 82, y + 8, 15, kText);
+            uiText(gMission.factories.empty() ? "CLICK A UNIT TO INSPECT IT"
+                                              : "CLICK A UNIT OR A FACTORY",
+                   px + 82, y + 46, 10, kDim);
+            uiText("SELECT A UNIT FOR ORDERS AND STATS", px + 4, y + 188, 10, kDim);
         }
-        y += 196;
-
-        if (alive0 == 0 || alive1 == 0) {
-            Color mc = (alive1 == 0) ? kGreenUI : kPeach;
-            uiText((alive1 == 0) ? "VICTORY" : "DEFEAT", px, y + 4, 18, mc);
-            y += 30;
-        }
-
-        // Controls footer.
-        const int footTop = scrH - 116;
-        DrawRectangle(px, footTop, innerW, 2, kPanelHi);
-        DrawRectangle(px, footTop + 2, innerW, 1, kInk);
-        auto key = [&](int ky, const char* k, const char* label) {
-            Rectangle kr{(float)px, (float)ky, 64.0f, 20.0f};
-            DrawRectangleRec(kr, kPanelLo);
-            DrawRectangleLinesEx(kr, 1, kPanelHi);
-            int kw = (int)textW(k, 10);
-            uiText(k, (int)(kr.x + (kr.width - kw) * 0.5f), ky + 2, 10, kPeach);
-            uiText(label, px + 72, ky + 2, 10, kSteel);
+        // Controls.
+        int fy = scrH - 176;
+        DrawRectangle(px, fy - 18, innerW, 2, kFrame);
+        auto keyRow = [&](int ky, const char* k, const char* label) {
+            rightText(k, 15, (float)(px + 78), (float)ky, kGold);
+            uiText(label, px + 94, ky + 7, 10, kText);
         };
-        key(footTop + 10, "SPACE", "END TURN / DESELECT");
-        key(footTop + 32, "R", "RESTART MISSION");
-        key(footTop + 54, "N / B", "NEXT / PREVIOUS MISSION");
-        key(footTop + 76, "LMB", "SELECT   DRAG   PAN");
+        keyRow(fy, "SPACE", "END TURN / DESELECT");
+        keyRow(fy + 36, "R", "RESTART MISSION");
+        keyRow(fy + 72, "N / B", "NEXT / PREVIOUS MISSION");
+        keyRow(fy + 108, "LMB", "SELECT   DRAG   PAN");
 
         if (noticeT > 0)
-            uiText(notice.c_str(), px, footTop - 24, 10, kPeach);
+            uiText(notice.c_str(), px, fy - 32, 10, kTitle);
         if (debug)
             uiText(TextFormat("cell %d,%d  terrain %d", mx, my,
                               inMap ? terrainAt(gMission, mx, my) : -1),
-                   px, footTop - 40, 10, kSteel);
+                   px, fy - 48, 10, kDim);
 
         // End-of-mission banner over the map.
         if (alive0 == 0 || alive1 == 0) {
             const char* msg = (alive1 == 0) ? "VICTORY" : "DEFEAT";
-            Color mc = (alive1 == 0) ? kGreenUI : kPeach;
+            Color mc = (alive1 == 0) ? kGreen : kTitle;
             float tw = textW(msg, 26);
             float bx = mapView.x + (mapView.width - tw) * 0.5f;
             float by = mapView.y + mapView.height * 0.5f - 30.0f;
             DrawRectangle((int)mapView.x, (int)(by - 18),
                           (int)mapView.width, 84, Fade(kInk, 0.84f));
             DrawRectangle((int)mapView.x, (int)(by - 19),
-                          (int)mapView.width, 1, kOrange);
+                          (int)mapView.width, 1, kFrame);
             DrawRectangle((int)mapView.x, (int)(by + 65),
-                          (int)mapView.width, 1, kOrange);
+                          (int)mapView.width, 1, kFrame);
             uiText(msg, (int)bx, (int)by, 26, mc);
             const char* sub = (alive1 == 0) ? "MISSION COMPLETE" : "ALL UNITS LOST";
             float sw2 = textW(sub, 10);
             uiText(sub, (int)(mapView.x + (mapView.width - sw2) * 0.5f),
-                   (int)(by + 44), 10, kPale);
+                   (int)(by + 44), 10, kText);
         }
 
         EndDrawing();

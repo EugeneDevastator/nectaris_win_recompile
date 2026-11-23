@@ -103,25 +103,32 @@ player uses shader amount 0, so its art is untouched.
 
 ---
 
-## World-map UI (Nov 2026 iteration)
+## World-map UI (mock-based, Nov 2026)
 
-The map screen follows the original's chrome: steel-teal panel, orange header
-bands, recessed navy wells, orange corner brackets on a dark map bezel.
+Source design: `ui_mocks/nectarisUntitled.png`.  The mock is a layout/style
+reference only; it is never used as runtime art.  The map viewport keeps the
+original game art untouched.
 
-### Palette (sampled from original UI data)
+The screen is a flat navy field divided by thin slate-blue rules.  There are no
+orange header bands or recessed wells in this iteration.
+
+### Palette (sampled from the mock)
 
 | role | RGB |
 | --- | --- |
-| ink / outline | 4, 20, 36 |
-| panel steel | 57, 90, 90 |
-| panel highlight | 90, 123, 123 |
-| navy well / map bezel | 8, 57, 90 |
-| steel text | 156, 156, 156 |
-| pale text | 222, 222, 222 |
-| orange band | 222, 90, 0 |
-| peach accent | 255, 189, 123 |
-| player accent | 123, 189, 255 |
-| computer accent | 140, 210, 140 |
+| background | 19, 33, 45 |
+| frame / rules | 75, 100, 122 |
+| ink / icon wells | 8, 16, 26 |
+| body text | 185, 193, 202 |
+| labels | 160, 171, 182 |
+| values / white | 245, 248, 252 |
+| masthead cream | 245, 221, 158 |
+| name / key gold | 255, 232, 140 |
+| active cyan | 64, 255, 255 |
+| enemy green | 110, 246, 92 |
+| ready green | 90, 210, 110 |
+| player blue | 61, 172, 252 |
+| dim hint | 130, 143, 156 |
 
 ### Layout model
 
@@ -129,15 +136,17 @@ All values are logical screen pixels at 1468x720 (the window is created from
 `mapW + 620` and `max(mapH, 720)`):
 
 * sidebar width: `clamp(27% of screen, 360, 520)` (396 at 1468)
-* map frame: 5 px inset, 8 px gutter before the sidebar
-* map viewport: frame inset 5, bottom reserved for the 28 px terrain strip
+* outer window rule: 2 px, inset 1 px
+* map-area rule: 2 px, inset 6 px; 4 px between the rule and the viewport
+* map viewport: 34 px terrain strip reserved at the bottom
 * map content is centred in the viewport when `loadMission` sets
   `gMapNeedsCenter` (initial load, N/B, R) or the viewport size changes; user
   panning is preserved
 * the map is clipped with `BeginScissorMode` and the cursor hit-test also
   requires the cursor to be inside the viewport
-* sidebar padding 18 px, content width `sideW - 36`
-* footer: 4 beveled keycaps anchored 116 px from the bottom
+* sidebar padding 26 px, content width `sideW - 52`
+* controls: four rows, 36 px apart, anchored 176 px above the bottom; key
+  labels right-aligned in a 78 px column, descriptions start at +94 px
 
 ### Typography
 
@@ -154,22 +163,27 @@ The UI deliberately uses only 10 (small), 15 (`32 px` values/titles) and 20
 
 ### Components
 
-* title plate: orange 52 px band, `NECTARIS` 48 px in ink, mission number in a
-  recessed navy 50x36 plate
-* section header: orange 20 px band with 1 px peach top and 1 px ink bottom
-* wells: navy fill, dark top/left and light bottom/right bevel
-* turn row: `PLAYER` in blue / `ENEMY` in green, garrison size in the band
-* forces: player blue and computer green markers with large counts
-* unit card: 190 px recessed card with map icon (green tint for enemy), name,
-  owner/ready state, HP pips, rank stars, two columns of stats (ATK G/A,
-  CTR G/A, DEFENCE, MOVE, RANK, HP) and context hints.  Enemy units are
-  read-only.
-* controls: beveled keycaps `SPACE`, `R`, `N / B`, `LMB` with descriptions
-* terrain strip: bottom of the map frame; hovering a hex shows a colour
+* masthead: `NECTARIS` 48 px cream, centred; 2 px slate rule below
+* mission line: uppercase mission name (underscores become spaces) in 32 px
+  body text with `NN / MM` right-aligned.  When a long test-map name would
+  collide with the number, the number drops to 16 px instead of overlapping.
+* turn state: `PLAYER ACTIVE` cyan / `ENEMY ACTIVE` green, 32 px
+* forces: 14 px blue/green squares, 32 px labels, 32 px white counts
+* unit card:
+  * 66 px ink icon well with a 2 px frame (enemy icons green-tinted)
+  * name in 32 px gold, `ALLIED/ENEMY / READY/ACTED` in 16 px green or dim
+  * HP pips plus `n / 7`; player pips blue, computer pips green
+  * flat 2-column stat grid at 16 px: ATK, CTR / DEF, MOVE / RANK, XP /
+    TERRAIN, TYPE
+  * two context hint lines (orders, cargo/unload, transport, read-only enemy)
+  * no wells or bands; rules separate groups
+* controls: flat gold key labels (`SPACE`, `R`, `N / B`, `LMB`) with 16 px
+  descriptions
+* terrain strip: 2 px rule and 16 px body text; on hover it shows a colour
   swatch, terrain name, coordinates and `DEF +n%`
-* space margins: deep navy with a deterministic starfield, two soft nebula
-  blobs; the map art itself carries the terrain colours, so only a very faint
-  hex grid (alpha 0.14) is drawn over it
+* space margins: navy with a deterministic starfield and two soft nebula
+  washes; the map itself carries the terrain colours, so only a very faint hex
+  grid (alpha 0.14) is drawn over it
 
 ### Key code
 
@@ -179,9 +193,8 @@ The UI deliberately uses only 10 (small), 15 (`32 px` values/titles) and 20
 * `assets/maps/<mission>.json` - `background` points at the original map art
 * `assets/art/map_tiles/background.png` - generic fallback map background
 
-A reference render is `port/build/map_ui_final3_crop.png` (REVOLT, 15x10).
-
----
+Reference renders: `port/build/mock_final2_crop.png` (REVOLT, empty card) and
+`port/build/mock_final1_crop.png` (all-units map, enemy card).
 
 ## Debug / test switches
 
