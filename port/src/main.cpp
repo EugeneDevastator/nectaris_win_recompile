@@ -3283,7 +3283,7 @@ int main(int argc, char** argv) {
         // ----- world-map layout, computed before hit-testing so the map
         // viewport can clip the cursor and the art stays centred in its frame.
         const int scrW = GetScreenWidth(), scrH = GetScreenHeight();
-        const int sideW = std::clamp((int)(scrW * 0.27f), 360, 520);
+        const int sideW = std::clamp((int)(scrW * 0.33f), 420, 600);
         const int mapAreaW = scrW - sideW;
         Rectangle mapFrame{6.0f, 6.0f, (float)(mapAreaW - 12),
                            (float)(scrH - 12)};
@@ -3730,8 +3730,18 @@ int main(int argc, char** argv) {
                        ? MeasureTextEx(gUiFont, t, uiFontPixels(size), uiSpacing(size)).x
                        : (float)MeasureText(t, size * 2);
         };
+        // The mock's lettering is heavier than the native BDF weight.  A
+        // one-pixel cross offset thickens strokes by about one pixel at every
+        // size while keeping the crisp pixel edges.
+        auto uiText = [&](const char* t, int x, int y, int size, Color c) {
+            ::uiText(t, x, y, size, c);
+            ::uiText(t, x + 1, y, size, c);
+            ::uiText(t, x - 1, y, size, c);
+            ::uiText(t, x, y + 1, size, c);
+            ::uiText(t, x, y - 1, size, c);
+        };
         auto rightText = [&](const char* t, int size, float rx, float ry, Color c) {
-            uiText(t, (int)(rx - textW(t, size)), (int)ry, size, c);
+            uiText(t, (int)(rx - textW(t, size) - 1.0f), (int)ry, size, c);
         };
 
         if (inMap) {
@@ -3799,7 +3809,7 @@ int main(int argc, char** argv) {
             // names fall back to the small size instead of overlapping.
             bool fits = textW(mname.c_str(), 15) + textW(num, 15) + 20.0f <= innerW;
             rightText(num, fits ? 15 : 10, (float)(px + innerW),
-                      (float)(y + (fits ? 0 : 7)), kText);
+                      (float)(y + (fits ? 0 : 10)), kText);
         }
         y += 42;
 
@@ -3847,26 +3857,32 @@ int main(int argc, char** argv) {
             for (int i = 0; i < u.hp; ++i)
                 DrawRectangle(px + 82 + i * 10, y + 58, 8, 7, accent);
             rightText(TextFormat("%d / 7", u.hp), 10,
-                      (float)(px + innerW), (float)(y + 54), kWhite);
+                      (float)(px + innerW), (float)(y + 58), kWhite);
 
-            int sy = y + 88;
+            int sy = y + 84;
             int half = innerW / 2;
+            bool wideStats = innerW >= 420;
+            // The mock's property block is set in the same face as the rest of
+            // the UI; here it is doubled (32 px) with compact values so both
+            // columns stay aligned inside the card.
             auto stat = [&](int sx, int ry, const char* label, const char* value) {
-                uiText(label, sx, ry, 10, kLabel);
-                rightText(value, 10, (float)(sx + half - 18), (float)ry, kWhite);
+                uiText(label, sx, ry, 15, kLabel);
+                rightText(value, 15, (float)(sx + half - 22), (float)ry, kWhite);
             };
-            int c1 = px + 4, c2 = px + half + 8;
-            stat(c1, sy, "ATK", TextFormat("%d / %d", t.atkGround, t.atkAir));
-            stat(c2, sy, "CTR", TextFormat("%d / %d", t.ctrGround, t.ctrAir));
-            stat(c1, sy + 26, "DEF", TextFormat("%d", t.def));
-            stat(c2, sy + 26, "MOVE", TextFormat("%d", t.movePts));
-            stat(c1, sy + 52, "RANK", TextFormat("%d", u.rank));
-            stat(c2, sy + 52, "XP", TextFormat("%d", u.xp));
+            int c1 = px + 4, c2 = px + half + 6;
+            stat(c1, sy, "ATK", TextFormat("%d/%d", t.atkGround, t.atkAir));
+            stat(c2, sy, "CTR", TextFormat("%d/%d", t.ctrGround, t.ctrAir));
+            stat(c1, sy + 36, "DEF", TextFormat("%d", t.def));
+            stat(c2, sy + 36, "MOVE", TextFormat("%d", t.movePts));
+            stat(c1, sy + 72, "RANK", TextFormat("%d", u.rank));
+            stat(c2, sy + 72, "XP", TextFormat("%d", u.xp));
             int terrU = t.airborne()
                             ? 0
                             : gTerrain[terrainAt(gMission, u.x, u.y)].def;
-            stat(c1, sy + 78, "TERRAIN", TextFormat("%+d%%", terrU));
-            stat(c2, sy + 78, "TYPE", t.airborne() ? "AIR" : "GROUND");
+            stat(c1, sy + 108, wideStats ? "TERRAIN" : "TERR",
+                 TextFormat("%+d%%", terrU));
+            stat(c2, sy + 108, "TYPE",
+                 t.airborne() ? "AIR" : (wideStats ? "GROUND" : "GND"));
 
             const char* hint1;
             const char* hint2;
@@ -3885,23 +3901,25 @@ int main(int argc, char** argv) {
                 hint1 = "LMB  MOVE / ATTACK";
                 hint2 = "CLICK A TRANSPORT TO LOAD";
             }
-            uiText(hint1, px + 4, y + 188, 10, kText);
-            uiText(hint2, px + 4, y + 204, 10, kDim);
+            uiText(hint1, px + 4, y + 228, 10, kText);
+            uiText(hint2, px + 4, y + 244, 10, kDim);
         } else {
             DrawRectangle(px, y, 66, 66, kInk);
             DrawRectangleLinesEx({(float)px, (float)y, 66, 66}, 2, kFrame);
+            float dashW = textW("-", 15);
+            uiText("-", (int)(px + (66 - dashW) * 0.5f), y + 16, 15, kDim);
             uiText("NO UNIT SELECTED", px + 82, y + 8, 15, kText);
             uiText(gMission.factories.empty() ? "CLICK A UNIT TO INSPECT IT"
                                               : "CLICK A UNIT OR A FACTORY",
                    px + 82, y + 46, 10, kDim);
-            uiText("SELECT A UNIT FOR ORDERS AND STATS", px + 4, y + 188, 10, kDim);
+            uiText("SELECT A UNIT FOR ORDERS AND STATS", px + 4, y + 86, 10, kDim);
         }
         // Controls.
-        int fy = scrH - 176;
+        int fy = scrH - 160;
         DrawRectangle(px, fy - 18, innerW, 2, kFrame);
         auto keyRow = [&](int ky, const char* k, const char* label) {
             rightText(k, 15, (float)(px + 78), (float)ky, kGold);
-            uiText(label, px + 94, ky + 7, 10, kText);
+            uiText(label, px + 94, ky + 9, 10, kText);
         };
         keyRow(fy, "SPACE", "END TURN / DESELECT");
         keyRow(fy + 36, "R", "RESTART MISSION");
@@ -3909,11 +3927,11 @@ int main(int argc, char** argv) {
         keyRow(fy + 108, "LMB", "SELECT   DRAG   PAN");
 
         if (noticeT > 0)
-            uiText(notice.c_str(), px, fy - 32, 10, kTitle);
+            uiText(notice.c_str(), px, scrH - 18, 10, kTitle);
         if (debug)
             uiText(TextFormat("cell %d,%d  terrain %d", mx, my,
                               inMap ? terrainAt(gMission, mx, my) : -1),
-                   px, fy - 48, 10, kDim);
+                   (int)mapView.x + 8, (int)mapView.y + 6, 10, kDim);
 
         // End-of-mission banner over the map.
         if (alive0 == 0 || alive1 == 0) {

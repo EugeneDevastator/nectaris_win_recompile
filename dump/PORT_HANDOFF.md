@@ -135,7 +135,8 @@ orange header bands or recessed wells in this iteration.
 All values are logical screen pixels at 1468x720 (the window is created from
 `mapW + 620` and `max(mapH, 720)`):
 
-* sidebar width: `clamp(27% of screen, 360, 520)` (396 at 1468)
+* sidebar width: `clamp(33% of screen, 420, 600)` (484 at 1468; widened so the
+  doubled unit-property text and both stat columns fit)
 * outer window rule: 2 px, inset 1 px
 * map-area rule: 2 px, inset 6 px; 4 px between the rule and the viewport
 * map viewport: 34 px terrain strip reserved at the bottom
@@ -145,7 +146,7 @@ All values are logical screen pixels at 1468x720 (the window is created from
 * the map is clipped with `BeginScissorMode` and the cursor hit-test also
   requires the cursor to be inside the viewport
 * sidebar padding 26 px, content width `sideW - 52`
-* controls: four rows, 36 px apart, anchored 176 px above the bottom; key
+* controls: four rows, 36 px apart, anchored 160 px above the bottom; key
   labels right-aligned in a 78 px column, descriptions start at +94 px
 
 ### Typography
@@ -161,6 +162,12 @@ All values are logical screen pixels at 1468x720 (the window is created from
 The UI deliberately uses only 10 (small), 15 (`32 px` values/titles) and 20
 (48 px masthead).
 
+The world-map text uses a five-pass bold (`+/-1 px` cross offsets) to match the
+mock's heavier pixel weight.  `rightText` compensates by one pixel so bold runs
+still terminate on the intended right edge.  Unit properties (labels *and*
+values) are set at **32 px**, double the old 16 px block; ATK/CTR use compact
+`a/b` values so each column stays aligned.
+
 ### Components
 
 * masthead: `NECTARIS` 48 px cream, centred; 2 px slate rule below
@@ -173,8 +180,10 @@ The UI deliberately uses only 10 (small), 15 (`32 px` values/titles) and 20
   * 66 px ink icon well with a 2 px frame (enemy icons green-tinted)
   * name in 32 px gold, `ALLIED/ENEMY / READY/ACTED` in 16 px green or dim
   * HP pips plus `n / 7`; player pips blue, computer pips green
-  * flat 2-column stat grid at 16 px: ATK, CTR / DEF, MOVE / RANK, XP /
-    TERRAIN, TYPE
+  * flat 2-column stat grid at **32 px**: ATK, CTR / DEF, MOVE / RANK, XP /
+    TERRAIN, TYPE; labels and values share the same size and baseline.  On
+    narrow deploy maps (`innerW < 420`) the long labels shorten to `TERR` and
+    `GND` so the columns cannot collide.
   * two context hint lines (orders, cargo/unload, transport, read-only enemy)
   * no wells or bands; rules separate groups
 * controls: flat gold key labels (`SPACE`, `R`, `N / B`, `LMB`) with 16 px
@@ -193,8 +202,9 @@ The UI deliberately uses only 10 (small), 15 (`32 px` values/titles) and 20
 * `assets/maps/<mission>.json` - `background` points at the original map art
 * `assets/art/map_tiles/background.png` - generic fallback map background
 
-Reference renders: `port/build/mock_final2_crop.png` (REVOLT, empty card) and
-`port/build/mock_final1_crop.png` (all-units map, enemy card).
+Reference renders: `port/build/final_empty2_crop.png` (REVOLT, empty card) and
+`port/build/final_card2_crop.png` (all-units map, enemy card with the 32 px
+property grid).
 
 ## Debug / test switches
 
