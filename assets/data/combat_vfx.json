@@ -1,5 +1,5 @@
 {
-  "note": "Combat VFX per unit. Frame numbers are resource-23 half frames (0..63); death lists are 64x64 frames; the killed-unit explosion is 32,36,40 (three frames). The miss uses packed sheet 44: its four 32x32 cells animate in the original order BR, TR, TL, BL (47,45,44,46), i.e. starting at the lower-right and going counterclockwise, 0.10 s per frame. Projectiles/muzzles are side-based in the original: left player shots use frame 4 / muzzle 14,15,16,23; right computer shots use frame 18 / muzzle 17,19,21,22.",
+  "note": "Combat VFX per unit. Frame numbers are resource-23 half frames (0..63); death lists are 64x64 frames; the killed-unit explosion is 32,36,40 (three frames). Every non-killed slot uses the packed miss sheet 44: its four 32x32 cells animate in the original order BR, TR, TL, BL (47,45,44,46), i.e. starting at the lower-right and going counterclockwise, 0.10 s per frame. The old hit frames (25) remain only as a fallback if the packed sheet is missing. Projectiles/muzzles are side-based in the original: left player shots use frame 4 / muzzle 14,15,16,23; right computer shots use frame 18 / muzzle 17,19,21,22.",
   "frames": {
     "projectile_left": [4],
     "projectile_right": [18],

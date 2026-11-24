@@ -1064,14 +1064,19 @@ static void drawVfxHalf(int frame, Vector2 center, float size, Color tint) {
                    {0, 0}, 0, tint);
 }
 
-static void drawVfxQuad(int startFrame, Vector2 center, float size, Color tint) {
+static void drawVfxQuadPivot(int startFrame, Vector2 pos, float size, Color tint,
+                             Vector2 pivot) {
     int idx = startFrame / 4;
     if (idx < 0 || idx >= 16) return;
     Texture2D& tex = gVfxQuad[idx];
     if (!tex.id) return;
     DrawTexturePro(tex, {0, 0, (float)tex.width, (float)tex.height},
-                   {center.x - size / 2, center.y - size / 2, size, size},
+                   {pos.x - size * pivot.x, pos.y - size * pivot.y, size, size},
                    {0, 0}, 0, tint);
+}
+
+static void drawVfxQuad(int startFrame, Vector2 center, float size, Color tint) {
+    drawVfxQuadPivot(startFrame, center, size, tint, {0.5f, 0.5f});
 }
 
 // One 32x32 cell from a packed 2x2 sheet (storage order TL,TR,BL,BR).
@@ -2127,22 +2132,27 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
                     int step = std::clamp((int)(ddel / gVfxDeathStep), 0, (int)death.size() - 1);
                     float fadeStart = (float)death.size() * gVfxDeathStep;
                     float alpha = 1.0f - std::clamp((ddel - fadeStart) / 0.35f, 0.0f, 1.0f);
-                    drawVfxQuad(death[step], to[i],
-                                us * 2.40f * vfxScaleFor(targetType),
-                                Fade(WHITE, alpha));
-                } else if (damage > 0 && !hit.empty()) {
-                    int frame = hit[(int)(dt / 0.10f) % (int)hit.size()];
-                    float a = 1.0f - std::clamp((dt - 0.40f) / 0.40f, 0.0f, 1.0f);
-                    drawVfxHalf(frame, to[i], us * 1.55f, Fade(WHITE, a));
+                    // Anchor the big blast at its bottom centre on the unit's
+                    // ground line so it rises upward instead of being centred
+                    // over the dead sprite.
+                    drawVfxQuadPivot(death[step],
+                                     {to[i].x, to[i].y + us * 0.50f},
+                                     us * 2.40f * vfxScaleFor(targetType),
+                                     Fade(WHITE, alpha), {0.5f, 1.0f});
                 } else if (gVfxMissSheet >= 0 && !miss.empty() &&
                            gVfxQuad[gVfxMissSheet / 4].id) {
-                    // Packed miss sheet (44): four cells animate in the
-                    // original order BR, TR, TL, BL (counterclockwise from the
-                    // lower-right corner), 0.10 s per frame.
+                    // Every non-killed slot uses the packed miss sheet (44),
+                    // so only destroyed units show the big 32/36/40 explosion.
+                    // Four cells animate in the original order BR, TR, TL, BL
+                    // (counterclockwise from the lower-right), 0.10 s/frame.
                     int frame = miss[(int)(dt / gVfxMissFrame) % (int)miss.size()];
                     float a = 1.0f - std::clamp((dt - 0.40f) / 0.25f, 0.0f, 1.0f);
                     drawVfxPackedCell(gVfxMissSheet, frame, to[i],
                                       us * 0.90f, Fade(WHITE, a));
+                } else if (damage > 0 && !hit.empty()) {
+                    int frame = hit[(int)(dt / 0.10f) % (int)hit.size()];
+                    float a = 1.0f - std::clamp((dt - 0.40f) / 0.40f, 0.0f, 1.0f);
+                    drawVfxHalf(frame, to[i], us * 1.55f, Fade(WHITE, a));
                 } else if (!miss.empty()) {
                     // Missed shot: small, short-lived ground burst (clearly not
                     // the multi-frame destruction explosion).

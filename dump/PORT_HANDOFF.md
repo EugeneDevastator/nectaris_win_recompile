@@ -128,13 +128,18 @@ groups, which determine the clean export in `assets/art/combat_effects/`:
   four consecutive cells in row-major TL, TR, BL, BR order.
   Export: `big/vfx_big_32..52.png`.
   The killed-unit explosion sequence is `32, 36, 40` (set in
-  `assets/data/combat_vfx.json`).
+  `assets/data/combat_vfx.json`).  The blast is drawn with a **bottom-centre
+  pivot** on the unit's ground line (`to.y + 0.5 * us`), so it rises upward
+  from the ground instead of being centred over the dead sprite.
 * **packed** - `44, 56, 60` are 64x64 groups that are actually four separate
   32x32 sprites packed in a 2x2 square.  `44` is the **miss** sheet; `56` and
   `60` are particle/shard sheets.  Export: `packed/vfx_packed_44..60.png`.
   The miss animates one cell at a time in the original order **BR, TR, TL, BL**
   (frames `47,45,44,46`), 0.10 s per frame, selected by
   `"miss_sheet": 44` + `"miss": [47,45,44,46]` in `combat_vfx.json`.
+  **All non-killed slots** use this miss sheet; the big `32,36,40` explosion is
+  reserved for destroyed HP sprites, so a normal exchange no longer shows the
+  same large explosion on every survivor.
 
 The old `vfx_00..15` sheets composed each group as
 `[(32,0), (0,0), (32,32), (0,32)]`, i.e. rolled 50% along U; `vfx_08` was the

@@ -147,12 +147,14 @@ not the stretched map sprites.
   - **small** cells `0..31`: projectiles, muzzle flashes, hit and small bursts
     -> `small/vfx_small_00..31.png` (32x32).
   - **big** true 64x64 frames `32,36,40,48,52` -> `big/vfx_big_32..52.png`.
-    Killed-unit explosion is `32,36,40`.
+    Killed-unit explosion is `32,36,40`; it is anchored at its bottom centre
+    on the unit ground line so the blast rises upward.
   - **packed** 64x64 sheets `44,56,60` (four separate 32x32 sprites in a 2x2
     square) -> `packed/vfx_packed_44..60.png`.  `44` is the miss sheet; its
     cells animate BR,TR,TL,BL (`47,45,44,46`) at 0.10 s per frame
-    (`"miss_sheet": 44` + `"miss": [...]` in `combat_vfx.json`).
-    Killed-unit explosion is the three frames `32,36,40`.
+    (`"miss_sheet": 44` + `"miss": [...]` in `combat_vfx.json`).  All
+    non-killed slots use the miss sheet; only destroyed HP sprites use the
+    three-frame `32,36,40` explosion.
   `tools/export_combat_vfx.py` writes:
   - `vfx_atlas.png` + `vfx_atlas.json` (640x512 at 2x: big row, packed row,
     small cells 8x4 below)
