@@ -157,6 +157,19 @@ Runtime paths: `art/combat_effects/small/vfx_small_%02d.png`,
 `big/vfx_big_%02d.png` and `packed/vfx_packed_%02d.png` (start-frame name).
 The named `effect_192..199.png` files and `splat.png` stay at the root.
 
+### Combat exchange timing
+
+* `fireT = 2.55 s`, travel `fireDur = 0.42 s`.
+* A side's shots are spread over **0.5 s**: shot `i` leaves at
+  `fireT + 0.5*i/(n-1)` and arrives `fireDur` later.  The last arrival is
+  `fireT + 0.5 + fireDur = 3.47 s`.
+* Each impact effect starts at that shot's arrival.  The killed sprite is
+  hidden and its wreck splat appears at the same arrival; the death explosion
+  starts then too.
+* Death explosion size is `us * 2.40 * 0.80 = us * 1.92` (0.8x the previous
+  size), with the bottom-centre pivot on the unit ground line.
+* The first click skips to `4.30 s`, after the last explosion has played.
+
 ---
 
 ## World-map UI (mock-based, Nov 2026)

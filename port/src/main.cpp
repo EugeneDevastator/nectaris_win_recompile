@@ -1570,9 +1570,11 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
                   std::max(3, (int)(topH * 0.02f)), Color{70, 190, 100, 255});
 
     float t = v.t;
-    // Shooting is 1.2x slower than the original 0.35 s window.
+    // Shooting is 1.2x slower than the original 0.35 s window.  A formation's
+    // shots are spread across SHOT_SPREAD seconds instead of firing together.
+    const float SHOT_SPREAD = 0.50f;
     float fireT = 2.55f, fireDur = 0.42f;
-    float impactT = fireT + fireDur + 0.10f;
+    float impactT = fireT + fireDur;
     int hpL0 = v.left.hp0;
     int hpR0 = v.right.hp0;
     int hpL1 = v.left.hp1;
@@ -1581,6 +1583,22 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
     int nR0 = std::clamp(hpR0 + 1, 0, 8);
     int nL1 = (hpL1 > 0) ? std::clamp(hpL1 + 1, 0, 8) : 0;  // survivors
     int nR1 = (hpR1 > 0) ? std::clamp(hpR1 + 1, 0, 8) : 0;
+    // Shot i leaves at fireT + i*step and reaches its target fireDur later.
+    // The whole volley spans SHOT_SPREAD seconds (a single shot has no spread).
+    auto shotStart = [&](int i, int count) {
+        if (count <= 1) return fireT;
+        return fireT + SHOT_SPREAD * (float)i / (float)(count - 1);
+    };
+    auto shotArrival = [&](int i, int count) { return shotStart(i, count) + fireDur; };
+    float lastArrival = shotArrival(8, 8);
+    // The targeted side is hit by the other side's shot i; kill i explodes at
+    // that shot's arrival.
+    auto killArrival = [&](int targetSide, int i) {
+        int shots = (targetSide == 1) ? nL0 : nR0;
+        if (shots <= 1) return fireT + fireDur;
+        i = std::clamp(i, 0, shots - 1);
+        return shotArrival(i, shots);
+    };
     bool impact = t > impactT;
     hpBox(hpXL, impact ? nL1 : nL0);
     hpBox(hpXR, impact ? nR1 : nR0);
@@ -1722,8 +1740,8 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
     bool flashOn = (t > impactT && t < impactT + 0.50f);
     Color flashA = (hurtL && flashOn) ? Color{255, 150, 150, 255} : WHITE;
     Color flashD = (hurtR && flashOn) ? Color{255, 150, 150, 255} : WHITE;
-    float rk = (t > fireT && t < fireT + fireDur)
-                   ? std::sin((t - fireT) / fireDur * 3.14159f)
+    float rk = (t > fireT && t < lastArrival)
+                   ? std::sin((t - fireT) / (lastArrival - fireT) * 3.14159f)
                    : 0.0f;
     float recoilA = -us * 0.20f * rk;
     float recoilD = us * 0.20f * rk;
@@ -1795,7 +1813,7 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
         };
         for (int i = 0; i < count0; ++i) {
             if (i >= count1) {
-                float death = impactT + (i - count1) * 0.12f;
+                float death = killArrival(mirror ? 1 : 0, i - count1);
                 if (t >= death) continue;      // slot already exploded
             }
             Vector2 slotUv, posUv;
@@ -2048,7 +2066,7 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
         }
     }
 
-    if (t > fireT && t < fireT + fireDur) {
+    if (t > fireT && t < lastArrival) {
         // Only a side that can actually shoot fires.  Indirect attacks never
         // provoke a counter (original sets the counter strength to 0 in that
         // branch), so the defender stays silent against artillery.
@@ -2060,9 +2078,9 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
             const std::vector<int>& proj = vfxProjectileFor(type, side);
             const std::vector<int>& muzz = vfxMuzzleFor(type, side);
             for (int i = 0; i < count; ++i) {
-                float st = fireT + i * 0.012f;
-                if (t < st) continue;
-                float k = std::clamp((t - st) / fireDur, 0.0f, 1.0f);
+                float st = shotStart(i, count);
+                float k = (t - st) / fireDur;
+                if (t < st || k >= 1.0f) continue;
                 Vector2 p = {from[i].x + nudge + (to[i].x - from[i].x - nudge) * k,
                              from[i].y + (to[i].y - from[i].y) * k};
                 float ang = std::atan2(to[i].y - from[i].y,
@@ -2100,7 +2118,7 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
         auto wreck = [&](bool rightSide, int baseSlot, int killed) {
             if (killed <= 0) return;
             for (int i = 0; i < killed; ++i) {
-                if (t < impactT + i * 0.12f) continue;
+                if (t < killArrival(rightSide ? 1 : 0, i)) continue;
                 Vector2 c = slotVisualCenter(rightSide, baseSlot + i);
                 DrawTexturePro(gVfxSplat,
                                {0, 0, (float)gVfxSplat.width, (float)gVfxSplat.height},
@@ -2112,32 +2130,30 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
         wreck(false, nL1, killedL);   // left vehicles lost to the right side
     }
 
-    if (t > impactT && t < impactT + 1.10f) {
+    if (t > impactT && t < lastArrival + 1.10f) {
         const bool attackerIsLeft = (v.left.unit == v.r.atkSlot);
         const bool counterFires = (v.r.ctrStrength > 0 || v.r.rawDmgToAtk > 0);
         const bool leftFires = attackerIsLeft || counterFires;
         const bool rightFires = !attackerIsLeft || counterFires;
-        float dt = t - impactT;
         auto impact = [&](Vector2* to, int count, int killed, int targetType,
                           int damage, int targetSide) {
             const std::vector<int>& death = vfxDeathFor(targetType);
             const std::vector<int>& hit = gVfxHit;
             const std::vector<int>& miss = gVfxMiss;
             for (int i = 0; i < count; ++i) {
+                // Impact i happens exactly when shot i reaches the target.
+                float dti = t - shotArrival(i, count);
+                if (dti < 0.0f) continue;
                 if (i < killed && !death.empty()) {
-                    // Stagger kills: the original removes the formation slots
-                    // one at a time instead of all in the same frame.
-                    float ddel = dt - i * 0.12f;
-                    if (ddel < 0.0f) continue;
-                    int step = std::clamp((int)(ddel / gVfxDeathStep), 0, (int)death.size() - 1);
+                    int step = std::clamp((int)(dti / gVfxDeathStep), 0, (int)death.size() - 1);
                     float fadeStart = (float)death.size() * gVfxDeathStep;
-                    float alpha = 1.0f - std::clamp((ddel - fadeStart) / 0.35f, 0.0f, 1.0f);
+                    float alpha = 1.0f - std::clamp((dti - fadeStart) / 0.35f, 0.0f, 1.0f);
                     // Anchor the big blast at its bottom centre on the unit's
                     // ground line so it rises upward instead of being centred
                     // over the dead sprite.
                     drawVfxQuadPivot(death[step],
                                      {to[i].x, to[i].y + us * 0.50f},
-                                     us * 2.40f * vfxScaleFor(targetType),
+                                     us * 2.40f * 0.80f * vfxScaleFor(targetType),
                                      Fade(WHITE, alpha), {0.5f, 1.0f});
                 } else if (gVfxMissSheet >= 0 && !miss.empty() &&
                            gVfxQuad[gVfxMissSheet / 4].id) {
@@ -2145,22 +2161,22 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
                     // so only destroyed units show the big 32/36/40 explosion.
                     // Four cells animate in the original order BR, TR, TL, BL
                     // (counterclockwise from the lower-right), 0.10 s/frame.
-                    int frame = miss[(int)(dt / gVfxMissFrame) % (int)miss.size()];
-                    float a = 1.0f - std::clamp((dt - 0.40f) / 0.25f, 0.0f, 1.0f);
+                    int frame = miss[(int)(dti / gVfxMissFrame) % (int)miss.size()];
+                    float a = 1.0f - std::clamp((dti - 0.40f) / 0.25f, 0.0f, 1.0f);
                     drawVfxPackedCell(gVfxMissSheet, frame, to[i],
                                       us * 0.90f, Fade(WHITE, a));
                 } else if (damage > 0 && !hit.empty()) {
-                    int frame = hit[(int)(dt / 0.10f) % (int)hit.size()];
-                    float a = 1.0f - std::clamp((dt - 0.40f) / 0.40f, 0.0f, 1.0f);
+                    int frame = hit[(int)(dti / 0.10f) % (int)hit.size()];
+                    float a = 1.0f - std::clamp((dti - 0.40f) / 0.40f, 0.0f, 1.0f);
                     drawVfxHalf(frame, to[i], us * 1.55f, Fade(WHITE, a));
                 } else if (!miss.empty()) {
                     // Missed shot: small, short-lived ground burst (clearly not
                     // the multi-frame destruction explosion).
-                    int frame = miss[(int)(dt / 0.12f) % (int)miss.size()];
-                    float a = 1.0f - std::clamp((dt - 0.30f) / 0.30f, 0.0f, 1.0f);
+                    int frame = miss[(int)(dti / 0.12f) % (int)miss.size()];
+                    float a = 1.0f - std::clamp((dti - 0.30f) / 0.30f, 0.0f, 1.0f);
                     drawVfxHalf(frame, to[i], us * 0.90f, Fade(WHITE, a));
                 } else {
-                    drawExplosion(to[i].x, to[i].y, us * 0.70f, dt * 7.0f, 1.0f);
+                    drawExplosion(to[i].x, to[i].y, us * 0.70f, dti * 7.0f, 1.0f);
                 }
             }
             (void)targetSide;
@@ -3136,8 +3152,8 @@ int main(int argc, char** argv) {
             drawCombatScreen(gCv, playerTex, enemyTex);
             EndDrawing();
             if (IsKeyPressed(KEY_SPACE) || IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-                if (gCv.t < 3.60f) {
-                    gCv.t = 3.60f;      // first input skips to the result
+                if (gCv.t < 4.30f) {
+                    gCv.t = 4.30f;      // first input skips past the last impact
                 } else {
                     gCv.active = false;
                     startNextCombat();

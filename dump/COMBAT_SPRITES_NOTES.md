@@ -166,6 +166,9 @@ not the stretched map sprites.
   `vfx_quad_32`; those, `vfx_pair_*`, `vfx_sheet*`, `vfx_contact` and the
   invalid quads before 32 have been removed.  All mirrored to release/port
   build `assets/art/combat_effects/`.
+  Combat timing: shots are spread over 0.5 s, each impact (and kill explosion)
+  starts when its projectile arrives; the 3-frame death blast is scaled 0.8x
+  and anchored by its bottom centre on the ground line.
 
 ## Combat sprites decoded (Nov 9, earlier)
 - Correction: the `count` field in a command is `(cmd>>5)+1` and runs **1..8**, not 1..4.
