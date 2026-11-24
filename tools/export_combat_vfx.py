@@ -18,7 +18,8 @@ removed.
 Outputs (assets/, release/ and port/build mirrors):
   small/vfx_small_00..31.png   32x32 single-cell effects
   big/vfx_big_32..52.png       64x64 explosion frames: 32,36,40,48,52
-  packed/vfx_packed_44.png     64x64 sheet of four 32x32 sprites (miss)
+  packed/vfx_packed_44.png     64x64 sheet of four 32x32 sprites (miss;
+                               order BR,TR,TL,BL = 47,45,44,46)
   packed/vfx_packed_56.png     particle sheet (4 sprites packed 2x2)
   packed/vfx_packed_60.png     shard sheet (4 sprites packed 2x2)
   vfx_atlas.png                640x512 reference atlas: big row, packed row,
@@ -170,7 +171,8 @@ json.dump({
     },
     'roles': {
         'death_explosion': [32, 36, 40],
-        'miss': 44,
+        'miss_sheet': 44,
+        'miss_order': [47, 45, 44, 46],
         'other_big': [48, 52],
         'packed_sheets': PACKED_STARTS,
     },

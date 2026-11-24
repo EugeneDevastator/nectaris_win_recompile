@@ -140,7 +140,8 @@ static int compassSector(float dx, float dy) {
 }
 static CombatUnitVfx gUnitVfx[24];
 static std::vector<int> gVfxProjectile[2], gVfxMuzzle[2], gVfxHit, gVfxMiss;
-static int gVfxMissQuad = -1;   // packed 64x64 miss sheet (44 in the original)
+static int gVfxMissSheet = -1;  // packed 64x64 miss sheet (44 in the original)
+static float gVfxMissFrame = 0.10f;
 static float gVfxDeathStep = 0.09f;
 static Texture2D gBackdrop = {0};
 static bool gBackdropDirty = true;
@@ -317,7 +318,8 @@ static void loadData() {
             if (f.contains("muzzle_right")) gVfxMuzzle[1] = ints(f["muzzle_right"]);
             if (f.contains("hit")) gVfxHit = ints(f["hit"]);
             if (f.contains("miss")) gVfxMiss = ints(f["miss"]);
-            if (f.contains("miss_quad")) gVfxMissQuad = f.value("miss_quad", -1);
+            if (f.contains("miss_sheet")) gVfxMissSheet = f.value("miss_sheet", -1);
+            gVfxMissFrame = f.value("miss_frame_seconds", gVfxMissFrame);
             gVfxDeathStep = f.value("death_step_seconds", gVfxDeathStep);
         }
         if (vj.contains("classes")) {
@@ -1069,6 +1071,21 @@ static void drawVfxQuad(int startFrame, Vector2 center, float size, Color tint) 
     if (!tex.id) return;
     DrawTexturePro(tex, {0, 0, (float)tex.width, (float)tex.height},
                    {center.x - size / 2, center.y - size / 2, size, size},
+                   {0, 0}, 0, tint);
+}
+
+// One 32x32 cell from a packed 2x2 sheet (storage order TL,TR,BL,BR).
+static void drawVfxPackedCell(int sheetStart, int cell, Vector2 center,
+                              float size, Color tint) {
+    int idx = sheetStart / 4;
+    if (idx < 0 || idx >= 16) return;
+    Texture2D& tex = gVfxQuad[idx];
+    if (!tex.id) return;
+    int k = cell - sheetStart;
+    if (k < 0 || k > 3) return;
+    float cw = tex.width * 0.5f, ch = tex.height * 0.5f;
+    Rectangle src{(k % 2) * cw, (k / 2) * ch, cw, ch};
+    DrawTexturePro(tex, src, {center.x - size / 2, center.y - size / 2, size, size},
                    {0, 0}, 0, tint);
 }
 
@@ -2117,12 +2134,15 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
                     int frame = hit[(int)(dt / 0.10f) % (int)hit.size()];
                     float a = 1.0f - std::clamp((dt - 0.40f) / 0.40f, 0.0f, 1.0f);
                     drawVfxHalf(frame, to[i], us * 1.55f, Fade(WHITE, a));
-                } else if (gVfxMissQuad >= 0 &&
-                           gVfxQuad[gVfxMissQuad / 4].id) {
-                    // Packed miss sheet (44): four small sprites in one 2x2
-                    // square, used as a short ground burst.
-                    float a = 1.0f - std::clamp((dt - 0.30f) / 0.30f, 0.0f, 1.0f);
-                    drawVfxQuad(gVfxMissQuad, to[i], us * 1.60f, Fade(WHITE, a));
+                } else if (gVfxMissSheet >= 0 && !miss.empty() &&
+                           gVfxQuad[gVfxMissSheet / 4].id) {
+                    // Packed miss sheet (44): four cells animate in the
+                    // original order BR, TR, TL, BL (counterclockwise from the
+                    // lower-right corner), 0.10 s per frame.
+                    int frame = miss[(int)(dt / gVfxMissFrame) % (int)miss.size()];
+                    float a = 1.0f - std::clamp((dt - 0.40f) / 0.25f, 0.0f, 1.0f);
+                    drawVfxPackedCell(gVfxMissSheet, frame, to[i],
+                                      us * 0.90f, Fade(WHITE, a));
                 } else if (!miss.empty()) {
                     // Missed shot: small, short-lived ground burst (clearly not
                     // the multi-frame destruction explosion).

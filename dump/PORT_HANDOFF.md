@@ -130,9 +130,11 @@ groups, which determine the clean export in `assets/art/combat_effects/`:
   The killed-unit explosion sequence is `32, 36, 40` (set in
   `assets/data/combat_vfx.json`).
 * **packed** - `44, 56, 60` are 64x64 groups that are actually four separate
-  32x32 sprites packed in a 2x2 square.  `44` is the **miss** burst; `56` and
+  32x32 sprites packed in a 2x2 square.  `44` is the **miss** sheet; `56` and
   `60` are particle/shard sheets.  Export: `packed/vfx_packed_44..60.png`.
-  `combat_vfx.json` selects the miss with `"miss_quad": 44`.
+  The miss animates one cell at a time in the original order **BR, TR, TL, BL**
+  (frames `47,45,44,46`), 0.10 s per frame, selected by
+  `"miss_sheet": 44` + `"miss": [47,45,44,46]` in `combat_vfx.json`.
 
 The old `vfx_00..15` sheets composed each group as
 `[(32,0), (0,0), (32,32), (0,32)]`, i.e. rolled 50% along U; `vfx_08` was the
