@@ -159,7 +159,10 @@ static void resolveUnitFolders() {
         std::string n = e.path().filename().string();
         if (n.rfind("unit_", 0) != 0 || n.size() < 7) continue;
         int id = std::atoi(n.c_str() + 5);
-        if (id >= 0 && id < 24) gUnitDirName[id] = n;
+        // Prefer the longest suffix when a stale short folder is also present.
+        if (id >= 0 && id < 24 &&
+            (gUnitDirName[id].empty() || n.size() > gUnitDirName[id].size()))
+            gUnitDirName[id] = n;
     }
 }
 static std::string unitPath(int t, const char* file) {
@@ -477,6 +480,24 @@ static int factoryIndexAt(const Mission& m, int x, int y) {
     for (int i = 0; i < (int)m.factories.size(); ++i)
         if (m.factories[i].x == x && m.factories[i].y == y) return i;
     return -1;
+}
+
+// Only infantry can take a factory (GX-77 Charlie, GX-87 Kilroy, CBX-1
+// Panther).  Capturing changes ownership but leaves the stored roster for the
+// new owner, matching the original free stored units.
+static bool isCaptureInfantry(int type) {
+    return type == 18 || type == 19 || type == 20;
+}
+
+static bool captureFactoryAt(Mission& m, Unit& u, int x, int y) {
+    if (!isCaptureInfantry(u.type)) return false;
+    int fi = factoryIndexAt(m, x, y);
+    if (fi < 0) return false;
+    Factory& f = m.factories[fi];
+    if (f.owner == u.owner) return false;
+    f.owner = u.owner;
+    f.terrain = (u.owner == 0) ? 11 : 13;
+    return true;
 }
 
 static bool loadMission(const std::string& path) {    json j = loadJson(path);
@@ -881,6 +902,15 @@ static void drawHexMap(const Mission& m) {
             DrawPolyLines({cx, cy}, 6, gHexSize - 1.0f, 0,
                           Fade(BLACK, haveBg ? 0.14f : 0.35f));
         }
+    // Factory ownership ring: blue = player, red = computer, grey = neutral.
+    for (const Factory& f : m.factories) {
+        float cx, cy;
+        hexCenter(f.x, f.y, cx, cy);
+        Color c = (f.owner == 0) ? Color{90, 170, 255, 220}
+                : (f.owner == 1) ? Color{240, 90, 90, 220}
+                                 : Color{170, 170, 180, 170};
+        DrawPolyLinesEx({cx, cy}, 6, gHexSize - 1.0f, 0, 2.0f, c);
+    }
 }
 
 
@@ -3132,6 +3162,11 @@ int main(int argc, char** argv) {
             }
             u.x = tx;
             u.y = ty;
+            if (captureFactoryAt(gMission, u, tx, ty)) {
+                std::cout << "[AI capture] " << gTypes[u.type].name
+                          << " captured factory at " << tx << "," << ty
+                          << std::endl;
+            }
         }
         if (!aiPath.empty()) aiStartWaypoint();
         else aiWait = 0.18f;      // no move: brief pause, then resolve attack
@@ -3368,7 +3403,7 @@ int main(int argc, char** argv) {
         Rectangle mapFrame{6.0f, 6.0f, (float)(mapAreaW - 12),
                            (float)(scrH - 12)};
         Rectangle mapView{mapFrame.x + 4, mapFrame.y + 4,
-                          mapFrame.width - 8, mapFrame.height - 8 - 34};
+                          mapFrame.width - 8, mapFrame.height - 8 - 48};
         // Centre the mission map inside the viewport when the mission is loaded
         // (initial load, N/B, R) or the window changes.  Panning afterwards is
         // left alone.
@@ -3411,6 +3446,11 @@ int main(int argc, char** argv) {
             gPanX = std::clamp(gPanX, -lx, lx);
             gPanY = std::clamp(gPanY, -ly, ly);
         }
+        // Pan is applied directly to every unit (and any in-flight animation
+        // endpoints) so the army moves with the map instead of trailing it.
+        static float lastPanX = gPanX, lastPanY = gPanY;
+        float panDX = gPanX - lastPanX, panDY = gPanY - lastPanY;
+        lastPanX = gPanX; lastPanY = gPanY;
         int mx = 0, my = 0;
         bool inMap = pixelToHex(mouse.x, mouse.y, gMission.w, gMission.h, mx, my) &&
                       CheckCollisionPointRec(mouse, mapView);
@@ -3480,7 +3520,31 @@ int main(int argc, char** argv) {
 
         if (!aiActive && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
             int hit = inMap ? unitAt(gMission, mx, my) : -1;
-            if (selected < 0) {
+            int fi = inMap ? factoryIndexAt(gMission, mx, my) : -1;
+            // Double-clicking a unit that stands on a factory opens that
+            // factory's panel; a single click keeps the normal unit handling.
+            static double lastFactoryClickT = -1.0;
+            static int lastFactoryClickUnit = -1;
+            bool factoryDouble = false;
+            if (hit >= 0 && fi >= 0) {
+                double now = GetTime();
+                if (hit == lastFactoryClickUnit &&
+                    lastFactoryClickT >= 0.0 &&
+                    now - lastFactoryClickT <= 0.40) {
+                    factoryDouble = true;
+                    lastFactoryClickUnit = -1;
+                    lastFactoryClickT = -1.0;
+                } else {
+                    lastFactoryClickUnit = hit;
+                    lastFactoryClickT = now;
+                }
+            } else {
+                lastFactoryClickUnit = -1;
+                lastFactoryClickT = -1.0;
+            }
+            if (factoryDouble) {
+                openFactory(fi);
+            } else if (selected < 0) {
                 if (hit >= 0 && gMission.units[hit].owner == currentPlayer &&
                     !gMission.units[hit].acted && !gMission.units[hit].carried) {
                     selectUnit(hit);
@@ -3492,7 +3556,6 @@ int main(int argc, char** argv) {
                     if (IsSoundValid(sndSelect)) PlaySound(sndSelect);
                 } else if (inMap) {
                     inspect = -1;
-                    int fi = factoryIndexAt(gMission, mx, my);
                     if (fi >= 0) openFactory(fi);
                 }
             } else {
@@ -3543,6 +3606,12 @@ int main(int argc, char** argv) {
                     sel.facing = std::atan2(ny2 - oy, nx2 - ox) * 57.29578f - 90.0f;
                     sel.x = mx;
                     sel.y = my;
+                    if (captureFactoryAt(gMission, sel, mx, my)) {
+                        say("FACTORY CAPTURED");
+                        std::cout << "[capture] " << gTypes[sel.type].name
+                                  << " captured factory at " << mx << "," << my
+                                  << std::endl;
+                    }
                     sel.acted = true;          // movement consumes the unit's turn
                     inspect = -1;
                     if (IsSoundValid(sndMove)) PlaySound(sndMove);
@@ -3553,7 +3622,6 @@ int main(int argc, char** argv) {
                     // Unit that is not a legal target: inspect it instead.
                     inspect = (inspect == hit) ? -1 : hit;
                 } else if (inMap) {
-                    int fi = factoryIndexAt(gMission, mx, my);
                     if (fi >= 0) openFactory(fi);
                 }
             }
@@ -3606,6 +3674,22 @@ int main(int argc, char** argv) {
 
         // smooth movement + effect timers
         float usz = mapUnitSize();
+        if (panDX != 0.0f || panDY != 0.0f) {
+            if (aiAnimating) {
+                aiFromX += panDX; aiFromY += panDY;
+                aiToX += panDX; aiToY += panDY;
+            }
+            if (unloadAnimSlot >= 0) {
+                unloadSX += panDX; unloadSY += panDY;
+                unloadTX += panDX; unloadTY += panDY;
+            }
+            if (boardAnimSlot >= 0) {
+                boardSX += panDX; boardSY += panDY;
+                boardTX += panDX; boardTY += panDY;
+            }
+            for (auto& u : gMission.units)
+                if (u.px >= 0) { u.px += panDX; u.py += panDY; }
+        }
         for (int ui = 0; ui < (int)gMission.units.size(); ++ui) {
             Unit& u = gMission.units[ui];
             float hx, hy;
@@ -3827,24 +3911,24 @@ int main(int argc, char** argv) {
         DrawRectangleLinesEx({mapFrame.x, mapFrame.y,
                               mapFrame.width, mapFrame.height}, 2, kFrame);
 
-        // ----- bottom terrain strip inside the map frame
+        // ----- bottom terrain strip inside the map frame (footer at 2x)
         Rectangle strip{mapView.x, mapView.y + mapView.height,
-                        mapView.width, 34.0f};
+                        mapView.width, 48.0f};
         DrawRectangle((int)strip.x - 2, (int)strip.y, (int)strip.width + 4, 2, kFrame);
         int terr = inMap ? terrainAt(gMission, mx, my) : -1;
         if (terr >= 0) {
-            Rectangle sw{strip.x + 10, strip.y + 9, 16, 16};
+            Rectangle sw{strip.x + 12, strip.y + 12, 24, 24};
             DrawRectangleRec(sw, kTerrainCols[terr]);
             DrawRectangleLinesEx(sw, 1, kFrame);
-            uiText(gTerrainNames[terr].c_str(), (int)strip.x + 34,
-                   (int)strip.y + 9, 10, kText);
-            rightText(TextFormat("DEF %+d%%", gTerrain[terr].def), 10,
-                      strip.x + strip.width - 12, strip.y + 9, kTitle);
-            rightText(TextFormat("%d,%d", mx, my), 10,
-                      strip.x + strip.width - 108, strip.y + 9, kDim);
+            uiText(gTerrainNames[terr].c_str(), (int)strip.x + 46,
+                   (int)strip.y + 6, 15, kText);
+            rightText(TextFormat("DEF %+d%%", gTerrain[terr].def), 15,
+                      strip.x + strip.width - 12, strip.y + 6, kTitle);
+            rightText(TextFormat("%d,%d", mx, my), 15,
+                      strip.x + strip.width - 160, strip.y + 6, kDim);
         } else {
-            uiText("MOVE CURSOR OVER MAP", (int)strip.x + 14,
-                   (int)strip.y + 9, 10, kText);
+            uiText("MOVE CURSOR OVER MAP", (int)strip.x + 18,
+                   (int)strip.y + 6, 15, kText);
         }
 
         // ----- sidebar
@@ -3985,16 +4069,16 @@ int main(int argc, char** argv) {
             uiText("SELECT A UNIT FOR ORDERS AND STATS", px + 4, y + 86, 10, kDim);
         }
         // Controls.
-        int fy = scrH - 160;
+        int fy = scrH - 172;
         DrawRectangle(px, fy - 18, innerW, 2, kFrame);
         auto keyRow = [&](int ky, const char* k, const char* label) {
-            rightText(k, 15, (float)(px + 78), (float)ky, kGold);
-            uiText(label, px + 94, ky + 9, 10, kText);
+            rightText(k, 15, (float)(px + 100), (float)ky, kGold);
+            uiText(label, px + 116, ky, 15, kText);
         };
-        keyRow(fy, "SPACE", "END TURN / DESELECT");
-        keyRow(fy + 36, "R", "RESTART MISSION");
-        keyRow(fy + 72, "N / B", "NEXT / PREVIOUS MISSION");
-        keyRow(fy + 108, "LMB", "SELECT   DRAG   PAN");
+        keyRow(fy, "SPACE", "TURN / DESELECT");
+        keyRow(fy + 40, "R", "RESTART MISSION");
+        keyRow(fy + 80, "N / B", "NEXT / PREV");
+        keyRow(fy + 120, "LMB", "SELECT DRAG PAN");
 
         if (noticeT > 0)
             uiText(notice.c_str(), px, scrH - 18, 10, kTitle);

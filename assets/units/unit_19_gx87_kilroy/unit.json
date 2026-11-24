@@ -1,0 +1,53 @@
+{
+ "id": 19,
+ "name": "GX-87 Kilroy",
+ "attack_ground": 40,
+ "attack_air": 10,
+ "defense": 10,
+ "counter_ground": 1,
+ "counter_air": 1,
+ "movement": 2,
+ "movement_class": 3,
+ "ability_flags": 129,
+ "max_hp": 7,
+ "folder": "unit_19_gx87_kilroy",
+ "combat_chunks": [
+  688,
+  689,
+  690,
+  691
+ ],
+ "combat_sprite_group": "infantry",
+ "world_map_base": 120,
+ "sprites": [
+  "horizontal.png",
+  "vertical.png",
+  "combat_alive.png",
+  "combat_diagonal.png"
+ ],
+ "palette": "blue default; tint for enemy",
+ "guide_frames": {
+  "horizontal": "combat_alive.png",
+  "diagonal": "combat_diagonal.png"
+ },
+ "guide": {
+  "english_name": "GX-87",
+  "movement": 2,
+  "defense": 10,
+  "attack_ground": 40,
+  "attack_air": 10,
+  "range_ground": 1,
+  "range_air": 1,
+  "frame_alive": "combat_alive.png",
+  "frame_wreck": "combat_wreck.png"
+ },
+ "impostor_frames": [
+  "frames/impostor_00.png",
+  "frames/impostor_01.png",
+  "frames/impostor_02.png",
+  "frames/impostor_03.png",
+  "frames/impostor_04.png",
+  "frames/impostor_05.png"
+ ],
+ "impostor_count": 6
+}

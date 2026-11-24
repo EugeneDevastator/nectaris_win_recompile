@@ -1,0 +1,51 @@
+{
+ "id": 13,
+ "name": "MB-5 Rabbit",
+ "attack_ground": 70,
+ "attack_air": 10,
+ "defense": 20,
+ "counter_ground": 1,
+ "counter_air": 1,
+ "movement": 8,
+ "movement_class": 1,
+ "ability_flags": 21,
+ "max_hp": 7,
+ "folder": "unit_13_mb5_rabbit",
+ "combat_chunks": [
+  628,
+  629,
+  630,
+  631
+ ],
+ "combat_sprite_group": 246,
+ "world_map_base": 184,
+ "sprites": [
+  "horizontal.png",
+  "vertical.png",
+  "combat_alive.png",
+  "combat_diagonal.png"
+ ],
+ "palette": "blue default; tint for enemy",
+ "guide_frames": {
+  "horizontal": "combat_alive.png",
+  "diagonal": "combat_diagonal.png"
+ },
+ "guide": {
+  "english_name": "MB-5",
+  "movement": 8,
+  "defense": 20,
+  "attack_ground": 70,
+  "attack_air": 10,
+  "range_ground": 1,
+  "range_air": 1,
+  "frame_alive": "combat_alive.png",
+  "frame_wreck": "combat_wreck.png"
+ },
+ "impostor_frames": [
+  "frames/impostor_00.png",
+  "frames/impostor_01.png",
+  "frames/impostor_02.png",
+  "frames/impostor_03.png"
+ ],
+ "impostor_count": 4
+}

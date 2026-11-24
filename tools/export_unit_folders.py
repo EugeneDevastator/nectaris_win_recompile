@@ -1,5 +1,5 @@
 """Build per-unit folders:
-    assets/units/unit_XX/
+    assets/units/unit_XX_code_name/
         unit.json          configuration (stats + sprite metadata)
         world_map.png      8-direction map-icon strip (256x32)
         combat_blue.png    64x64 battle sprite, player palette
@@ -19,6 +19,16 @@ PAL = [(p['r'], p['g'], p['b']) for p in pal]
 groups = json.load(open(os.path.join(ROOT, 'dump', 'sprite_groups.json')))
 units = json.load(open(os.path.join(ROOT, 'assets', 'data', 'units.json'), encoding='utf-8'))['units']
 names = {u['id']: u['name'] for u in units}
+# Readable folder suffixes: code + StrategyWiki name, e.g. unit_00_m77_trigger.
+SLUGS = {
+    0: 'm77_trigger', 1: 'fx1_falcon', 2: 'ax87_eagle', 3: 'ef88_hunter',
+    4: 't79_grizzly', 5: 'pt6_polar', 6: 's61_bison', 7: 'gs81_slagger',
+    8: 'gt86_titan', 9: 'hmb2_giant', 10: 'tt1_lenet', 11: 'sg4_hadrian',
+    12: 'mr22_octopus', 13: 'mb5_rabbit', 14: 'mb4_lynx', 15: 'aag4_seeker',
+    16: 'mm107_hawkeye', 17: 'ss80_atlas', 18: 'gx77_charlie',
+    19: 'gx87_kilroy', 20: 'cbx1_panther', 21: 'nc1_mule', 22: 'c61_pelican',
+    23: 'yamaarashi',
+}
 OUT = os.path.join(ROOT, 'assets', 'units')
 os.makedirs(OUT, exist_ok=True)
 
@@ -58,7 +68,8 @@ for t in range(24):
     else:
         sprites = [p[2] + 512 for p in groups['255']]
 
-    suffix = re.sub(r'[^a-z0-9]', '', str(units[t].get('name', '')).lower())
+    suffix = SLUGS.get(t) or re.sub(r'[^a-z0-9]+', '_',
+                                    str(units[t].get('name', '')).lower()).strip('_')
     dirname = ('unit_%02d_%s' % (t, suffix)) if suffix else ('unit_%02d' % t)
     folder = os.path.join(OUT, dirname)
     os.makedirs(folder, exist_ok=True)

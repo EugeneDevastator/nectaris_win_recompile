@@ -1,0 +1,53 @@
+{
+ "id": 3,
+ "name": "EF-88 Hunter",
+ "attack_ground": 70,
+ "attack_air": 70,
+ "defense": 50,
+ "counter_ground": 1,
+ "counter_air": 1,
+ "movement": 11,
+ "movement_class": 4,
+ "ability_flags": 83,
+ "max_hp": 7,
+ "folder": "unit_03_ef88_hunter",
+ "combat_chunks": [
+  588,
+  589,
+  590,
+  591
+ ],
+ "combat_sprite_group": 236,
+ "world_map_base": 104,
+ "sprites": [
+  "horizontal.png",
+  "vertical.png",
+  "combat_alive.png",
+  "combat_diagonal.png"
+ ],
+ "palette": "blue default; tint for enemy",
+ "guide_frames": {
+  "horizontal": "combat_alive.png",
+  "diagonal": "combat_diagonal.png"
+ },
+ "guide": {
+  "english_name": "EF-88",
+  "movement": 11,
+  "defense": 50,
+  "attack_ground": 70,
+  "attack_air": 70,
+  "range_ground": 1,
+  "range_air": 1,
+  "frame_alive": "combat_alive.png",
+  "frame_wreck": "combat_wreck.png"
+ },
+ "impostor_frames": [
+  "frames/impostor_00.png",
+  "frames/impostor_01.png",
+  "frames/impostor_02.png",
+  "frames/impostor_03.png",
+  "frames/impostor_04.png",
+  "frames/impostor_05.png"
+ ],
+ "impostor_count": 6
+}

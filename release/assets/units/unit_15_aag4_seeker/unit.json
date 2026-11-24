@@ -1,0 +1,53 @@
+{
+ "id": 15,
+ "name": "AAG-4 Seeker",
+ "attack_ground": 30,
+ "attack_air": 65,
+ "defense": 30,
+ "counter_ground": 1,
+ "counter_air": 1,
+ "movement": 6,
+ "movement_class": 0,
+ "ability_flags": 19,
+ "max_hp": 7,
+ "folder": "unit_15_aag4_seeker",
+ "combat_chunks": [
+  636,
+  637,
+  638,
+  639
+ ],
+ "combat_sprite_group": 248,
+ "world_map_base": 88,
+ "sprites": [
+  "horizontal.png",
+  "vertical.png",
+  "combat_alive.png",
+  "combat_diagonal.png"
+ ],
+ "palette": "blue default; tint for enemy",
+ "guide_frames": {
+  "horizontal": "combat_alive.png",
+  "diagonal": "combat_diagonal.png"
+ },
+ "guide": {
+  "english_name": "AAG-4",
+  "movement": 6,
+  "defense": 30,
+  "attack_ground": 30,
+  "attack_air": 65,
+  "range_ground": 1,
+  "range_air": 1,
+  "frame_alive": "combat_alive.png",
+  "frame_wreck": "combat_wreck.png"
+ },
+ "impostor_frames": [
+  "frames/impostor_00.png",
+  "frames/impostor_01.png",
+  "frames/impostor_02.png",
+  "frames/impostor_03.png",
+  "frames/impostor_04.png",
+  "frames/impostor_05.png"
+ ],
+ "impostor_count": 6
+}

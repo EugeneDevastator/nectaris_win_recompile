@@ -1,0 +1,51 @@
+{
+ "id": 21,
+ "name": "NC-1 Mule",
+ "attack_ground": 10,
+ "attack_air": 10,
+ "defense": 10,
+ "counter_ground": 1,
+ "counter_air": 1,
+ "movement": 6,
+ "movement_class": 2,
+ "ability_flags": 32,
+ "max_hp": 7,
+ "folder": "unit_21_nc1_mule",
+ "combat_chunks": [
+  660,
+  661,
+  662,
+  663
+ ],
+ "combat_sprite_group": 254,
+ "world_map_base": 136,
+ "sprites": [
+  "horizontal.png",
+  "vertical.png",
+  "combat_alive.png",
+  "combat_diagonal.png"
+ ],
+ "palette": "blue default; tint for enemy",
+ "guide_frames": {
+  "horizontal": "combat_alive.png",
+  "diagonal": "combat_diagonal.png"
+ },
+ "guide": {
+  "english_name": "NC-1",
+  "movement": 6,
+  "defense": 10,
+  "attack_ground": 10,
+  "attack_air": 10,
+  "range_ground": 1,
+  "range_air": 1,
+  "frame_alive": "combat_alive.png",
+  "frame_wreck": "combat_wreck.png"
+ },
+ "impostor_frames": [
+  "frames/impostor_00.png",
+  "frames/impostor_01.png",
+  "frames/impostor_02.png",
+  "frames/impostor_03.png"
+ ],
+ "impostor_count": 4
+}

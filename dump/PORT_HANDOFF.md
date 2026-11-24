@@ -53,10 +53,14 @@ curves in `assets/data/combat_entry_curves.json`.
 Per-unit frames are editable PNGs:
 
 ```
-assets/units/unit_06_s61/frames/impostor_00.png ... impostor_NN.png
+assets/units/unit_06_s61_bison/frames/impostor_00.png ... impostor_NN.png
 ```
 
-Folder names carry the unit name (`unit_02_ax87`, `unit_06_s61`, ...);
+Folder names carry the code and human name (`unit_02_ax87_eagle`,
+`unit_06_s61_bison`, ...), sourced from StrategyWiki's Military Madness unit
+list (`M-77 Trigger`, `S-61 Bison`, ...).  `units.json` and each `unit.json`
+use the full display name (`AX-87 Eagle`); `tools/update_unit_display_names.py`
+performs the migration and the packers/renamers use the same code_name suffix.
 `tools/rename_unit_folders.py` and `tools/export_unit_folders.py` keep the
 number/name mapping in sync.
 
@@ -215,8 +219,8 @@ All values are logical screen pixels at 1468x720 (the window is created from
 * the map is clipped with `BeginScissorMode` and the cursor hit-test also
   requires the cursor to be inside the viewport
 * sidebar padding 26 px, content width `sideW - 52`
-* controls: four rows, 36 px apart, anchored 160 px above the bottom; key
-  labels right-aligned in a 78 px column, descriptions start at +94 px
+* controls: four rows, 40 px apart, anchored 172 px above the bottom; key
+  labels right-aligned in a 100 px column, 32 px descriptions start at +116 px
 
 ### Typography
 
@@ -260,6 +264,23 @@ Unit properties (labels *and* values) are set at **32 px**, double the old
 * space margins: navy with a deterministic starfield and two soft nebula
   washes; the map itself carries the terrain colours, so only a very faint hex
   grid (alpha 0.14) is drawn over it
+
+### World-map interactions / fixes
+
+* **Panning** applies the same-frame pan delta to every unit's `px/py` and to
+  in-flight animation endpoints, so the army moves with the map instead of
+  trailing it while the map is dragged.
+* **Footer** uses 32 px text in both places: the bottom terrain strip (48 px
+  tall) and the four controls rows (40 px apart), twice the old 16 px text.
+* **Factory capture**: infantry only (`GX-77 Charlie`, `GX-87 Kilroy`,
+  `CBX-1 Panther`).  Ending movement on an undefended factory owned by the
+  other side changes ownership and terrain colour; the stored roster remains
+  available to the new owner.  Verified on RAMSEY group 3 at `2,9`: GX-77 at
+  `3,11` reaches it at cost 3 with 3 movement.
+* **Factory ownership rings** are drawn on factory hexes: blue player, red
+  computer, grey neutral.
+* **Double-click** a unit standing on a factory hex to open the factory panel;
+  a single click keeps the normal unit select/inspect behavior.
 
 ### Key code
 
