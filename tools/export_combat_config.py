@@ -1,7 +1,7 @@
 """Export the combat tables/constants from the original executable into
 assets/data/combat.json.
 
-Sources (see RE_FINDINGS.md section 5):
+Sources (see docs/RE_FINDINGS.md section 5):
   0x42b158  HP/rank damage multiplier (8 bytes)
   0x42b160  terrain defence (16 bytes)
   0x42b248  terrain move cost (16 x 4 bytes)   -> assets/data/terrain.json

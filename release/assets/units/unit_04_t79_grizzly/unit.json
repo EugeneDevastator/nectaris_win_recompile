@@ -21,11 +21,10 @@
  "world_map_base": 112,
  "sprites": [
   "horizontal.png",
-  "vertical.png",
-  "combat_alive.png",
-  "combat_diagonal.png"
+  "horizontal_green.png",
+  "horizontal_used.png"
  ],
- "palette": "blue default; tint for enemy",
+ "palette": "map bank 9 blue / 10 green / 12 used",
  "guide_frames": {
   "horizontal": "combat_alive.png",
   "diagonal": "combat_diagonal.png"

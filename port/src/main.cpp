@@ -59,6 +59,9 @@ static Texture2D gFxShell = {0}, gFxFlash = {0}, gFxStreak = {0};
 static Texture2D gUnitSprite[24];
 static Texture2D gUnitSpriteFlip[24];
 static Texture2D gUnitMapTex[24], gUnitMapFlipTex[24];
+// Exact world-map palette states: bank 10 green, bank 12 used-up grey.
+static Texture2D gUnitMapEnemyTex[24], gUnitMapEnemyFlipTex[24];
+static Texture2D gUnitMapUsedTex[24], gUnitMapUsedFlipTex[24];
 static Texture2D gVfxHalf[64];
 static Texture2D gVfxQuad[16];
 static Texture2D gVfxSplat = {0};   // shared wreck: mine's dead sprite
@@ -902,14 +905,19 @@ static void drawHexMap(const Mission& m) {
             DrawPolyLines({cx, cy}, 6, gHexSize - 1.0f, 0,
                           Fade(BLACK, haveBg ? 0.14f : 0.35f));
         }
-    // Factory ownership ring: blue = player, red = computer, grey = neutral.
+    // Factory team indicator: a quarter-cell coloured square at the top-right
+    // of the hex.  Blue = player, red = computer, grey = neutral/capturable.
     for (const Factory& f : m.factories) {
         float cx, cy;
         hexCenter(f.x, f.y, cx, cy);
-        Color c = (f.owner == 0) ? Color{90, 170, 255, 220}
-                : (f.owner == 1) ? Color{240, 90, 90, 220}
-                                 : Color{170, 170, 180, 170};
-        DrawPolyLinesEx({cx, cy}, 6, gHexSize - 1.0f, 0, 2.0f, c);
+        Color c = (f.owner == 0) ? Color{90, 170, 255, 255}
+                : (f.owner == 1) ? Color{240, 90, 90, 255}
+                                 : Color{185, 185, 195, 255};
+        float s = gHexSize * 0.50f;
+        float bx = cx + gHexSize * 0.34f;
+        float by = cy - gHexSize * 0.86f;
+        DrawRectangle((int)bx, (int)by, (int)s, (int)s, c);
+        DrawRectangleLinesEx({bx, by, s, s}, 1.0f, Color{8, 16, 26, 255});
     }
 }
 
@@ -964,6 +972,16 @@ static void drawStar(float cx, float cy, float r, Color c) {
         DrawTriangle({cx, cy}, pts[(i + 1) % 10], pts[i], c);
 }
 
+// World-map palette states: player blue, computer green, acted/used grey.
+static Texture2D& mapUnitTexture(int type, int owner, bool acted, bool flipped) {
+    if (type < 0 || type >= 24) return gUnitMapTex[0];
+    if (acted && gUnitMapUsedTex[type].id)
+        return flipped ? gUnitMapUsedFlipTex[type] : gUnitMapUsedTex[type];
+    if (owner == 1 && gUnitMapEnemyTex[type].id)
+        return flipped ? gUnitMapEnemyFlipTex[type] : gUnitMapEnemyTex[type];
+    return flipped ? gUnitMapFlipTex[type] : gUnitMapTex[type];
+}
+
 static void drawUnitSprite(const Mission& m, const Unit& u, Texture2D playerTex, Texture2D enemyTex) {
     // The bank icons are left-facing side views.  The original map only turns
     // the icon in 45-degree sectors: straight left/right stay horizontal, the
@@ -975,7 +993,7 @@ static void drawUnitSprite(const Mission& m, const Unit& u, Texture2D playerTex,
     int sector = (int)std::lround((a + 135.0f) / 45.0f) & 7;
     static const bool mirror[8] = {true, true, true, false, false, false, false, false};
     static const float turn[8] = {-30.0f, 0.0f, 30.0f, -90.0f, -30.0f, 0.0f, 30.0f, 90.0f};
-    Texture2D& tex = mirror[sector] ? gUnitMapFlipTex[u.type] : gUnitMapTex[u.type];
+    Texture2D& tex = mapUnitTexture(u.type, u.owner, u.acted, mirror[sector]);
     if (!tex.id) return;
     float size = mapUnitSize();
     float hx, hy;
@@ -985,8 +1003,7 @@ static void drawUnitSprite(const Mission& m, const Unit& u, Texture2D playerTex,
     float cy = (u.py >= 0) ? u.py + size / 2 : hy;
     Rectangle src{0, 0, (float)tex.width, (float)tex.height};
     Rectangle dst{cx, cy, size, size};
-    Color tint = (u.owner == 0) ? WHITE : Color{150, 255, 150, 255};
-    DrawTexturePro(tex, src, dst, {size / 2, size / 2}, turn[sector], tint);
+    DrawTexturePro(tex, src, dst, {size / 2, size / 2}, turn[sector], WHITE);
 }
 
 // ------------------------------------------------------------------ combat screen
@@ -1356,7 +1373,7 @@ static void drawFactoryScreen(const Factory& f, int sel, bool canDeploy) {
         if (i < (int)f.roster.size()) {
             int t = f.roster[i];
             if (t < 0 || t >= 24) continue;
-            Texture2D* tex = &gUnitMapTex[t];
+            Texture2D* tex = &mapUnitTexture(t, f.owner, false, false);
             if (!tex->id) tex = &gUnitSprite[t];
             if (tex->id) {
                 float icon = std::min(r.width, r.height) * 0.58f;
@@ -1621,13 +1638,16 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
     };
     auto shotArrival = [&](int i, int count) { return shotStart(i, count) + fireDur; };
     float lastArrival = shotArrival(8, 8);
-    // The targeted side is hit by the other side's shot i; kill i explodes at
-    // that shot's arrival.
+    // Kills are deliberately scheduled after all misses: the first shots are
+    // the misses/scatter shots, the last shots hit the destroyed slots.
     auto killArrival = [&](int targetSide, int i) {
         int shots = (targetSide == 1) ? nL0 : nR0;
-        if (shots <= 1) return fireT + fireDur;
-        i = std::clamp(i, 0, shots - 1);
-        return shotArrival(i, shots);
+        int killed = (targetSide == 1) ? std::max(0, nR0 - nR1)
+                                       : std::max(0, nL0 - nL1);
+        if (shots <= 0) return fireT + fireDur;
+        int misses = std::max(0, shots - killed);
+        int index = std::min(shots - 1, misses + std::max(0, i));
+        return shotArrival(index, shots);
     };
     bool impact = t > impactT;
     hpBox(hpXL, impact ? nL1 : nL0);
@@ -1692,11 +1712,10 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
                 x = x0;
                 y += rowH;
             }
-            Texture2D& tex = gUnitMapTex[N.type];
-            Color tint = (side.team == 0) ? WHITE : Color{150, 255, 150, 255};
+            Texture2D& tex = mapUnitTexture(N.type, side.team, false, false);
             if (tex.id) {
                 DrawTexturePro(tex, {0, 0, (float)tex.width, (float)tex.height},
-                               {x, y, sz, sz}, {0, 0}, 0, tint);
+                               {x, y, sz, sz}, {0, 0}, 0, WHITE);
             }
             x += sz + 3;
             rowText(x, y, txt, BORDER);
@@ -2048,11 +2067,10 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
             float ix = bx + 4.0f + shown * (isz + igap);
             DrawRectangleLinesEx({ix - 1.0f, iy - 1.0f, isz + 2.0f, isz + 2.0f},
                                  1.0f, Color{255, 190, 60, 255});
-            Texture2D& tex = gUnitMapTex[su.type];
+            Texture2D& tex = mapUnitTexture(su.type, su.owner, false, false);
             if (tex.id) {
                 DrawTexturePro(tex, {0, 0, (float)tex.width, (float)tex.height},
-                               {ix, iy, isz, isz}, {0, 0}, 0,
-                               side.team == 0 ? WHITE : Color{150, 255, 150, 255});
+                               {ix, iy, isz, isz}, {0, 0}, 0, WHITE);
             }
             ++shown;
         }
@@ -2079,20 +2097,22 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
     int killedL = std::max(0, nL0 - nL1);   // left-side (player) vehicles lost
     for (int i = 0; i < nL0; ++i) {
         fromL[i] = slotVisualCenter(false, i);
-        if (i < killedR) {
-            int slot = nR1 + i;
-            toL[i] = slotVisualCenter(true, slot);
-        } else {
+        int missShots = std::max(0, nL0 - killedR);
+        if (i < missShots) {
             toL[i] = scatter(0, i);
+        } else {
+            int slot = nR1 + (i - missShots);
+            toL[i] = slotVisualCenter(true, std::min(slot, nR0 - 1));
         }
     }
     for (int i = 0; i < nR0; ++i) {
         fromR[i] = slotVisualCenter(true, i);
-        if (i < killedL) {
-            int slot = nL1 + i;
-            toR[i] = slotVisualCenter(false, slot);
-        } else {
+        int missShots = std::max(0, nR0 - killedL);
+        if (i < missShots) {
             toR[i] = scatter(1, i);
+        } else {
+            int slot = nL1 + (i - missShots);
+            toR[i] = slotVisualCenter(false, std::min(slot, nL0 - 1));
         }
     }
 
@@ -2170,11 +2190,12 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
             const std::vector<int>& death = vfxDeathFor(targetType);
             const std::vector<int>& hit = gVfxHit;
             const std::vector<int>& miss = gVfxMiss;
+            int firstKill = std::max(0, count - killed);
             for (int i = 0; i < count; ++i) {
                 // Impact i happens exactly when shot i reaches the target.
                 float dti = t - shotArrival(i, count);
                 if (dti < 0.0f) continue;
-                if (i < killed && !death.empty()) {
+                if (i >= firstKill && !death.empty()) {
                     int step = std::clamp((int)(dti / gVfxDeathStep), 0, (int)death.size() - 1);
                     float fadeStart = (float)death.size() * gVfxDeathStep;
                     float alpha = 1.0f - std::clamp((dti - fadeStart) / 0.35f, 0.0f, 1.0f);
@@ -2616,6 +2637,27 @@ int main(int argc, char** argv) {
             ImageFlipHorizontal(&vm);
             gUnitMapFlipTex[t] = LoadTextureFromImage(vm);
             UnloadImage(vm);
+        }
+        // Exact world-map states: bank 10 green, bank 12 used-up grey.
+        std::string eg = unitPath(t, "horizontal_green.png");
+        if (FileExists(eg.c_str())) {
+            gUnitMapEnemyTex[t] = LoadTexture(eg.c_str());
+            Image im2 = LoadImage(eg.c_str());
+            if (im2.data) {
+                ImageFlipHorizontal(&im2);
+                gUnitMapEnemyFlipTex[t] = LoadTextureFromImage(im2);
+                UnloadImage(im2);
+            }
+        }
+        std::string us = unitPath(t, "horizontal_used.png");
+        if (FileExists(us.c_str())) {
+            gUnitMapUsedTex[t] = LoadTexture(us.c_str());
+            Image im3 = LoadImage(us.c_str());
+            if (im3.data) {
+                ImageFlipHorizontal(&im3);
+                gUnitMapUsedFlipTex[t] = LoadTextureFromImage(im3);
+                UnloadImage(im3);
+            }
         }
     }
     // VFX organization taken from the live queues: cells 0..31 are complete
@@ -3787,8 +3829,6 @@ int main(int argc, char** argv) {
             float cx, cy;
             hexCenter(u.x, u.y, cx, cy);
             if (u.px >= 0) { cx = u.px + usz / 2; cy = u.py + usz / 2; }
-            if (u.acted)
-                DrawPoly({cx, cy}, 6, gHexSize - 2, 0, Fade(BLACK, 0.35f));
             for (int i = 0; i < u.hp; ++i)
                 DrawRectangle((int)(cx - u.hp * 4 + i * 8), (int)(cy + gHexSize * 0.55f),
                               6, 5, u.owner == 0 ? kGreen : kRed);
@@ -3998,11 +4038,11 @@ int main(int argc, char** argv) {
 
             DrawRectangle(px, y, 66, 66, kInk);
             DrawRectangleLinesEx({(float)px, (float)y, 66, 66}, 2, kFrame);
-            Texture2D& icon = gUnitMapTex[u.type];
+            Texture2D& icon = mapUnitTexture(u.type, u.owner, u.acted, false);
             if (icon.id) {
                 DrawTexturePro(icon, {0, 0, (float)icon.width, (float)icon.height},
                                {(float)px + 2, (float)y + 2, 62, 62}, {0, 0}, 0,
-                               u.owner == 0 ? WHITE : Color{150, 255, 150, 255});
+                               WHITE);
             }
             uiText(t.name.c_str(), px + 82, y - 2, 15, kGold);
             uiText(TextFormat("%s / %s", u.owner == 0 ? "ALLIED" : "ENEMY",
@@ -4075,10 +4115,10 @@ int main(int argc, char** argv) {
             rightText(k, 15, (float)(px + 100), (float)ky, kGold);
             uiText(label, px + 116, ky, 15, kText);
         };
-        keyRow(fy, "SPACE", "TURN / DESELECT");
-        keyRow(fy + 40, "R", "RESTART MISSION");
+        keyRow(fy, "SPACE", "END TURN");
+        keyRow(fy + 40, "R", "RESTART");
         keyRow(fy + 80, "N / B", "NEXT / PREV");
-        keyRow(fy + 120, "LMB", "SELECT DRAG PAN");
+        keyRow(fy + 120, "LMB", "SELECT / PAN");
 
         if (noticeT > 0)
             uiText(notice.c_str(), px, scrH - 18, 10, kTitle);
@@ -4134,6 +4174,10 @@ int main(int argc, char** argv) {
         if (gUnitSpriteFlip[t].id) UnloadTexture(gUnitSpriteFlip[t]);
         if (gUnitMapTex[t].id) UnloadTexture(gUnitMapTex[t]);
         if (gUnitMapFlipTex[t].id) UnloadTexture(gUnitMapFlipTex[t]);
+        if (gUnitMapEnemyTex[t].id) UnloadTexture(gUnitMapEnemyTex[t]);
+        if (gUnitMapEnemyFlipTex[t].id) UnloadTexture(gUnitMapEnemyFlipTex[t]);
+        if (gUnitMapUsedTex[t].id) UnloadTexture(gUnitMapUsedTex[t]);
+        if (gUnitMapUsedFlipTex[t].id) UnloadTexture(gUnitMapUsedFlipTex[t]);
     }
     if (gImpostorAtlas.id) UnloadTexture(gImpostorAtlas);
     for (int i = 0; i < 64; ++i) if (gVfxHalf[i].id) UnloadTexture(gVfxHalf[i]);

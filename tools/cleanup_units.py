@@ -34,14 +34,16 @@ for t in range(24):
     src = tile(160 + (t if t < 23 else 0))
     src.save(os.path.join(folder, 'horizontal.png'))
     centered_rot(src, 90).save(os.path.join(folder, 'vertical.png'))
-    # remove everything except the two sprites and unit.json
-    keep = {'horizontal.png', 'vertical.png', 'unit.json'}
+    # remove everything except the map sprites and unit.json
+    keep = {'horizontal.png', 'vertical.png', 'horizontal_green.png',
+            'horizontal_used.png', 'unit.json'}
     for f in os.listdir(folder):
         if f not in keep:
             os.remove(os.path.join(folder, f))
     meta_path = os.path.join(folder, 'unit.json')
     meta = json.load(open(meta_path, encoding='utf-8'))
-    meta['sprites'] = ['horizontal.png', 'vertical.png']
+    meta['sprites'] = ['horizontal.png', 'horizontal_green.png',
+                       'horizontal_used.png', 'vertical.png']
     meta['palette'] = 'blue default; tint for enemy'
     for k in ('world_map', 'world_map_tiles', 'world_map_sprites', 'combat_blue',
               'combat_green', 'combat_green_flip'):

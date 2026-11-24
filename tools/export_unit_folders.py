@@ -79,6 +79,10 @@ for t in range(24):
     green.save(os.path.join(folder, 'combat_green.png'))
     green.transpose(Image.FLIP_LEFT_RIGHT).save(os.path.join(folder, 'combat_green_flip.png'))
     map_strip(t, 9).save(os.path.join(folder, 'world_map.png'))
+    # Exact map-icon palette states: green enemy, grey used-up.
+    midx = 160 + (t if t < 23 else 0)
+    tile(mapbank, midx, 10).save(os.path.join(folder, 'horizontal_green.png'))
+    tile(mapbank, midx, 12).save(os.path.join(folder, 'horizontal_used.png'))
 
     u = dict(units[t])
     u.update({
@@ -86,6 +90,8 @@ for t in range(24):
         'combat_chunks': sprites,
         'combat_sprite_group': 233 + t if t <= 22 and t not in (18, 19) else 'infantry',
         'world_map_base': 80 + (t % 14) * 8,
+        'sprites': ['horizontal.png', 'horizontal_green.png',
+                    'horizontal_used.png'],
     })
     json.dump(u, open(os.path.join(folder, 'unit.json'), 'w', encoding='utf-8'),
               indent=2, ensure_ascii=False)

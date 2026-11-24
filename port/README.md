@@ -260,14 +260,18 @@ interior holes, so no black bands appear in battle.
 
 ## Art (per-unit folders)
 
-Each unit lives in its own folder under `assets/units/unit_XX/`:
+Each unit lives in its own folder under `assets/units/unit_XX_code_name/`
+(for example `assets/units/unit_06_s61_bison/`):
 
 ```
-assets/units/unit_06/
-  horizontal.png        32x32  side-view map icon (left-facing; mirrored when heading right)
+assets/units/unit_06_s61_bison/
+  horizontal.png        32x32  allied map icon (map palette bank 9, blue)
+  horizontal_green.png  32x32  computer map icon (bank 10, green)
+  horizontal_used.png   32x32  acted/used map icon (bank 12, grey)
   vertical.png          32x32  vertical world-map icon (unused by the port map)
   combat_alive.png      64x64  WEAPON DATA horizontal guide frame
   combat_diagonal.png   64x64  WEAPON DATA diagonal guide frame
+  frames/               per-direction impostor frames for the combat screen
   unit.json             stats + sprite metadata
 ```
 
@@ -364,7 +368,7 @@ Every resolved attack switches to a battle screen modeled on the original:
   opaque (their transparent areas were pre-filled) and the two panels overlap
   by one pixel to hide the seam.
   Each side shows its **initial formation** using the per-unit horizontal
-  sprite (`assets/units/unit_XX/horizontal.png`), left-facing by default and
+  sprite (`assets/units/unit_XX_code_name/horizontal.png`), left-facing by default and
   horizontally mirrored when the unit heads right; blue tint for the player and
   green for the enemy.
 * **ranged layout**: indirect/ranged battles open a wider black gap between the
@@ -572,12 +576,16 @@ Factory mechanics in the original code:
 * Moving any unit into a factory you own stores it and sets its HP to full
   (`FUN_004025f0`); it cannot be deployed again until the next turn.  This is
   the "replenish" behaviour, not a timed production queue.
-* Only infantry (GX-77, GX-87, CBX-1) can capture a factory.
+* Only infantry (GX-77 Charlie, GX-87 Kilroy, CBX-1 Panther) can capture a
+  factory.  Ending movement on an undefended factory flips its owner and keeps
+  the stored roster for the new owner.
 
 In the port, clicking a factory hex (with no unit selected) opens its 4x3
 contents screen.  Any owner's factory can be inspected, matching the original
 game.  Arrow keys or the mouse select a slot; the info panel shows the unit's
-HP, movement, attack and defence.  `ESC` closes it.  For scripted previews,
+HP, movement, attack and defence.  `ESC` closes it.  If a unit is standing on
+the factory hex, double-click that unit to open the factory panel; a single
+click keeps the normal unit selection.  For scripted previews,
 `--factoryshot <png> <group>` renders a factory screen directly.
 
 Deployment is a separate action from movement.  In a factory you own, select a

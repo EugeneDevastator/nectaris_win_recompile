@@ -106,7 +106,7 @@ combat = {
     'hp_bonus': 50,
     'destroy_threshold': 8,
     'xp': {'hit': 4, 'kill': 8, 'no_damage': 8, 'max': 31, 'rank_divisor': 4},
-    'formula': 'see RE_FINDINGS.md section 5; tables from 0x42b158/0x42b160',
+    'formula': 'see docs/RE_FINDINGS.md section 5; tables from 0x42b158/0x42b160',
 }
 json.dump(combat, open(os.path.join(OUT, 'data', 'combat.json'), 'w'), indent=2)
 

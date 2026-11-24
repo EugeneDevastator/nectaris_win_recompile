@@ -49,7 +49,8 @@ Debug: CodeView NB10 -> C:\WINDOWS\USER\NEC2\RELEASE\Nec.pdb  (release build, no
 
 **It is 32-bit Win32, not 16-bit/DOS.** On modern Windows (WoW64) it launches and runs
 with no shims. Verified: 640×480 window, title + attract animation render correctly
-(screenshots `shot1.png`, `shot_t1.png`, `shot_t2.png`).
+(screenshots `screenshots/shot1.png`, `screenshots/shot_t1.png`,
+`screenshots/shot_t2.png`).
 
 Imports (static): `KERNEL32, USER32, GDI32, comdlg32, ADVAPI32, WINMM`.
 Loaded dynamically: `DDRAW.DLL` (`DirectDrawCreate`), `DSOUND.DLL` (`DirectSoundCreate`).
@@ -144,5 +145,5 @@ tools/isdecomp/           InstallShield 3 extractor (source + built exe)
 tools/peinfo.py           PE sections/imports/resources/debug dump
 tools/extract_wav.py      WAVE resource extractor
 tools/*.py                strings / DIB / map / menu probes
-shot*.png                 screenshots of the running original
+screenshots/shot*.png     screenshots of the running original/port
 ```

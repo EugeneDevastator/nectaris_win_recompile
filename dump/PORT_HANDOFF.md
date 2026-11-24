@@ -61,6 +61,9 @@ Folder names carry the code and human name (`unit_02_ax87_eagle`,
 list (`M-77 Trigger`, `S-61 Bison`, ...).  `units.json` and each `unit.json`
 use the full display name (`AX-87 Eagle`); `tools/update_unit_display_names.py`
 performs the migration and the packers/renamers use the same code_name suffix.
+Each folder also carries `horizontal_green.png` and `horizontal_used.png`
+(world-map palette banks 10/12); `tools/export_map_unit_states.py` regenerates
+them from map row-4 tile `160+type`.
 `tools/rename_unit_folders.py` and `tools/export_unit_folders.py` keep the
 number/name mapping in sync.
 
@@ -167,6 +170,9 @@ The named `effect_192..199.png` files and `splat.png` stay at the root.
 * A side's shots are spread over **0.5 s**: shot `i` leaves at
   `fireT + 0.5*i/(n-1)` and arrives `fireDur` later.  The last arrival is
   `fireT + 0.5 + fireDur = 3.47 s`.
+* Miss/scatter shots are scheduled first; the last `killed` shots are the ones
+  aimed at destroyed slots.  Kill projectiles therefore always arrive after
+  all misses, and their explosions start on those final arrivals.
 * Each impact effect starts at that shot's arrival.  The killed sprite is
   hidden and its wreck splat appears at the same arrival; the death explosion
   starts then too.
@@ -277,10 +283,14 @@ Unit properties (labels *and* values) are set at **32 px**, double the old
   other side changes ownership and terrain colour; the stored roster remains
   available to the new owner.  Verified on RAMSEY group 3 at `2,9`: GX-77 at
   `3,11` reaches it at cost 3 with 3 movement.
-* **Factory ownership rings** are drawn on factory hexes: blue player, red
-  computer, grey neutral.
+* **Factory team indicator** is a quarter-cell coloured square at the
+  top-right of the factory hex: blue player, red computer, grey neutral.
 * **Double-click** a unit standing on a factory hex to open the factory panel;
   a single click keeps the normal unit select/inspect behavior.
+* **Map unit palettes** use exact world-map banks, not a tint: bank 9 blue
+  (`horizontal.png`), bank 10 green (`horizontal_green.png`), bank 12 used-up
+  grey (`horizontal_used.png`), all generated from map row-4 tile `160+type`.
+  Flipped variants are built at load just like the blue icon.
 
 ### Key code
 
