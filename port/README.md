@@ -89,9 +89,11 @@ miss and `se13` capture, plus `se01`/`se02` for select and cursor move.  Use
 `IsSoundValid`, so headless capture runs still work.
 
 Selecting a unit shows its movement overlay: reachable cells use additive
-cyan (bright terrain brightens) and impassable terrain is darkened with
-semi-transparent black.  Destroyed units all explode together after the last
-missile arrives; the death blast uses three frames at 0.18 s each.
+cyan (bright terrain brightens) and impassable terrain gets a 45% dark-gray
+veil.  Destroyed units all explode together after the last missile arrives;
+the death blast uses three frames at 0.18 s each, with the first frame held an
+extra 0.45 s.  Roll-in is 1.2x, parked aircraft bob, and the furthest formation
+row is 0.85x its old scale for a stronger depth falloff.
 
 ## Transports
 

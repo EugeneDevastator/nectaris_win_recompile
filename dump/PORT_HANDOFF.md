@@ -175,7 +175,14 @@ The named `effect_192..199.png` files and `splat.png` stay at the root.
   all misses, and every destroyed slot's explosion starts **simultaneously**
   on that final arrival.
 * The big death frames step every **0.18 s** (was 0.09) and fade over 0.55 s,
-  so the destruction blast lasts about twice as long.
+  so the destruction blast lasts about twice as long.  The first frame is
+  additionally held for **0.45 s** (`death_first_hold_seconds` in
+  `combat_vfx.json`, five original 0.09 s frames) before it advances.
+* Roll-in playback is 1.2x (`combat_perspective.json` `speed`); `speed` now
+  correctly scales playback time instead of canceling itself out.
+* Parked aircraft bob slightly up/down (`sin(t*9 + slot*1.7) * us*0.05`).
+* The furthest formation row uses 0.85x its old scale (0.612 vs 0.72 at depth
+  0); the nearest row is unchanged at 1.52.
 * Each impact effect starts at that shot's arrival.  The killed sprite is
   hidden and its wreck splat appears at the same arrival; the death explosion
   starts then too.
@@ -191,7 +198,7 @@ plays all 36 and exports a corrected mapping.
 
 | role | file | trigger |
 | --- | --- | --- |
-| battle entry (roll-in) | `se34.wav` | `startNextCombat()` |
+| battle entry (roll-in) | `se33` then `se34` | enter/roll-in; same pair for every matchup |
 | direct volley | `se28.wav` | first frame after `fireT` |
 | heavy / indirect volley | `se29.wav` | same, when the attacker is ranged |
 | big destruction | `se14.wav` | the common kill arrival, once per side |
@@ -205,6 +212,11 @@ the frame loop calls `FUN_0040b260(id-1, 0)`.  Confirmed ids: `0x1c` (SE28) and
 `0x1d` (SE29) at `0x41433f` / `0x413eaf` (combat formation firing), `0x0e`
 (SE14) in the destruction frame animation, and `0x22` (SE34) at `0x413531`
 just before the nine-step battle-screen roll-in.
+
+The roll-in sequence is fixed: `se33` at `0x4134cf`, then `se34` at `0x413531`,
+then combat music (`0x36`) — there is no unit-type branch.  Infantry-vs-infantry
+and air-vs-air therefore use the same pair; the only other combat movement
+blips are the generic sprite-VM sounds (`se21`/`se25`/`se26`/`se27`).
 
 Set `NECTARIS_SFX_LOG=1` to print every triggered role and its resolved file.
 Sound playback is guarded by `IsSoundValid`, so headless/no-audio runs work.
@@ -318,8 +330,8 @@ Unit properties (labels *and* values) are set at **32 px**, double the old
   a single click keeps the normal unit select/inspect behavior.
 * **Selection highlight**: reachable cells are drawn with additive cyan
   (bright terrain brightens), while terrain the selected unit cannot enter is
-  covered with semi-transparent black (55% alpha).  Air units skip the
-  impassable pass.
+  covered with a 45% dark-gray veil (40,42,48); not pure black.  Air units skip
+  the impassable pass.
 * **Map unit palettes** use exact world-map banks, not a tint: bank 9 blue
   (`horizontal.png`), bank 10 green (`horizontal_green.png`), bank 12 used-up
   grey (`horizontal_used.png`), all generated from map row-4 tile `160+type`.

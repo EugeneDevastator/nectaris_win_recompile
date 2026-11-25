@@ -151,6 +151,8 @@ static std::vector<int> gVfxProjectile[2], gVfxMuzzle[2], gVfxHit, gVfxMiss;
 static int gVfxMissSheet = -1;  // packed 64x64 miss sheet (44 in the original)
 static float gVfxMissFrame = 0.10f;
 static float gVfxDeathStep = 0.09f;
+// Extra time the first destruction frame stays on screen (config-driven).
+static float gVfxDeathFirstHold = 0.0f;
 static Texture2D gBackdrop = {0};
 static bool gBackdropDirty = true;
 static Font gUiFont = {0};
@@ -341,6 +343,7 @@ static void loadData() {
     gVfxHit = {25};
     gVfxMiss = {27};
     gVfxDeathStep = 0.09f;
+    gVfxDeathFirstHold = 0.0f;
     gVfxClasses.clear();
     gVfxClasses["air"] = {{32, 36}, 0.90f};
     gVfxClasses["infantry"] = {{32, 36, 44}, 0.85f};
@@ -369,6 +372,8 @@ static void loadData() {
             if (f.contains("miss_sheet")) gVfxMissSheet = f.value("miss_sheet", -1);
             gVfxMissFrame = f.value("miss_frame_seconds", gVfxMissFrame);
             gVfxDeathStep = f.value("death_step_seconds", gVfxDeathStep);
+            gVfxDeathFirstHold =
+                f.value("death_first_hold_seconds", gVfxDeathFirstHold);
         }
         if (vj.contains("classes")) {
             for (auto it = vj["classes"].begin(); it != vj["classes"].end(); ++it) {
@@ -1906,17 +1911,17 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
             BeginShaderMode(gUnitRecolor);
         }
         auto curveAt = [&](const EntryCurve& cv, float local, Vector2& out) {
+            // `speed` scales playback time: local 2.0 s at speed 1.2 samples
+            // the curve at 2.4 s, so the whole roll-in finishes sooner.
             float lt = local * speed;
-            float dur = cv.duration * speed;
             if (lt <= 0.0f || cv.pts.empty()) { out = cv.start; return; }
-            if (lt >= dur) { out = cv.slot; return; }
+            if (lt >= cv.duration) { out = cv.slot; return; }
             size_t k = 0;
-            while (k + 1 < cv.pts.size() && cv.pts[k + 1].x * speed < lt) ++k;
+            while (k + 1 < cv.pts.size() && cv.pts[k + 1].x < lt) ++k;
             const Vector3& a = cv.pts[k];
             const Vector3& b = cv.pts[std::min(k + 1, cv.pts.size() - 1)];
-            float ta = a.x * speed, tb = b.x * speed;
-            float span = tb - ta;
-            float f = span > 1e-6f ? (lt - ta) / span : 1.0f;
+            float span = b.x - a.x;
+            float f = span > 1e-6f ? (lt - a.x) / span : 1.0f;
             out = {a.y + (b.y - a.y) * f, a.z + (b.z - a.z) * f};
         };
         for (int i = 0; i < count0; ++i) {
@@ -1934,7 +1939,7 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
                 slotUv = cv.slot;
                 float local = t - cv.t0;
                 curveAt(cv, local, posUv);
-                settled = (local * speed >= cv.duration * speed);
+                settled = (local * speed >= cv.duration);
                 // Use the whole recorded displacement for the facing so the
                 // flip never changes once the unit stops; the per-unit table
                 // maps compass sectors to atlas frames.
@@ -1982,7 +1987,9 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
             // Perspective is active during the slide: the sprite scale follows
             // the unit's current depth, not its final slot.
             float depthNow = std::clamp(posUv.y, 0.0f, 1.0f);
-            float cfgScale = std::max(0.2f, (0.72f + 0.80f * depthNow) * scaleMul);
+            // Stronger depth falloff: the furthest slot is 0.85x the old
+            // scale (0.612), while the nearest stays at 1.52.
+            float cfgScale = std::max(0.2f, (0.612f + 0.908f * depthNow) * scaleMul);
             if (settled && spriteEnd >= 0) sprite = spriteEnd;
             bool useFrames = (frameCount > 0) && gImpostorAtlas.id;
             ImpostorRect ir = {0, 0, baseTex ? (int)baseTex->width : 0,
@@ -1998,6 +2005,9 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
             if (useFrames && drawFlip)
                 src = {(float)ir.x, (float)ir.y, -(float)ir.w, (float)ir.h};
             Vector2 dest = panelPoint(px, posUv.x, posUv.y);
+            // Parked aircraft hover with a slight vertical bob.
+            if (settled && gTypes[type].airborne())
+                dest.y += std::sin(t * 9.0f + i * 1.7f) * us * 0.05f;
             Rectangle dr;
             if (useFrames) {
                 // Directional frames are cropped to their opaque bounds; draw
@@ -2251,7 +2261,7 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
         wreck(false, nL1, killedL);   // left vehicles lost to the right side
     }
 
-    if (t > impactT && t < lastArrival + 1.10f) {
+    if (t > impactT && t < lastArrival + 1.10f + gVfxDeathFirstHold) {
         const bool attackerIsLeft = (v.left.unit == v.r.atkSlot);
         const bool counterFires = (v.r.ctrStrength > 0 || v.r.rawDmgToAtk > 0);
         const bool leftFires = attackerIsLeft || counterFires;
@@ -2277,9 +2287,13 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
                 float dti = t - shotArrival(i, count, killed);
                 if (dti < 0.0f) continue;
                 if (i >= firstKill && !death.empty()) {
-                    int step = std::clamp((int)(dti / gVfxDeathStep), 0, (int)death.size() - 1);
+                    // Hold the first blast frame longer before the animation
+                    // advances (five extra original 0.09 s frames).
+                    float dd = dti - gVfxDeathFirstHold;
+                    int step = std::clamp((int)(dd / gVfxDeathStep), 0,
+                                          (int)death.size() - 1);
                     float fadeStart = (float)death.size() * gVfxDeathStep;
-                    float alpha = 1.0f - std::clamp((dti - fadeStart) / 0.55f, 0.0f, 1.0f);
+                    float alpha = 1.0f - std::clamp((dd - fadeStart) / 0.55f, 0.0f, 1.0f);
                     // Anchor the big blast at its bottom centre on the unit's
                     // ground line so it rises upward instead of being centred
                     // over the dead sprite.
@@ -3328,8 +3342,9 @@ int main(int argc, char** argv) {
             drawCombatScreen(gCv, playerTex, enemyTex);
             EndDrawing();
             if (IsKeyPressed(KEY_SPACE) || IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-                if (gCv.t < 4.30f) {
-                    gCv.t = 4.30f;      // first input skips past the last impact
+                const float skipT = 4.30f + gVfxDeathFirstHold;
+                if (gCv.t < skipT) {
+                    gCv.t = skipT;      // first input skips past the last impact
                 } else {
                     gCv.active = false;
                     startNextCombat();
@@ -3917,7 +3932,7 @@ int main(int argc, char** argv) {
                             float cx, cy;
                             hexCenter(x, y, cx, cy);
                             DrawPoly({cx, cy}, 6, gHexSize - 1, 0,
-                                     Fade(BLACK, 0.55f));
+                                     Fade(Color{40, 42, 48, 255}, 0.45f));
                         }
                     }
             }
