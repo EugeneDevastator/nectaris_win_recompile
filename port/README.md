@@ -78,6 +78,18 @@ Controls:
 | R | restart mission |
 | F1 | debug cell info |
 
+## Audio
+
+The original Se WAV resources are used directly (`assets/audio/seNN.wav`):
+`se25` simulation bed, `se03` shot, `se08` miss, `se21` big destruction,
+`se13` factory capture, plus `se01`/`se02` for select/move.  Effects are
+guarded with `IsSoundValid`, so headless capture runs still work.
+
+Selecting a unit shows its movement overlay: reachable cells use additive
+cyan (bright terrain brightens) and impassable terrain is darkened with
+semi-transparent black.  Destroyed units all explode together after the last
+missile arrives; the death blast uses three frames at 0.18 s each.
+
 ## Transports
 
 A transport carries exactly one unit formation. The cargo is hidden and inactive;

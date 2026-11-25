@@ -54,6 +54,10 @@ static std::vector<std::string> gTerrainNames;
 static std::vector<int> gRemap, gPanelTable, gPanelIndirect;
 static std::vector<Texture2D> gCombatPanels;
 static Texture2D gFxBoom = {0}, gFxDebris = {0};
+// Combat audio: simulation bed + effect one-shots.
+static Sound gSndSim = {0}, gSndShot = {0}, gSndBig = {0};
+static Sound gSndMiss = {0}, gSndCapture = {0};
+static int gCombatSerial = 0;
 static Texture2D gEnemyFlipTex = {0};
 static Texture2D gFxShell = {0}, gFxFlash = {0}, gFxStreak = {0};
 static Texture2D gUnitSprite[24];
@@ -500,6 +504,7 @@ static bool captureFactoryAt(Mission& m, Unit& u, int x, int y) {
     if (f.owner == u.owner) return false;
     f.owner = u.owner;
     f.terrain = (u.owner == 0) ? 11 : 13;
+    if (IsSoundValid(gSndCapture)) PlaySound(gSndCapture);
     return true;
 }
 
@@ -1203,6 +1208,8 @@ static void startNextCombat() {
         gCv = gCombatQueue.front();
         gCombatQueue.pop_front();
         gCv.active = true;
+        ++gCombatSerial;
+        if (IsSoundValid(gSndSim)) PlaySound(gSndSim);
     }
 }
 
@@ -1617,6 +1624,16 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
                   std::max(3, (int)(topH * 0.02f)), Color{70, 190, 100, 255});
 
     float t = v.t;
+    static int sndSerial = -1;
+    static bool shotSnd[2] = {false, false};
+    static bool missSnd[2] = {false, false};
+    static bool bigSnd[2] = {false, false};
+    if (sndSerial != gCombatSerial) {
+        sndSerial = gCombatSerial;
+        shotSnd[0] = shotSnd[1] = false;
+        missSnd[0] = missSnd[1] = false;
+        bigSnd[0] = bigSnd[1] = false;
+    }
     // Shooting is 1.2x slower than the original 0.35 s window.  A formation's
     // shots are spread across SHOT_SPREAD seconds instead of firing together.
     const float SHOT_SPREAD = 0.50f;
@@ -1630,24 +1647,28 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
     int nR0 = std::clamp(hpR0 + 1, 0, 8);
     int nL1 = (hpL1 > 0) ? std::clamp(hpL1 + 1, 0, 8) : 0;  // survivors
     int nR1 = (hpR1 > 0) ? std::clamp(hpR1 + 1, 0, 8) : 0;
-    // Shot i leaves at fireT + i*step and reaches its target fireDur later.
-    // The whole volley spans SHOT_SPREAD seconds (a single shot has no spread).
-    auto shotStart = [&](int i, int count) {
+    // Shots are spread over SHOT_SPREAD; the kill shots all leave together at
+    // the end of the window so the destroyed-unit explosions can play as one
+    // informative simultaneous blast.  The whole volley spans about 0.5 s.
+    auto shotStart = [&](int i, int count, int killed) {
         if (count <= 1) return fireT;
+        int firstKill = std::max(0, count - killed);
+        if (i >= firstKill) return fireT + SHOT_SPREAD;
         return fireT + SHOT_SPREAD * (float)i / (float)(count - 1);
     };
-    auto shotArrival = [&](int i, int count) { return shotStart(i, count) + fireDur; };
-    float lastArrival = shotArrival(8, 8);
-    // Kills are deliberately scheduled after all misses: the first shots are
-    // the misses/scatter shots, the last shots hit the destroyed slots.
+    auto shotArrival = [&](int i, int count, int killed) {
+        return shotStart(i, count, killed) + fireDur;
+    };
+    float lastArrival = fireT + SHOT_SPREAD + fireDur;
+    // All kills share the final arrival; misses arrive earlier.
     auto killArrival = [&](int targetSide, int i) {
+        (void)i;
         int shots = (targetSide == 1) ? nL0 : nR0;
         int killed = (targetSide == 1) ? std::max(0, nR0 - nR1)
                                        : std::max(0, nL0 - nL1);
         if (shots <= 0) return fireT + fireDur;
-        int misses = std::max(0, shots - killed);
-        int index = std::min(shots - 1, misses + std::max(0, i));
-        return shotArrival(index, shots);
+        if (killed > 0) return shotArrival(shots - 1, shots, killed);
+        return fireT + fireDur;
     };
     bool impact = t > impactT;
     hpBox(hpXL, impact ? nL1 : nL0);
@@ -2124,11 +2145,20 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
         const bool counterFires = (v.r.ctrStrength > 0 || v.r.rawDmgToAtk > 0);
         const bool leftFires = attackerIsLeft || counterFires;
         const bool rightFires = !attackerIsLeft || counterFires;
-        auto fire = [&](Vector2* from, Vector2* to, int count, float nudge, int side, int type) {
+        if (leftFires && !shotSnd[0]) {
+            if (IsSoundValid(gSndShot)) PlaySound(gSndShot);
+            shotSnd[0] = true;
+        }
+        if (rightFires && !shotSnd[1]) {
+            if (IsSoundValid(gSndShot)) PlaySound(gSndShot);
+            shotSnd[1] = true;
+        }
+        auto fire = [&](Vector2* from, Vector2* to, int count, float nudge,
+                        int side, int type, int killed) {
             const std::vector<int>& proj = vfxProjectileFor(type, side);
             const std::vector<int>& muzz = vfxMuzzleFor(type, side);
             for (int i = 0; i < count; ++i) {
-                float st = shotStart(i, count);
+                float st = shotStart(i, count, killed);
                 float k = (t - st) / fireDur;
                 if (t < st || k >= 1.0f) continue;
                 Vector2 p = {from[i].x + nudge + (to[i].x - from[i].x - nudge) * k,
@@ -2152,8 +2182,8 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
                 }
             }
         };
-        if (leftFires) fire(fromL, toL, nL0, recoilA, 0, L.type);
-        if (rightFires) fire(fromR, toR, nR0, recoilD, 1, R.type);
+        if (leftFires) fire(fromL, toL, nL0, recoilA, 0, L.type, killedR);
+        if (rightFires) fire(fromR, toR, nR0, recoilD, 1, R.type, killedL);
     }
 
     // ----- wrecks: the mine's dead sprite (black splat) replaces the unit
@@ -2191,14 +2221,24 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
             const std::vector<int>& hit = gVfxHit;
             const std::vector<int>& miss = gVfxMiss;
             int firstKill = std::max(0, count - killed);
+            if (killed > 0 && !bigSnd[targetSide] &&
+                t >= killArrival(targetSide, 0)) {
+                if (IsSoundValid(gSndBig)) PlaySound(gSndBig);
+                bigSnd[targetSide] = true;
+            }
+            if (killed < count && !missSnd[targetSide] &&
+                t >= shotArrival(0, count, killed)) {
+                if (IsSoundValid(gSndMiss)) PlaySound(gSndMiss);
+                missSnd[targetSide] = true;
+            }
             for (int i = 0; i < count; ++i) {
                 // Impact i happens exactly when shot i reaches the target.
-                float dti = t - shotArrival(i, count);
+                float dti = t - shotArrival(i, count, killed);
                 if (dti < 0.0f) continue;
                 if (i >= firstKill && !death.empty()) {
                     int step = std::clamp((int)(dti / gVfxDeathStep), 0, (int)death.size() - 1);
                     float fadeStart = (float)death.size() * gVfxDeathStep;
-                    float alpha = 1.0f - std::clamp((dti - fadeStart) / 0.35f, 0.0f, 1.0f);
+                    float alpha = 1.0f - std::clamp((dti - fadeStart) / 0.55f, 0.0f, 1.0f);
                     // Anchor the big blast at its bottom centre on the unit's
                     // ground line so it rises upward instead of being centred
                     // over the dead sprite.
@@ -2911,7 +2951,7 @@ int main(int argc, char** argv) {
     int selected = shotSelect;
     int inspect = shotInspect;  // enemy (or busy) unit opened for information only
     int currentPlayer = 0;
-    bool showReach = false;
+    bool showReach = (shotSelect >= 0);   // previewshot also shows the move overlay
     bool debug = false;
     bool factoryOpen = false;
     int factoryIndex = -1;
@@ -2933,7 +2973,10 @@ int main(int argc, char** argv) {
     float boardSX = 0, boardSY = 0, boardTX = 0, boardTY = 0;
     std::vector<int> reach;
     std::vector<int> targets;
-    if (shotSelect >= 0) targets = attackable(gMission, shotSelect);
+    if (shotSelect >= 0) {
+        targets = attackable(gMission, shotSelect);
+        reach = reachable(gMission, shotSelect);
+    }
     std::string notice;
     float noticeT = 0.0f;
 
@@ -2953,7 +2996,11 @@ int main(int argc, char** argv) {
     InitAudioDevice();
     Sound sndSelect = LoadSound((gAssetDir + "audio/se01.wav").c_str());
     Sound sndMove   = LoadSound((gAssetDir + "audio/se02.wav").c_str());
-    Sound sndHit    = LoadSound((gAssetDir + "audio/se07.wav").c_str());
+    gSndSim     = LoadSound((gAssetDir + "audio/se25.wav").c_str());
+    gSndShot    = LoadSound((gAssetDir + "audio/se03.wav").c_str());
+    gSndBig     = LoadSound((gAssetDir + "audio/se21.wav").c_str());
+    gSndMiss    = LoadSound((gAssetDir + "audio/se08.wav").c_str());
+    gSndCapture = LoadSound((gAssetDir + "audio/se13.wav").c_str());
 
     auto resetSelection = [&]() {
         selected = -1;
@@ -3634,7 +3681,6 @@ int main(int argc, char** argv) {
                               << "  hp " << r.newHpDef << "/" << r.newHpAtk << "\n";
                     fx.push_back({1.1f, dx, dy, r.dmgToDef, true});
                     fx.push_back({1.1f, ax, ay, r.dmgToAtk, false});
-                    if (IsSoundValid(sndHit)) PlaySound(sndHit);
                     queueCombat(selected, hit, hpA0, hpD0, sel.hp, gMission.units[hit].hp,
                                 r, mode);
                     startNextCombat();
@@ -3806,15 +3852,40 @@ int main(int argc, char** argv) {
         drawHexMap(gMission);
 
         if (showReach && selected >= 0) {
+            const UnitType& selType = gTypes[gMission.units[selected].type];
+            int mclass = std::clamp(selType.moveClass, 0, 3);
+            bool air = selType.airborne();
+            // Impassable terrain: semi-transparent black so the player can see
+            // at a glance which cells the unit can never enter.
+            if (!air) {
+                for (int y = 0; y < gMission.h; ++y)
+                    for (int x = 0; x < gMission.w; ++x) {
+                        int t = terrainAt(gMission, x, y);
+                        if (gTerrain[t].cost[mclass] & kMoveImpassable) {
+                            float cx, cy;
+                            hexCenter(x, y, cx, cy);
+                            DrawPoly({cx, cy}, 6, gHexSize - 1, 0,
+                                     Fade(BLACK, 0.55f));
+                        }
+                    }
+            }
+            // Reachable cells use additive blending: bright terrain gets
+            // brighter, shadowed/dark terrain stays dark (overlay-style).
+            BeginBlendMode(BLEND_ADDITIVE);
             for (int y = 0; y < gMission.h; ++y)
                 for (int x = 0; x < gMission.w; ++x) {
                     int idx = y * gMission.w + x;
-                    if (reach[idx] <= gTypes[gMission.units[selected].type].movePts) {
+                    if (reach[idx] <= selType.movePts) {
+                        int t = terrainAt(gMission, x, y);
+                        if (!air && (gTerrain[t].cost[mclass] & kMoveImpassable))
+                            continue;
                         float cx, cy;
                         hexCenter(x, y, cx, cy);
-                        DrawPoly({cx, cy}, 6, gHexSize - 2, 0, Fade(SKYBLUE, 0.24f));
+                        DrawPoly({cx, cy}, 6, gHexSize - 1, 0,
+                                 Fade(SKYBLUE, 0.30f));
                     }
                 }
+            EndBlendMode();
         }
         for (int t : targets) {
             const Unit& u = gMission.units[t];
@@ -4161,7 +4232,11 @@ int main(int argc, char** argv) {
     if (gBackdrop.id != 0) UnloadTexture(gBackdrop);
     UnloadSound(sndSelect);
     UnloadSound(sndMove);
-    UnloadSound(sndHit);
+    if (IsSoundValid(gSndSim)) UnloadSound(gSndSim);
+    if (IsSoundValid(gSndShot)) UnloadSound(gSndShot);
+    if (IsSoundValid(gSndBig)) UnloadSound(gSndBig);
+    if (IsSoundValid(gSndMiss)) UnloadSound(gSndMiss);
+    if (IsSoundValid(gSndCapture)) UnloadSound(gSndCapture);
     for (auto& t : gCombatPanels) if (t.id) UnloadTexture(t);
     if (gFxBoom.id) UnloadTexture(gFxBoom);
     if (gFxDebris.id) UnloadTexture(gFxDebris);

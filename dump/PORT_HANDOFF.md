@@ -170,15 +170,33 @@ The named `effect_192..199.png` files and `splat.png` stay at the root.
 * A side's shots are spread over **0.5 s**: shot `i` leaves at
   `fireT + 0.5*i/(n-1)` and arrives `fireDur` later.  The last arrival is
   `fireT + 0.5 + fireDur = 3.47 s`.
-* Miss/scatter shots are scheduled first; the last `killed` shots are the ones
-  aimed at destroyed slots.  Kill projectiles therefore always arrive after
-  all misses, and their explosions start on those final arrivals.
+* Miss/scatter shots are scheduled first; the last `killed` shots all leave
+  together at the end of the window.  Kill projectiles therefore arrive after
+  all misses, and every destroyed slot's explosion starts **simultaneously**
+  on that final arrival.
+* The big death frames step every **0.18 s** (was 0.09) and fade over 0.55 s,
+  so the destruction blast lasts about twice as long.
 * Each impact effect starts at that shot's arrival.  The killed sprite is
   hidden and its wreck splat appears at the same arrival; the death explosion
   starts then too.
 * Death explosion size is `us * 2.40 * 0.80 = us * 1.92` (0.8x the previous
   size), with the bottom-centre pivot on the unit ground line.
 * The first click skips to `4.30 s`, after the last explosion has played.
+
+### Combat audio
+
+Sounds are the original resource WAVs in `assets/audio/`:
+
+| role | file | trigger |
+| --- | --- | --- |
+| simulation bed | `se25.wav` | `startNextCombat()` |
+| shot / volley | `se03.wav` | first frame after `fireT`, once per side |
+| miss | `se08.wav` | first miss impact arrival, once per side |
+| big destruction | `se21.wav` | the common kill arrival, once per side |
+| factory capture | `se13.wav` | `captureFactoryAt()` |
+
+Select/move continue to use `se01` / `se02`.  Sound playback is guarded by
+`IsSoundValid`, so headless/no-audio runs still work.
 
 ---
 
@@ -287,6 +305,10 @@ Unit properties (labels *and* values) are set at **32 px**, double the old
   top-right of the factory hex: blue player, red computer, grey neutral.
 * **Double-click** a unit standing on a factory hex to open the factory panel;
   a single click keeps the normal unit select/inspect behavior.
+* **Selection highlight**: reachable cells are drawn with additive cyan
+  (bright terrain brightens), while terrain the selected unit cannot enter is
+  covered with semi-transparent black (55% alpha).  Air units skip the
+  impassable pass.
 * **Map unit palettes** use exact world-map banks, not a tint: bank 9 blue
   (`horizontal.png`), bank 10 green (`horizontal_green.png`), bank 12 used-up
   grey (`horizontal_used.png`), all generated from map row-4 tile `160+type`.

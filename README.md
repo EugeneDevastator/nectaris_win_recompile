@@ -22,6 +22,10 @@ the intro and the story VM are intentionally out of scope.
   original VFX frame organization.
 - World map UI with faction palettes, star ranks, factory ownership markers,
   factory capture, pan-with-units and a large readable footer.
+- Original sound effects for the battle simulation, shots, misses, destruction
+  and factory capture, with simultaneous multi-unit death explosions.
+- Selection overlay: additive reachable highlights and black impassable
+  terrain, so the legal ground is readable at a glance.
 - Every asset is replaceable: `assets/data/*.json`, `assets/units/*`,
   `assets/maps/*.json`, `assets/art/*` and `assets/fonts/*`.
 

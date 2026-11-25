@@ -30,7 +30,7 @@
   ],
   "miss_sheet": 44,
   "miss_frame_seconds": 0.1,
-  "death_step_seconds": 0.09
+  "death_step_seconds": 0.18
  },
  "classes": {
   "air": {
