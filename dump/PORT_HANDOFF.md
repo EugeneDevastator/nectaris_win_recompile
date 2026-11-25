@@ -185,18 +185,29 @@ The named `effect_192..199.png` files and `splat.png` stay at the root.
 
 ### Combat audio
 
-Sounds are the original resource WAVs in `assets/audio/`:
+Sounds are the original resource WAVs in `assets/audio/`, mapped by role in
+`assets/data/audio.json` (no rebuild needed).  `docs/audio/soundboard.html`
+plays all 36 and exports a corrected mapping.
 
 | role | file | trigger |
 | --- | --- | --- |
-| simulation bed | `se25.wav` | `startNextCombat()` |
-| shot / volley | `se03.wav` | first frame after `fireT`, once per side |
-| miss | `se08.wav` | first miss impact arrival, once per side |
-| big destruction | `se21.wav` | the common kill arrival, once per side |
-| factory capture | `se13.wav` | `captureFactoryAt()` |
+| battle entry (roll-in) | `se34.wav` | `startNextCombat()` |
+| direct volley | `se28.wav` | first frame after `fireT` |
+| heavy / indirect volley | `se29.wav` | same, when the attacker is ranged |
+| big destruction | `se14.wav` | the common kill arrival, once per side |
+| miss | `se08.wav` | first miss impact arrival (provisional) |
+| factory capture | `se13.wav` | `captureFactoryAt()` (provisional) |
+| unit select | `se01.wav` | map/UI confirm |
+| cursor move | `se02.wav` | map cursor |
 
-Select/move continue to use `se01` / `se02`.  Sound playback is guarded by
-`IsSoundValid`, so headless/no-audio runs still work.
+The original queues an SE number in `DAT_0042fb90`; `FUN_00412890` sets it and
+the frame loop calls `FUN_0040b260(id-1, 0)`.  Confirmed ids: `0x1c` (SE28) and
+`0x1d` (SE29) at `0x41433f` / `0x413eaf` (combat formation firing), `0x0e`
+(SE14) in the destruction frame animation, and `0x22` (SE34) at `0x413531`
+just before the nine-step battle-screen roll-in.
+
+Set `NECTARIS_SFX_LOG=1` to print every triggered role and its resolved file.
+Sound playback is guarded by `IsSoundValid`, so headless/no-audio runs work.
 
 ---
 

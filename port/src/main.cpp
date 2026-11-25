@@ -24,6 +24,7 @@
 #include <cmath>
 #include <cstdio>
 #include <cstdint>
+#include <cstdlib>
 #include <ctime>
 #include <deque>
 #include <filesystem>
@@ -55,8 +56,8 @@ static std::vector<int> gRemap, gPanelTable, gPanelIndirect;
 static std::vector<Texture2D> gCombatPanels;
 static Texture2D gFxBoom = {0}, gFxDebris = {0};
 // Combat audio: simulation bed + effect one-shots.
-static Sound gSndSim = {0}, gSndShot = {0}, gSndBig = {0};
-static Sound gSndMiss = {0}, gSndCapture = {0};
+static Sound gSndEntry = {0}, gSndShot = {0}, gSndShotHeavy = {0};
+static Sound gSndBig = {0}, gSndMiss = {0}, gSndCapture = {0};
 static int gCombatSerial = 0;
 static Texture2D gEnemyFlipTex = {0};
 static Texture2D gFxShell = {0}, gFxFlash = {0}, gFxStreak = {0};
@@ -212,6 +213,43 @@ static constexpr int kMoveImpassable = 0x80;
 static inline int moveCost(const Mission& m, int x, int y, int moveClass) {
     if (moveClass >= 4) return 1;                 // aircraft: ignore terrain
     return gTerrain[terrainAt(m, x, y)].cost[std::clamp(moveClass, 0, 3)];
+}
+
+// Logical event -> SE file mapping (assets/data/audio.json).  Missing or
+// malformed entries fall back to the built-in default, so the game still runs
+// with an untouched asset folder.
+static bool sfxLogEnabled() {
+    static int on = -1;
+    if (on < 0) on = std::getenv("NECTARIS_SFX_LOG") ? 1 : 0;
+    return on != 0;
+}
+
+static void playSfx(Sound s, const char* role) {
+    if (!IsSoundValid(s)) {
+        if (sfxLogEnabled()) std::cout << "[sfx] " << role << " (invalid)\n";
+        return;
+    }
+    if (sfxLogEnabled())
+        std::cout << "[sfx] " << role << " t=" << GetTime() << "\n";
+    PlaySound(s);
+}
+
+static Sound loadSfx(const json& cfg, const char* role, const char* fallback) {
+    std::string file = fallback;
+    if (cfg.is_object()) {
+        auto it = cfg.find(role);
+        if (it != cfg.end() && it->is_string()) {
+            std::string v = it->get<std::string>();
+            if (!v.empty()) file = v;
+        }
+    }
+    file = std::filesystem::path(file).filename().string();
+    if (file.find('.') == std::string::npos) file += ".wav";
+    if (sfxLogEnabled()) std::cout << "sfx " << role << " -> " << file << "\n";
+    Sound s = LoadSound((gAssetDir + "audio/" + file).c_str());
+    if (sfxLogEnabled())
+        std::cout << "  " << (IsSoundValid(s) ? "ok" : "FAILED") << "\n";
+    return s;
 }
 
 // ------------------------------------------------------------------ load
@@ -504,7 +542,7 @@ static bool captureFactoryAt(Mission& m, Unit& u, int x, int y) {
     if (f.owner == u.owner) return false;
     f.owner = u.owner;
     f.terrain = (u.owner == 0) ? 11 : 13;
-    if (IsSoundValid(gSndCapture)) PlaySound(gSndCapture);
+    playSfx(gSndCapture, "capture");
     return true;
 }
 
@@ -1209,7 +1247,7 @@ static void startNextCombat() {
         gCombatQueue.pop_front();
         gCv.active = true;
         ++gCombatSerial;
-        if (IsSoundValid(gSndSim)) PlaySound(gSndSim);
+        playSfx(gSndEntry, "entry");
     }
 }
 
@@ -2146,11 +2184,14 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
         const bool leftFires = attackerIsLeft || counterFires;
         const bool rightFires = !attackerIsLeft || counterFires;
         if (leftFires && !shotSnd[0]) {
-            if (IsSoundValid(gSndShot)) PlaySound(gSndShot);
+            // Indirect (artillery) attackers use the heavy report.
+            playSfx((v.ranged && attackerIsLeft) ? gSndShotHeavy : gSndShot,
+                    (v.ranged && attackerIsLeft) ? "shot_heavy" : "shot");
             shotSnd[0] = true;
         }
         if (rightFires && !shotSnd[1]) {
-            if (IsSoundValid(gSndShot)) PlaySound(gSndShot);
+            playSfx((v.ranged && !attackerIsLeft) ? gSndShotHeavy : gSndShot,
+                    (v.ranged && !attackerIsLeft) ? "shot_heavy" : "shot");
             shotSnd[1] = true;
         }
         auto fire = [&](Vector2* from, Vector2* to, int count, float nudge,
@@ -2223,12 +2264,12 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
             int firstKill = std::max(0, count - killed);
             if (killed > 0 && !bigSnd[targetSide] &&
                 t >= killArrival(targetSide, 0)) {
-                if (IsSoundValid(gSndBig)) PlaySound(gSndBig);
+                playSfx(gSndBig, "big");
                 bigSnd[targetSide] = true;
             }
             if (killed < count && !missSnd[targetSide] &&
                 t >= shotArrival(0, count, killed)) {
-                if (IsSoundValid(gSndMiss)) PlaySound(gSndMiss);
+                playSfx(gSndMiss, "miss");
                 missSnd[targetSide] = true;
             }
             for (int i = 0; i < count; ++i) {
@@ -2619,6 +2660,25 @@ int main(int argc, char** argv) {
     SetTargetFPS(60);
     loadUiFont();
 
+    // Audio is needed by every interactive and capture mode; load it once here.
+    InitAudioDevice();
+    json audioCfg = json::object();
+    {
+        std::ifstream af(gAssetDir + "data/audio.json");
+        if (af) {
+            try { audioCfg = json::parse(af); }
+            catch (const std::exception&) { audioCfg = json::object(); }
+        }
+    }
+    Sound sndSelect = loadSfx(audioCfg, "select", "se01.wav");
+    Sound sndMove   = loadSfx(audioCfg, "move",   "se02.wav");
+    gSndEntry   = loadSfx(audioCfg, "entry",  "se34.wav");
+    gSndShot    = loadSfx(audioCfg, "shot",   "se28.wav");
+    gSndShotHeavy = loadSfx(audioCfg, "shot_heavy", "se29.wav");
+    gSndBig     = loadSfx(audioCfg, "big",    "se14.wav");
+    gSndMiss    = loadSfx(audioCfg, "miss",   "se08.wav");
+    gSndCapture = loadSfx(audioCfg, "capture","se13.wav");
+
     if (backdropshot) {
         float ox = gOriginX, oy = gOriginY;
         gOriginX = gOriginY = 0.0f;
@@ -2993,14 +3053,6 @@ int main(int argc, char** argv) {
 
     struct Fx { float t; float x, y; int dmg; bool onDefender; };
     std::vector<Fx> fx;
-    InitAudioDevice();
-    Sound sndSelect = LoadSound((gAssetDir + "audio/se01.wav").c_str());
-    Sound sndMove   = LoadSound((gAssetDir + "audio/se02.wav").c_str());
-    gSndSim     = LoadSound((gAssetDir + "audio/se25.wav").c_str());
-    gSndShot    = LoadSound((gAssetDir + "audio/se03.wav").c_str());
-    gSndBig     = LoadSound((gAssetDir + "audio/se21.wav").c_str());
-    gSndMiss    = LoadSound((gAssetDir + "audio/se08.wav").c_str());
-    gSndCapture = LoadSound((gAssetDir + "audio/se13.wav").c_str());
 
     auto resetSelection = [&]() {
         selected = -1;
@@ -4232,8 +4284,9 @@ int main(int argc, char** argv) {
     if (gBackdrop.id != 0) UnloadTexture(gBackdrop);
     UnloadSound(sndSelect);
     UnloadSound(sndMove);
-    if (IsSoundValid(gSndSim)) UnloadSound(gSndSim);
+    if (IsSoundValid(gSndEntry)) UnloadSound(gSndEntry);
     if (IsSoundValid(gSndShot)) UnloadSound(gSndShot);
+    if (IsSoundValid(gSndShotHeavy)) UnloadSound(gSndShotHeavy);
     if (IsSoundValid(gSndBig)) UnloadSound(gSndBig);
     if (IsSoundValid(gSndMiss)) UnloadSound(gSndMiss);
     if (IsSoundValid(gSndCapture)) UnloadSound(gSndCapture);

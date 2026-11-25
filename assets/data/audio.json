@@ -1,0 +1,11 @@
+{
+  "note": "Original SE resources. shot/heavy/big/entry confirmed from the game's own call sites; select/move are the map cursor sounds; miss/capture are still provisional. Edit docs/audio/soundboard.html to re-map by ear.",
+  "select": "se01.wav",
+  "move": "se02.wav",
+  "entry": "se34.wav",
+  "shot": "se28.wav",
+  "shot_heavy": "se29.wav",
+  "big": "se14.wav",
+  "miss": "se08.wav",
+  "capture": "se13.wav"
+}

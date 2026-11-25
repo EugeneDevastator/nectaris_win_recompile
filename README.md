@@ -22,8 +22,10 @@ the intro and the story VM are intentionally out of scope.
   original VFX frame organization.
 - World map UI with faction palettes, star ranks, factory ownership markers,
   factory capture, pan-with-units and a large readable footer.
-- Original sound effects for the battle simulation, shots, misses, destruction
-  and factory capture, with simultaneous multi-unit death explosions.
+- Original sound effects for the battle entry, shots, misses, destruction and
+  factory capture, with simultaneous multi-unit death explosions.  Event-to-SE
+  mapping lives in `assets/data/audio.json`; `docs/audio/soundboard.html` plays
+  all 36 extracted effects for remapping by ear.
 - Selection overlay: additive reachable highlights and black impassable
   terrain, so the legal ground is readable at a glance.
 - Every asset is replaceable: `assets/data/*.json`, `assets/units/*`,
@@ -91,9 +93,11 @@ game/              original game files used by the capture tools
   impostors, palettes, VFX, world-map UI, unit folders, known gotchas.
 - [`dump/COMBAT_SPRITES_NOTES.md`](dump/COMBAT_SPRITES_NOTES.md) — combat
   sprite/VFX investigation history.
-- [`docs/PORTING_NOTES.md`](docs/PORTING_NOTES.md) — original porting log.
-- [`docs/RE_FINDINGS.md`](docs/RE_FINDINGS.md) — reverse-engineering findings.
-- [`port/README.md`](port/README.md) — detailed build/run and transport notes.
+- [`docs/PORTING_NOTES.md`](docs/PORTING_NOTES.md) - original porting log.
+- [`docs/RE_FINDINGS.md`](docs/RE_FINDINGS.md) - reverse-engineering findings.
+- [`docs/audio/soundboard.html`](docs/audio/soundboard.html) - listen to all 36
+  original SE resources and remap combat events.
+- [`port/README.md`](port/README.md) - detailed build/run and transport notes.
 
 ## Credits
 

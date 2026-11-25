@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Nectaris SFX soundboard</title>
+<style>
+  :root { color-scheme: dark; }
+  body { margin: 0; padding: 24px 28px 60px; background: #0d1017;
+         color: #e6e9ef; font: 14px/1.45 "Segoe UI", system-ui, sans-serif; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  h2 { font-size: 16px; margin: 30px 0 10px; }
+  p.lead { margin: 0 0 18px; color: #9aa4b5; max-width: 900px; }
+  .banner { background: #1b2333; border-left: 3px solid #e0a63a;
+            padding: 10px 14px; border-radius: 4px; margin: 0 0 22px;
+            max-width: 900px; color: #d8dced; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+          gap: 12px; }
+  .card { background: #161c27; border: 1px solid #263043; border-radius: 6px;
+          padding: 10px; }
+  .card.used { border-color: #3f7f5a; box-shadow: 0 0 0 1px #2f6b4a inset; }
+  .card .head { display: flex; justify-content: space-between; align-items: baseline;
+                margin-bottom: 6px; letter-spacing: .04em; }
+  .card .head span { color: #8b96a8; font-size: 12px; }
+  audio { width: 100%; height: 32px; }
+  .roles { margin-top: 6px; font-size: 12px; color: #6fd08c; min-height: 15px; }
+  table { border-collapse: collapse; max-width: 1000px; width: 100%; }
+  th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid #232b3a;
+           vertical-align: top; font-size: 13px; }
+  th { color: #9aa4b5; font-weight: 600; }
+  code { background: #1d2532; padding: 1px 5px; border-radius: 3px; }
+  select { background: #1d2532; color: #e6e9ef; border: 1px solid #33405a;
+           border-radius: 4px; padding: 4px 6px; min-width: 110px; }
+  .muted { color: #8b96a8; font-size: 12px; }
+  .bar { display: flex; gap: 10px; align-items: center; margin: 10px 0 0; }
+  button { background: #2b6cb0; color: #fff; border: 0; border-radius: 4px;
+           padding: 8px 14px; font: inherit; cursor: pointer; }
+  button.secondary { background: #2a3343; }
+  button:hover { filter: brightness(1.15); }
+  textarea { width: 100%; max-width: 900px; height: 190px; margin-top: 12px;
+             background: #11161f; color: #cfe3ff; border: 1px solid #2a3648;
+             border-radius: 5px; padding: 10px; font: 12px/1.4 Consolas, monospace; }
+  a { color: #7fb3ff; }
+</style>
+</head>
+<body>
+<h1>Nectaris / Military Madness &mdash; SFX soundboard</h1>
+<p class="lead">All 36 effects are the original <code>Nec.exe</code> WAVE
+resources (8-bit mono 22050 Hz).  Listen to each one, then assign the SE that
+belongs to every game event.  Export the result and drop it into
+<code>assets/data/audio.json</code> &mdash; the runtime reads that file, so no
+rebuild is needed.</p>
+
+<div class="banner"><b>Provisional mapping.</b> The IDs currently selected were
+guesses and are known to be wrong.  Please correct them by ear.</div>
+
+<h2>Events</h2>
+<table>
+  <tr><th>Event</th><th>SE file</th><th>When it plays</th></tr>
+  <tr><td><code>select</code><div class="muted">Unit selected</div></td><td><select data-role="select"><option value="">(none)</option><option value="se01.wav" selected>se01</option><option value="se02.wav">se02</option><option value="se03.wav">se03</option><option value="se04.wav">se04</option><option value="se05.wav">se05</option><option value="se06.wav">se06</option><option value="se07.wav">se07</option><option value="se08.wav">se08</option><option value="se09.wav">se09</option><option value="se10.wav">se10</option><option value="se11.wav">se11</option><option value="se12.wav">se12</option><option value="se13.wav">se13</option><option value="se14.wav">se14</option><option value="se15.wav">se15</option><option value="se16.wav">se16</option><option value="se17.wav">se17</option><option value="se18.wav">se18</option><option value="se19.wav">se19</option><option value="se20.wav">se20</option><option value="se21.wav">se21</option><option value="se22.wav">se22</option><option value="se23.wav">se23</option><option value="se24.wav">se24</option><option value="se25.wav">se25</option><option value="se26.wav">se26</option><option value="se27.wav">se27</option><option value="se28.wav">se28</option><option value="se29.wav">se29</option><option value="se30.wav">se30</option><option value="se31.wav">se31</option><option value="se32.wav">se32</option><option value="se33.wav">se33</option><option value="se34.wav">se34</option><option value="se35.wav">se35</option><option value="se36.wav">se36</option></select></td><td class="muted">Clicking a friendly unit on the map.</td></tr>
+  <tr><td><code>move</code><div class="muted">Cursor moved</div></td><td><select data-role="move"><option value="">(none)</option><option value="se01.wav">se01</option><option value="se02.wav" selected>se02</option><option value="se03.wav">se03</option><option value="se04.wav">se04</option><option value="se05.wav">se05</option><option value="se06.wav">se06</option><option value="se07.wav">se07</option><option value="se08.wav">se08</option><option value="se09.wav">se09</option><option value="se10.wav">se10</option><option value="se11.wav">se11</option><option value="se12.wav">se12</option><option value="se13.wav">se13</option><option value="se14.wav">se14</option><option value="se15.wav">se15</option><option value="se16.wav">se16</option><option value="se17.wav">se17</option><option value="se18.wav">se18</option><option value="se19.wav">se19</option><option value="se20.wav">se20</option><option value="se21.wav">se21</option><option value="se22.wav">se22</option><option value="se23.wav">se23</option><option value="se24.wav">se24</option><option value="se25.wav">se25</option><option value="se26.wav">se26</option><option value="se27.wav">se27</option><option value="se28.wav">se28</option><option value="se29.wav">se29</option><option value="se30.wav">se30</option><option value="se31.wav">se31</option><option value="se32.wav">se32</option><option value="se33.wav">se33</option><option value="se34.wav">se34</option><option value="se35.wav">se35</option><option value="se36.wav">se36</option></select></td><td class="muted">Moving the map cursor.</td></tr>
+  <tr><td><code>entry</code><div class="muted">Battle entry (roll-in)</div></td><td><select data-role="entry"><option value="">(none)</option><option value="se01.wav">se01</option><option value="se02.wav">se02</option><option value="se03.wav">se03</option><option value="se04.wav">se04</option><option value="se05.wav">se05</option><option value="se06.wav">se06</option><option value="se07.wav">se07</option><option value="se08.wav">se08</option><option value="se09.wav">se09</option><option value="se10.wav">se10</option><option value="se11.wav">se11</option><option value="se12.wav">se12</option><option value="se13.wav">se13</option><option value="se14.wav">se14</option><option value="se15.wav">se15</option><option value="se16.wav">se16</option><option value="se17.wav">se17</option><option value="se18.wav">se18</option><option value="se19.wav">se19</option><option value="se20.wav">se20</option><option value="se21.wav">se21</option><option value="se22.wav">se22</option><option value="se23.wav">se23</option><option value="se24.wav">se24</option><option value="se25.wav">se25</option><option value="se26.wav">se26</option><option value="se27.wav">se27</option><option value="se28.wav">se28</option><option value="se29.wav">se29</option><option value="se30.wav">se30</option><option value="se31.wav">se31</option><option value="se32.wav">se32</option><option value="se33.wav">se33</option><option value="se34.wav" selected>se34</option><option value="se35.wav">se35</option><option value="se36.wav">se36</option></select></td><td class="muted">The combat screen rolls in, before the volley.</td></tr>
+  <tr><td><code>shot</code><div class="muted">Volley / shot</div></td><td><select data-role="shot"><option value="">(none)</option><option value="se01.wav">se01</option><option value="se02.wav">se02</option><option value="se03.wav">se03</option><option value="se04.wav">se04</option><option value="se05.wav">se05</option><option value="se06.wav">se06</option><option value="se07.wav">se07</option><option value="se08.wav">se08</option><option value="se09.wav">se09</option><option value="se10.wav">se10</option><option value="se11.wav">se11</option><option value="se12.wav">se12</option><option value="se13.wav">se13</option><option value="se14.wav">se14</option><option value="se15.wav">se15</option><option value="se16.wav">se16</option><option value="se17.wav">se17</option><option value="se18.wav">se18</option><option value="se19.wav">se19</option><option value="se20.wav">se20</option><option value="se21.wav">se21</option><option value="se22.wav">se22</option><option value="se23.wav">se23</option><option value="se24.wav">se24</option><option value="se25.wav">se25</option><option value="se26.wav">se26</option><option value="se27.wav">se27</option><option value="se28.wav" selected>se28</option><option value="se29.wav">se29</option><option value="se30.wav">se30</option><option value="se31.wav">se31</option><option value="se32.wav">se32</option><option value="se33.wav">se33</option><option value="se34.wav">se34</option><option value="se35.wav">se35</option><option value="se36.wav">se36</option></select></td><td class="muted">First frame of a direct-fire volley.</td></tr>
+  <tr><td><code>shot_heavy</code><div class="muted">Heavy shot</div></td><td><select data-role="shot_heavy"><option value="">(none)</option><option value="se01.wav">se01</option><option value="se02.wav">se02</option><option value="se03.wav">se03</option><option value="se04.wav">se04</option><option value="se05.wav">se05</option><option value="se06.wav">se06</option><option value="se07.wav">se07</option><option value="se08.wav">se08</option><option value="se09.wav">se09</option><option value="se10.wav">se10</option><option value="se11.wav">se11</option><option value="se12.wav">se12</option><option value="se13.wav">se13</option><option value="se14.wav">se14</option><option value="se15.wav">se15</option><option value="se16.wav">se16</option><option value="se17.wav">se17</option><option value="se18.wav">se18</option><option value="se19.wav">se19</option><option value="se20.wav">se20</option><option value="se21.wav">se21</option><option value="se22.wav">se22</option><option value="se23.wav">se23</option><option value="se24.wav">se24</option><option value="se25.wav">se25</option><option value="se26.wav">se26</option><option value="se27.wav">se27</option><option value="se28.wav">se28</option><option value="se29.wav" selected>se29</option><option value="se30.wav">se30</option><option value="se31.wav">se31</option><option value="se32.wav">se32</option><option value="se33.wav">se33</option><option value="se34.wav">se34</option><option value="se35.wav">se35</option><option value="se36.wav">se36</option></select></td><td class="muted">Volley from an indirect/artillery unit.</td></tr>
+  <tr><td><code>miss</code><div class="muted">Miss / scatter</div></td><td><select data-role="miss"><option value="">(none)</option><option value="se01.wav">se01</option><option value="se02.wav">se02</option><option value="se03.wav">se03</option><option value="se04.wav">se04</option><option value="se05.wav">se05</option><option value="se06.wav">se06</option><option value="se07.wav">se07</option><option value="se08.wav" selected>se08</option><option value="se09.wav">se09</option><option value="se10.wav">se10</option><option value="se11.wav">se11</option><option value="se12.wav">se12</option><option value="se13.wav">se13</option><option value="se14.wav">se14</option><option value="se15.wav">se15</option><option value="se16.wav">se16</option><option value="se17.wav">se17</option><option value="se18.wav">se18</option><option value="se19.wav">se19</option><option value="se20.wav">se20</option><option value="se21.wav">se21</option><option value="se22.wav">se22</option><option value="se23.wav">se23</option><option value="se24.wav">se24</option><option value="se25.wav">se25</option><option value="se26.wav">se26</option><option value="se27.wav">se27</option><option value="se28.wav">se28</option><option value="se29.wav">se29</option><option value="se30.wav">se30</option><option value="se31.wav">se31</option><option value="se32.wav">se32</option><option value="se33.wav">se33</option><option value="se34.wav">se34</option><option value="se35.wav">se35</option><option value="se36.wav">se36</option></select></td><td class="muted">A shot that does not hit a slot.</td></tr>
+  <tr><td><code>big</code><div class="muted">Destruction</div></td><td><select data-role="big"><option value="">(none)</option><option value="se01.wav">se01</option><option value="se02.wav">se02</option><option value="se03.wav">se03</option><option value="se04.wav">se04</option><option value="se05.wav">se05</option><option value="se06.wav">se06</option><option value="se07.wav">se07</option><option value="se08.wav">se08</option><option value="se09.wav">se09</option><option value="se10.wav">se10</option><option value="se11.wav">se11</option><option value="se12.wav">se12</option><option value="se13.wav">se13</option><option value="se14.wav" selected>se14</option><option value="se15.wav">se15</option><option value="se16.wav">se16</option><option value="se17.wav">se17</option><option value="se18.wav">se18</option><option value="se19.wav">se19</option><option value="se20.wav">se20</option><option value="se21.wav">se21</option><option value="se22.wav">se22</option><option value="se23.wav">se23</option><option value="se24.wav">se24</option><option value="se25.wav">se25</option><option value="se26.wav">se26</option><option value="se27.wav">se27</option><option value="se28.wav">se28</option><option value="se29.wav">se29</option><option value="se30.wav">se30</option><option value="se31.wav">se31</option><option value="se32.wav">se32</option><option value="se33.wav">se33</option><option value="se34.wav">se34</option><option value="se35.wav">se35</option><option value="se36.wav">se36</option></select></td><td class="muted">Destroyed units explode (all at once).</td></tr>
+  <tr><td><code>capture</code><div class="muted">Factory capture</div></td><td><select data-role="capture"><option value="">(none)</option><option value="se01.wav">se01</option><option value="se02.wav">se02</option><option value="se03.wav">se03</option><option value="se04.wav">se04</option><option value="se05.wav">se05</option><option value="se06.wav">se06</option><option value="se07.wav">se07</option><option value="se08.wav">se08</option><option value="se09.wav">se09</option><option value="se10.wav">se10</option><option value="se11.wav">se11</option><option value="se12.wav">se12</option><option value="se13.wav" selected>se13</option><option value="se14.wav">se14</option><option value="se15.wav">se15</option><option value="se16.wav">se16</option><option value="se17.wav">se17</option><option value="se18.wav">se18</option><option value="se19.wav">se19</option><option value="se20.wav">se20</option><option value="se21.wav">se21</option><option value="se22.wav">se22</option><option value="se23.wav">se23</option><option value="se24.wav">se24</option><option value="se25.wav">se25</option><option value="se26.wav">se26</option><option value="se27.wav">se27</option><option value="se28.wav">se28</option><option value="se29.wav">se29</option><option value="se30.wav">se30</option><option value="se31.wav">se31</option><option value="se32.wav">se32</option><option value="se33.wav">se33</option><option value="se34.wav">se34</option><option value="se35.wav">se35</option><option value="se36.wav">se36</option></select></td><td class="muted">A factory changes owner.</td></tr>
+</table>
+
+<h2>All extracted effects</h2>
+<div class="grid">
+<div class="card" data-se="se01"><div class="head"><b>SE01</b><span>0.46 s</span></div><audio controls preload="none" src="../../assets/audio/se01.wav"></audio><div class="roles" data-roles="se01"></div></div>
+<div class="card" data-se="se02"><div class="head"><b>SE02</b><span>0.47 s</span></div><audio controls preload="none" src="../../assets/audio/se02.wav"></audio><div class="roles" data-roles="se02"></div></div>
+<div class="card" data-se="se03"><div class="head"><b>SE03</b><span>0.62 s</span></div><audio controls preload="none" src="../../assets/audio/se03.wav"></audio><div class="roles" data-roles="se03"></div></div>
+<div class="card" data-se="se04"><div class="head"><b>SE04</b><span>0.65 s</span></div><audio controls preload="none" src="../../assets/audio/se04.wav"></audio><div class="roles" data-roles="se04"></div></div>
+<div class="card" data-se="se05"><div class="head"><b>SE05</b><span>0.47 s</span></div><audio controls preload="none" src="../../assets/audio/se05.wav"></audio><div class="roles" data-roles="se05"></div></div>
+<div class="card" data-se="se06"><div class="head"><b>SE06</b><span>0.75 s</span></div><audio controls preload="none" src="../../assets/audio/se06.wav"></audio><div class="roles" data-roles="se06"></div></div>
+<div class="card" data-se="se07"><div class="head"><b>SE07</b><span>1.05 s</span></div><audio controls preload="none" src="../../assets/audio/se07.wav"></audio><div class="roles" data-roles="se07"></div></div>
+<div class="card" data-se="se08"><div class="head"><b>SE08</b><span>0.69 s</span></div><audio controls preload="none" src="../../assets/audio/se08.wav"></audio><div class="roles" data-roles="se08"></div></div>
+<div class="card" data-se="se09"><div class="head"><b>SE09</b><span>0.71 s</span></div><audio controls preload="none" src="../../assets/audio/se09.wav"></audio><div class="roles" data-roles="se09"></div></div>
+<div class="card" data-se="se10"><div class="head"><b>SE10</b><span>0.56 s</span></div><audio controls preload="none" src="../../assets/audio/se10.wav"></audio><div class="roles" data-roles="se10"></div></div>
+<div class="card" data-se="se11"><div class="head"><b>SE11</b><span>0.48 s</span></div><audio controls preload="none" src="../../assets/audio/se11.wav"></audio><div class="roles" data-roles="se11"></div></div>
+<div class="card" data-se="se12"><div class="head"><b>SE12</b><span>0.42 s</span></div><audio controls preload="none" src="../../assets/audio/se12.wav"></audio><div class="roles" data-roles="se12"></div></div>
+<div class="card" data-se="se13"><div class="head"><b>SE13</b><span>0.45 s</span></div><audio controls preload="none" src="../../assets/audio/se13.wav"></audio><div class="roles" data-roles="se13"></div></div>
+<div class="card" data-se="se14"><div class="head"><b>SE14</b><span>1.50 s</span></div><audio controls preload="none" src="../../assets/audio/se14.wav"></audio><div class="roles" data-roles="se14"></div></div>
+<div class="card" data-se="se15"><div class="head"><b>SE15</b><span>1.30 s</span></div><audio controls preload="none" src="../../assets/audio/se15.wav"></audio><div class="roles" data-roles="se15"></div></div>
+<div class="card" data-se="se16"><div class="head"><b>SE16</b><span>0.48 s</span></div><audio controls preload="none" src="../../assets/audio/se16.wav"></audio><div class="roles" data-roles="se16"></div></div>
+<div class="card" data-se="se17"><div class="head"><b>SE17</b><span>0.83 s</span></div><audio controls preload="none" src="../../assets/audio/se17.wav"></audio><div class="roles" data-roles="se17"></div></div>
+<div class="card" data-se="se18"><div class="head"><b>SE18</b><span>0.83 s</span></div><audio controls preload="none" src="../../assets/audio/se18.wav"></audio><div class="roles" data-roles="se18"></div></div>
+<div class="card" data-se="se19"><div class="head"><b>SE19</b><span>0.95 s</span></div><audio controls preload="none" src="../../assets/audio/se19.wav"></audio><div class="roles" data-roles="se19"></div></div>
+<div class="card" data-se="se20"><div class="head"><b>SE20</b><span>0.57 s</span></div><audio controls preload="none" src="../../assets/audio/se20.wav"></audio><div class="roles" data-roles="se20"></div></div>
+<div class="card" data-se="se21"><div class="head"><b>SE21</b><span>2.05 s</span></div><audio controls preload="none" src="../../assets/audio/se21.wav"></audio><div class="roles" data-roles="se21"></div></div>
+<div class="card" data-se="se22"><div class="head"><b>SE22</b><span>0.97 s</span></div><audio controls preload="none" src="../../assets/audio/se22.wav"></audio><div class="roles" data-roles="se22"></div></div>
+<div class="card" data-se="se23"><div class="head"><b>SE23</b><span>0.97 s</span></div><audio controls preload="none" src="../../assets/audio/se23.wav"></audio><div class="roles" data-roles="se23"></div></div>
+<div class="card" data-se="se24"><div class="head"><b>SE24</b><span>0.74 s</span></div><audio controls preload="none" src="../../assets/audio/se24.wav"></audio><div class="roles" data-roles="se24"></div></div>
+<div class="card" data-se="se25"><div class="head"><b>SE25</b><span>1.71 s</span></div><audio controls preload="none" src="../../assets/audio/se25.wav"></audio><div class="roles" data-roles="se25"></div></div>
+<div class="card" data-se="se26"><div class="head"><b>SE26</b><span>2.47 s</span></div><audio controls preload="none" src="../../assets/audio/se26.wav"></audio><div class="roles" data-roles="se26"></div></div>
+<div class="card" data-se="se27"><div class="head"><b>SE27</b><span>0.32 s</span></div><audio controls preload="none" src="../../assets/audio/se27.wav"></audio><div class="roles" data-roles="se27"></div></div>
+<div class="card" data-se="se28"><div class="head"><b>SE28</b><span>0.54 s</span></div><audio controls preload="none" src="../../assets/audio/se28.wav"></audio><div class="roles" data-roles="se28"></div></div>
+<div class="card" data-se="se29"><div class="head"><b>SE29</b><span>0.99 s</span></div><audio controls preload="none" src="../../assets/audio/se29.wav"></audio><div class="roles" data-roles="se29"></div></div>
+<div class="card" data-se="se30"><div class="head"><b>SE30</b><span>0.83 s</span></div><audio controls preload="none" src="../../assets/audio/se30.wav"></audio><div class="roles" data-roles="se30"></div></div>
+<div class="card" data-se="se31"><div class="head"><b>SE31</b><span>1.04 s</span></div><audio controls preload="none" src="../../assets/audio/se31.wav"></audio><div class="roles" data-roles="se31"></div></div>
+<div class="card" data-se="se32"><div class="head"><b>SE32</b><span>0.93 s</span></div><audio controls preload="none" src="../../assets/audio/se32.wav"></audio><div class="roles" data-roles="se32"></div></div>
+<div class="card" data-se="se33"><div class="head"><b>SE33</b><span>1.12 s</span></div><audio controls preload="none" src="../../assets/audio/se33.wav"></audio><div class="roles" data-roles="se33"></div></div>
+<div class="card" data-se="se34"><div class="head"><b>SE34</b><span>2.94 s</span></div><audio controls preload="none" src="../../assets/audio/se34.wav"></audio><div class="roles" data-roles="se34"></div></div>
+<div class="card" data-se="se35"><div class="head"><b>SE35</b><span>1.74 s</span></div><audio controls preload="none" src="../../assets/audio/se35.wav"></audio><div class="roles" data-roles="se35"></div></div>
+<div class="card" data-se="se36"><div class="head"><b>SE36</b><span>0.67 s</span></div><audio controls preload="none" src="../../assets/audio/se36.wav"></audio><div class="roles" data-roles="se36"></div></div>
+</div>
+
+<h2>Export</h2>
+<div class="bar">
+  <button onclick="buildJson()">Refresh JSON</button>
+  <button class="secondary" onclick="copyJson()">Copy</button>
+  <button class="secondary" onclick="downloadJson()">Download audio.json</button>
+  <span class="muted">Then save/overwrite <code>assets/data/audio.json</code>.</span>
+</div>
+<textarea id="out" spellcheck="false"></textarea>
+
+<script>
+const ROLES = ["select", "move", "entry", "shot", "shot_heavy", "miss", "big", "capture"];
+const LABELS = {"select": "Unit selected", "move": "Cursor moved", "entry": "Battle entry (roll-in)", "shot": "Volley / shot", "shot_heavy": "Heavy shot", "miss": "Miss / scatter", "big": "Destruction", "capture": "Factory capture"};
+const selects = Array.from(document.querySelectorAll('select[data-role]'));
+
+function currentMap() {
+  const m = {};
+  for (const s of selects) m[s.dataset.role] = s.value;
+  return m;
+}
+
+function refreshCards() {
+  const m = currentMap();
+  document.querySelectorAll('.card').forEach(card => {
+    const se = card.dataset.se;
+    const used = ROLES.filter(r => (m[r] || '').replace('.wav','') === se).map(r => LABELS[r]);
+    card.classList.toggle('used', used.length > 0);
+    card.querySelector('.roles').textContent = used.length ? '→ ' + used.join(', ') : '';
+  });
+}
+
+function buildJson() {
+  const m = currentMap();
+  const out = { note: 'Confirmed event mapping for the original SFX.' };
+  for (const r of ROLES) out[r] = m[r];
+  const text = JSON.stringify(out, null, 1) + '';
+  document.getElementById('out').value = text;
+  refreshCards();
+  return text;
+}
+
+function copyJson() {
+  const text = buildJson();
+  navigator.clipboard.writeText(text).then(
+    () => document.querySelector('.bar .muted').textContent = 'Copied.',
+    () => { const t = document.getElementById('out'); t.select(); document.execCommand('copy'); });
+  document.querySelector('.bar .muted').textContent = 'Copied.';
+}
+
+function downloadJson() {
+  const text = buildJson();
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([text], {type: 'application/json'}));
+  a.download = 'audio.json';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+selects.forEach(s => s.addEventListener('change', buildJson));
+buildJson();
+</script>
+</body>
+</html>

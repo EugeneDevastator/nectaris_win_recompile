@@ -80,10 +80,13 @@ Controls:
 
 ## Audio
 
-The original Se WAV resources are used directly (`assets/audio/seNN.wav`):
-`se25` simulation bed, `se03` shot, `se08` miss, `se21` big destruction,
-`se13` factory capture, plus `se01`/`se02` for select/move.  Effects are
-guarded with `IsSoundValid`, so headless capture runs still work.
+The original SE WAV resources are used directly (`assets/audio/seNN.wav`) and
+roles are read from `assets/data/audio.json`: `se34` battle entry/roll-in,
+`se28` direct shot, `se29` heavy (indirect) shot, `se14` destruction, `se08`
+miss and `se13` capture, plus `se01`/`se02` for select and cursor move.  Use
+`docs/audio/soundboard.html` to listen to all 36 and rewrite the mapping; set
+`NECTARIS_SFX_LOG=1` to print each triggered role.  Effects are guarded with
+`IsSoundValid`, so headless capture runs still work.
 
 Selecting a unit shows its movement overlay: reachable cells use additive
 cyan (bright terrain brightens) and impassable terrain is darkened with
