@@ -163,5 +163,23 @@
    "flip": -1,
    "scale": 1.0
   }
- ]
+ ],
+ "ground_pack": {
+  "9": {
+   "x": 0.88,
+   "y": 0.6,
+   "anchor": 0.72
+  },
+  "10": {
+   "x": 0.88,
+   "y": 0.55,
+   "anchor": 0.8
+  },
+  "4": {
+   "x": 0.88,
+   "y": 0.55,
+   "anchor": 0.8
+  }
+ },
+ "note": "Ground-unit packing on narrow panels: ground_pack keys are terrain ids (9 road, 10 bridge/river, 4 water); x/y squeeze the formation toward anchor (0..1 panel height)."
 }

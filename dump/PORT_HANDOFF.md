@@ -183,6 +183,9 @@ The named `effect_192..199.png` files and `splat.png` stay at the root.
 * Parked aircraft bob slightly up/down (`sin(t*9 + slot*1.7) * us*0.05`).
 * The furthest formation row uses 0.85x its old scale (0.612 vs 0.72 at depth
   0); the nearest row is unchanged at 1.52.
+* Ground formations on road/bridge/water panels are squeezed toward the panel
+  ground line (`ground_pack` in `combat_perspective.json`), so they pack onto
+  the road or river bank; aircraft keep the full depth spread.
 * Each impact effect starts at that shot's arrival.  The killed sprite is
   hidden and its wreck splat appears at the same arrival; the death explosion
   starts then too.

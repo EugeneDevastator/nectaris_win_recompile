@@ -93,7 +93,9 @@ cyan (bright terrain brightens) and impassable terrain gets a 45% dark-gray
 veil.  Destroyed units all explode together after the last missile arrives;
 the death blast uses three frames at 0.18 s each, with the first frame held an
 extra 0.45 s.  Roll-in is 1.2x, parked aircraft bob, and the furthest formation
-row is 0.85x its old scale for a stronger depth falloff.
+row is 0.85x its old scale for a stronger depth falloff.  On road, bridge and
+water panels ground formations pack toward the panel's ground line; aircraft
+keep their normal spread (`ground_pack` in `combat_perspective.json`).
 
 ## Transports
 

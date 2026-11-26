@@ -133,6 +133,15 @@ struct PerspSlot {
     float scale = 1.0f;   // multiplier on the depth-based scale
 };
 static std::map<std::string, std::vector<PerspSlot>> gPersp;
+// Ground-unit packing on narrow terrain panels (road, bridge/river): the
+// formation is squeezed toward the panel's ground line instead of using the
+// full depth spread that aircraft can use.
+struct GroundPack {
+    float x = 1.0f;
+    float y = 1.0f;
+    float anchor = 0.72f;
+};
+static std::map<int, GroundPack> gGroundPack;
 static float gEntrySpeed = 1.0f;
 
 // Hex direction order of the unit frames: 0=E, 1=NE, 2=N, 5=SE.  The sheet only
@@ -472,6 +481,17 @@ static void loadData() {
         json pj = json::parse(pf);
         gEntrySpeed = pj.value("speed", 1.0f);
         if (gEntrySpeed <= 0.0f) gEntrySpeed = 1.0f;
+        gGroundPack.clear();
+        if (pj.contains("ground_pack")) {
+            for (auto it = pj["ground_pack"].begin();
+                 it != pj["ground_pack"].end(); ++it) {
+                GroundPack gp;
+                gp.x = it.value().value("x", 1.0f);
+                gp.y = it.value().value("y", 1.0f);
+                gp.anchor = it.value().value("anchor", 0.72f);
+                gGroundPack[std::atoi(it.key().c_str())] = gp;
+            }
+        }
         for (const char* side : {"left", "right"}) {
             if (!pj.contains(side)) continue;
             for (const auto& r : pj[side]) {
@@ -1815,6 +1835,20 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
     auto panelPoint = [&](float px, float slotX, float slotY) {
         return Vector2{px + slotX * panW, panY + slotY * panH};
     };
+    // Ground units on narrow panels (road, bridge/river) stand packed on the
+    // painted ground line instead of using the full depth spread.
+    auto packPoint = [&](bool right, Vector2 p, float px, int type) {
+        if (type < 0 || type >= (int)gTypes.size() || gTypes[type].airborne())
+            return p;
+        int terr = right ? v.right.terrain : v.left.terrain;
+        auto it = gGroundPack.find(terr);
+        if (it == gGroundPack.end()) return p;
+        float cx = px + panW * 0.5f;
+        float cy = panY + panH * it->second.anchor;
+        p.x = cx + (p.x - cx) * it->second.x;
+        p.y = cy + (p.y - cy) * it->second.y;
+        return p;
+    };
     // Visual centre of a settled slot: matches how drawArmy places the sprite
     // (the recorded slot is the 64x64 cell origin; frames are centred in it).
     auto slotVisualCenter = [&](bool right, int idx) -> Vector2 {
@@ -1822,9 +1856,14 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
         float mul = 1.0f;
         const auto& ps = gPersp[right ? "right" : "left"];
         if (!ps.empty()) mul = ps[std::min<int>(idx, (int)ps.size() - 1)].scale;
-        float cfg = std::max(0.2f, (0.72f + 0.80f * std::clamp(s.y, 0.0f, 1.0f)) * mul);
+        float cfg = std::max(0.2f, (0.612f + 0.908f * std::clamp(s.y, 0.0f, 1.0f)) * mul);
         float pxs = (panW / 256.0f) * cfg;
-        Vector2 dest = panelPoint(right ? dxPanel : axPanel, s.x, s.y);
+        float pxPanel = right ? dxPanel : axPanel;
+        Vector2 dest = panelPoint(pxPanel, s.x, s.y);
+        int uslot = right ? v.right.unit : v.left.unit;
+        int utype = (uslot >= 0 && uslot < (int)gMission.units.size())
+                        ? gMission.units[uslot].type : -1;
+        dest = packPoint(right, dest, pxPanel, utype);
         return {dest.x + 32.0f * pxs, dest.y + 32.0f * pxs};
     };
 
@@ -2005,6 +2044,7 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
             if (useFrames && drawFlip)
                 src = {(float)ir.x, (float)ir.y, -(float)ir.w, (float)ir.h};
             Vector2 dest = panelPoint(px, posUv.x, posUv.y);
+            dest = packPoint(mirror, dest, px, type);
             // Parked aircraft hover with a slight vertical bob.
             if (settled && gTypes[type].airborne())
                 dest.y += std::sin(t * 9.0f + i * 1.7f) * us * 0.05f;
