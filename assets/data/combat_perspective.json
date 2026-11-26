@@ -86,7 +86,7 @@
   {
    "slot": [
     0.2734,
-    0.2656
+    0.1719
    ],
    "sprite": -1,
    "sprite_end": -1,
@@ -96,7 +96,7 @@
   {
    "slot": [
     0.3203,
-    0.375
+    0.3047
    ],
    "sprite": -1,
    "sprite_end": -1,
@@ -106,7 +106,7 @@
   {
    "slot": [
     0.4297,
-    0.75
+    0.625
    ],
    "sprite": -1,
    "sprite_end": -1,
@@ -116,7 +116,7 @@
   {
    "slot": [
     0.4453,
-    0.5625
+    0.3984
    ],
    "sprite": -1,
    "sprite_end": -1,
@@ -126,7 +126,7 @@
   {
    "slot": [
     0.5547,
-    0.3125
+    0.1719
    ],
    "sprite": -1,
    "sprite_end": -1,
@@ -136,7 +136,7 @@
   {
    "slot": [
     0.6172,
-    0.4219
+    0.3047
    ],
    "sprite": -1,
    "sprite_end": -1,
@@ -146,7 +146,7 @@
   {
    "slot": [
     0.6562,
-    0.5781
+    0.4844
    ],
    "sprite": -1,
    "sprite_end": -1,
@@ -156,7 +156,7 @@
   {
    "slot": [
     0.7344,
-    0.75
+    0.6797
    ],
    "sprite": -1,
    "sprite_end": -1,
@@ -166,20 +166,20 @@
  ],
  "ground_pack": {
   "9": {
-   "x": 0.88,
-   "y": 0.6,
-   "anchor": 0.72
+   "x": 0.9,
+   "y": 0.8,
+   "anchor": 0.62
   },
   "10": {
-   "x": 0.88,
-   "y": 0.55,
-   "anchor": 0.8
+   "x": 0.9,
+   "y": 0.8,
+   "anchor": 0.62
   },
   "4": {
-   "x": 0.88,
-   "y": 0.55,
-   "anchor": 0.8
+   "x": 0.9,
+   "y": 0.8,
+   "anchor": 0.62
   }
  },
- "note": "Ground-unit packing on narrow panels: ground_pack keys are terrain ids (9 road, 10 bridge/river, 4 water); x/y squeeze the formation toward anchor (0..1 panel height)."
+ "note": "Left/right slots are the measured original positions. The right side reuses the measured left row heights so both armies stand on the same rows (only the columns are mirrored); this keeps the two formations visually symmetric. ground_pack keys are terrain ids (9 road, 10 bridge/river, 4 water); x/y squeeze the formation toward anchor (0..1 panel height) so narrow panels keep their units on the painted ground line without touching the report bar."
 }
