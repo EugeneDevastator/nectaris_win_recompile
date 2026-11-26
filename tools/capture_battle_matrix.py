@@ -235,6 +235,10 @@ def run_job(job):
                 continue
             owner = t & 0x80
             wr(0x4957a0 + slot, bytes([owner | (job['def'] if owner else job['atk'])]))
+        # Full formations so the 8 front/rear unit positions are present.
+        for slot in range(0x38):
+            if types[slot] != 0xff:
+                wr(0x4957e0 + slot, bytes([7]))
 
         # ---- patch terrain under the first blue and first green unit
         types = dm.read(h, base, 0x4957a0, 0x38)

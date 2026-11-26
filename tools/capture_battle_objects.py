@@ -157,7 +157,13 @@ def main():
     ap.add_argument('tag')
     ap.add_argument('--seconds', type=float, default=7.0)
     ap.add_argument('--frames', action='store_true')
+    ap.add_argument('--frame-times', default='',
+                    help='comma-separated seconds at which to save a framebuffer PNG')
     ap.add_argument('--dumpbank', default=None, help='write the battle sprite bank here')
+    ap.add_argument('--terrain-atk', type=int, default=-1)
+    ap.add_argument('--terrain-def', type=int, default=-1)
+    ap.add_argument('--hp', type=int, default=7,
+                    help='HP to give every formation slot (-1 = leave alone)')
     args = ap.parse_args()
 
     hdesk = U32.CreateDesktopW(DESKTOP, None, None, 0, 0x10000000, None)
@@ -221,6 +227,33 @@ def main():
                 continue
             owner = t & 0x80
             wr(0x4957a0 + slot, bytes([owner | (args.dfn if owner else args.atk)]))
+        # Full formations for complete 8-unit layouts (0 = leave HP alone).
+        if args.hp >= 0:
+            for slot in range(0x38):
+                if types[slot] != 0xff:
+                    wr(0x4957e0 + slot, bytes([args.hp]))
+        if args.terrain_atk >= 0 or args.terrain_def >= 0:
+            st = rd(0x495ab0, 0x38)
+            fl = rd(0x495af0, 0x38)
+            atk_slot = def_slot = -1
+            for slot in range(0x38):
+                t = types[slot]
+                if t == 0xff:
+                    continue
+                if (t & 0x80) == 0 and atk_slot < 0:
+                    atk_slot = slot
+                elif (t & 0x80) != 0 and def_slot < 0:
+                    def_slot = slot
+            if atk_slot >= 0 and def_slot >= 0:
+                ax, ay = st[atk_slot] & 0x1f, fl[atk_slot] & 0x1f
+                dx, dy = st[def_slot] & 0x1f, fl[def_slot] & 0x1f
+                if args.terrain_atk >= 0:
+                    wr(0x481a80 + ay * 32 + ax, bytes([args.terrain_atk & 0x0f]))
+                    wr(0x481db3, bytes([args.terrain_atk & 0x0f]))
+                if args.terrain_def >= 0:
+                    wr(0x481a80 + dy * 32 + dx, bytes([args.terrain_def & 0x0f]))
+                    wr(0x481db4, bytes([args.terrain_def & 0x0f]))
+                wr(0x481dbc, bytes([0]))
 
         for _ in range(22):
             tap(LEFT, gap=0.08)
@@ -241,14 +274,15 @@ def main():
 
         os.makedirs(OUT, exist_ok=True)
         frame_dir = os.path.join(OUT, args.tag + '_frames')
-        if args.frames:
+        if args.frames or args.frame_times:
             os.makedirs(frame_dir, exist_ok=True)
+        shot_times = [float(v) for v in args.frame_times.split(',') if v.strip()]
 
         samples = []
         stop = threading.Event()
         idx = [0]
 
-        def save_frame(i):
+        def save_frame(i, name=None):
             try:
                 pal = dm.read(h, base, 0x480f20, 4 + 256 * 4)
                 fb = dm.read_abs(h, struct.unpack('<I', dm.read(h, base, 0x480f18, 4))[0], 704 * 544)
@@ -261,7 +295,7 @@ def main():
                 im = Image.frombytes('P', (704, 544), fb).transpose(Image.FLIP_TOP_BOTTOM)
                 im = im.crop((32, 32, 672, 512))
                 im.putpalette(bytes(rgb))
-                im.convert('RGB').save(os.path.join(frame_dir, 'f%04d.png' % i))
+                im.convert('RGB').save(os.path.join(frame_dir, name or ('f%04d.png' % i)))
             except Exception:
                 pass
 
@@ -279,10 +313,14 @@ def main():
                     break
                 snap = (objs, q0, q1, bank, n)
                 if snap != last:
-                    samples.append((round(time.time() - tstart, 4), snap))
+                    ts = round(time.time() - tstart, 4)
+                    samples.append((ts, snap))
                     last = snap
                     if args.frames:
                         save_frame(idx[0])
+                    if shot_times:
+                        while shot_times and ts >= shot_times[0]:
+                            save_frame(idx[0], 't%.2f.png' % shot_times.pop(0))
                     idx[0] += 1
                 time.sleep(0.001)
 
