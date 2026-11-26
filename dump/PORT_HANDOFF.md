@@ -360,6 +360,15 @@ Unit properties (labels *and* values) are set at **32 px**, double the old
   (`horizontal.png`), bank 10 green (`horizontal_green.png`), bank 12 used-up
   grey (`horizontal_used.png`), all generated from map row-4 tile `160+type`.
   Flipped variants are built at load just like the blue icon.
+* **Movement vs attack**: moving sets `Unit::moved`, not `acted`.  A moved
+  direct-fire unit stays selectable and keeps its adjacent targets (also after
+  selecting another unit and coming back); a moved indirect/artillery unit
+  loses all targets.  `acted` is set only when the attack resolves or when no
+  legal target remains, and is reset at the start of that side's turn.
+* **AI factories**: at the end of the enemy turn the AI releases one stored
+  roster unit from an owned factory onto a free adjacent cell (same terrain
+  rules as player deployment), slides it in, and syncs the garrison count.
+  Verified on CYRANO factory 1: `[AI deploy] GX-87 Kilroy at 14,3`.
 
 ### Key code
 

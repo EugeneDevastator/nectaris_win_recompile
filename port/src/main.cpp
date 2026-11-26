@@ -3217,6 +3217,7 @@ int main(int argc, char** argv) {
     int aiAnimSlot = -1;
     float aiAnimT = 0.0f, aiAnimDur = 0.13f;
     float aiFromX = 0, aiFromY = 0, aiToX = 0, aiToY = 0;
+    bool aiDeployedThisTurn = false;
 
     struct Fx { float t; float x, y; int dmg; bool onDefender; };
     std::vector<Fx> fx;
@@ -3237,14 +3238,33 @@ int main(int argc, char** argv) {
         aiPathIdx = 0;
         aiAnimating = false;
         aiAnimSlot = -1;
+        aiDeployedThisTurn = false;
+    };
+
+    // Direct-fire units may attack after moving; indirect (artillery) attacks
+    // require the unit to have stayed put this turn.
+    auto availableTargets = [&](int slot) {
+        std::vector<int> out = attackable(gMission, slot);
+        if (slot < 0 || slot >= (int)gMission.units.size()) return out;
+        const Unit& u = gMission.units[slot];
+        if (u.moved) {
+            out.erase(std::remove_if(out.begin(), out.end(), [&](int t) {
+                return hexDistance(u.x, u.y, gMission.units[t].x,
+                                   gMission.units[t].y) != 1;
+            }), out.end());
+        }
+        return out;
     };
 
     auto selectUnit = [&](int slot) {
         selected = slot;
         inspect = -1;
-        reach = reachable(gMission, slot);
-        targets = attackable(gMission, slot);
-        showReach = true;
+        const Unit& u = gMission.units[slot];
+        bool canMove = !u.acted && !u.moved;
+        if (canMove) reach = reachable(gMission, slot);
+        else reach.assign(gMission.w * gMission.h, 1 << 29);
+        targets = availableTargets(slot);
+        showReach = canMove;
     };
 
     auto say = [&](const std::string& s) {
@@ -3481,6 +3501,77 @@ int main(int argc, char** argv) {
         std::cout << "[ai] " << gTypes[u.type].name << " "
                   << u.x << "," << u.y << " path " << aiPath.size() << std::endl;
         return true;
+    };
+
+    // Enemy factories release one stored unit per turn onto a free adjacent
+    // cell.  Deployed units are spent for this turn, like player deployments.
+    auto aiDeploy = [&]() -> bool {
+        for (Factory& f : gMission.factories) {
+            if (f.owner != 1 || f.roster.empty()) continue;
+            for (int si = 0; si < (int)f.roster.size(); ++si) {
+                int type = f.roster[si];
+                if (type < 0 || type >= (int)gTypes.size()) continue;
+                const UnitType& ut = gTypes[type];
+                int bx = -1, by = -1;
+                for (int d = 0; d < 6 && bx < 0; ++d) {
+                    int nx, ny;
+                    hexNeighbor(f.x, f.y, d, nx, ny);
+                    if (!inBounds(gMission, nx, ny)) continue;
+                    if (unitAt(gMission, nx, ny) >= 0) continue;
+                    bool ok;
+                    if (ut.airborne() || ut.moveClass == 4) {
+                        ok = true;
+                    } else {
+                        int terr = terrainAt(gMission, nx, ny);
+                        ok = terr != 0 && terr != 4 &&
+                             (moveCost(gMission, nx, ny, ut.moveClass) &
+                              kMoveImpassable) == 0;
+                    }
+                    if (ok) { bx = nx; by = ny; }
+                }
+                if (bx < 0) continue;
+
+                Unit u;
+                u.type = type;
+                u.owner = 1;
+                u.hp = 7;
+                u.rank = 0;
+                u.xp = 0;
+                u.acted = true;
+                u.moved = true;
+                u.facing = 90.0f;
+                u.x = bx;
+                u.y = by;
+                float fx, fy, cx, cy;
+                hexCenter(f.x, f.y, fx, fy);
+                hexCenter(bx, by, cx, cy);
+                float usz = mapUnitSize();
+                u.px = fx - usz / 2;
+                u.py = fy - usz / 2;
+                int idx = (int)gMission.units.size();
+                gMission.units.push_back(u);
+                unloadAnimSlot = idx;
+                unloadAnimT = 0.0f;
+                unloadSX = fx - usz / 2;
+                unloadSY = fy - usz / 2;
+                unloadTX = cx - usz / 2;
+                unloadTY = cy - usz / 2;
+                f.roster.erase(f.roster.begin() + si);
+                for (auto it = gMission.garrison.begin();
+                     it != gMission.garrison.end(); ++it) {
+                    if (it->type == type && it->x == f.x && it->y == f.y) {
+                        gMission.garrison.erase(it);
+                        break;
+                    }
+                }
+                if (IsSoundValid(sndMove)) PlaySound(sndMove);
+                std::cout << "[AI deploy] " << gTypes[type].name << " at "
+                          << bx << "," << by << " from factory " << f.group
+                          << "\n";
+                return true;
+            }
+        }
+        return false;
     };
 
     std::cout << "loaded " << gMission.name << " " << gMission.w << "x" << gMission.h
@@ -3774,7 +3865,10 @@ int main(int argc, char** argv) {
                 resetSelection();          // SPACE cancels a selection first
             } else if (currentPlayer == 0) {
                 currentPlayer = 1;
-                for (auto& u : gMission.units) u.acted = (u.owner == 0);
+                for (auto& u : gMission.units) {
+                    u.acted = (u.owner == 0);
+                    u.moved = (u.owner == 0);
+                }
                 std::cout << "[turn] enemy" << std::endl;
                 // Start the animated enemy turn; units act one at a time.
                 aiActive = true;
@@ -3784,10 +3878,14 @@ int main(int argc, char** argv) {
                 aiPathIdx = 0;
                 aiAnimating = false;
                 aiAnimSlot = -1;
+                aiDeployedThisTurn = false;
                 resetSelection();
             } else {
                 currentPlayer = 0;
-                for (auto& u : gMission.units) u.acted = (u.owner == 1);
+                for (auto& u : gMission.units) {
+                    u.acted = (u.owner == 1);
+                    u.moved = (u.owner == 1);
+                }
             }
         }
         if (IsKeyPressed(KEY_R)) {
@@ -3906,7 +4004,7 @@ int main(int argc, char** argv) {
                     startNextCombat();
                     sel.acted = true;
                     resetSelection();
-                } else if (inMap && hit < 0 && !sel.acted &&
+                } else if (inMap && hit < 0 && !sel.acted && !sel.moved &&
                            reach[my * gMission.w + mx] <= gTypes[sel.type].movePts) {
                     float ox, oy, nx2, ny2;
                     hexCenter(sel.x, sel.y, ox, oy);
@@ -3920,11 +4018,13 @@ int main(int argc, char** argv) {
                                   << " captured factory at " << mx << "," << my
                                   << std::endl;
                     }
-                    sel.acted = true;          // movement consumes the unit's turn
+                    sel.moved = true;      // movement used; direct units may still fire
                     inspect = -1;
                     if (IsSoundValid(sndMove)) PlaySound(sndMove);
-                    // after moving, allow an immediate attack
-                    targets = attackable(gMission, selected);
+                    // After moving, allow an immediate attack.  Indirect units
+                    // have no legal target once they moved, so they finish here.
+                    targets = availableTargets(selected);
+                    if (targets.empty()) sel.acted = true;
                     showReach = false;
                 } else if (hit >= 0) {
                     // Unit that is not a legal target: inspect it instead.
@@ -3971,12 +4071,21 @@ int main(int argc, char** argv) {
             } else if (aiSlot >= 0) {
                 aiFinishAction();
             } else if (!aiBeginAction()) {
-                // Enemy turn finished: hand control back to the player.
-                aiActive = false;
-                currentPlayer = 0;
-                for (auto& u : gMission.units) u.acted = (u.owner == 1);
-                resetSelection();
-                std::cout << "[turn] player" << std::endl;
+                // Release one stored unit from an enemy factory before the turn
+                // ends, then hand control back to the player.
+                if (!aiDeployedThisTurn && aiDeploy()) {
+                    aiDeployedThisTurn = true;
+                    aiWait = 0.45f;
+                } else {
+                    aiActive = false;
+                    currentPlayer = 0;
+                    for (auto& u : gMission.units) {
+                        u.acted = (u.owner == 1);
+                        u.moved = (u.owner == 1);
+                    }
+                    resetSelection();
+                    std::cout << "[turn] player" << std::endl;
+                }
             }
         }
 
@@ -4336,8 +4445,8 @@ int main(int argc, char** argv) {
                                WHITE);
             }
             uiText(t.name.c_str(), px + 82, y - 2, 15, kGold);
-            uiText(TextFormat("%s / %s", u.owner == 0 ? "ALLIED" : "ENEMY",
-                              u.acted ? "ACTED" : "READY"),
+            const char* state = u.acted ? "ACTED" : (u.moved ? "MOVED" : "READY");
+            uiText(TextFormat("%s / %s", u.owner == 0 ? "ALLIED" : "ENEMY", state),
                    px + 82, y + 34, 10, u.acted ? kDim : kStatus);
             for (int i = 0; i < u.hp; ++i)
                 DrawRectangle(px + 82 + i * 10, y + 58, 8, 7, accent);
