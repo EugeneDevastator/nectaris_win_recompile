@@ -54,6 +54,7 @@ static bool gFactoryDataLoaded = false;
 static std::vector<std::string> gTerrainNames;
 static std::vector<int> gRemap, gPanelTable, gPanelIndirect;
 static std::vector<Texture2D> gCombatPanels;
+static Texture2D gUnitFrameTex = {0};   // original yellow HP/number frame
 static Texture2D gFxBoom = {0}, gFxDebris = {0};
 // Combat audio: simulation bed + effect one-shots.
 static Sound gSndEntry = {0}, gSndShot = {0}, gSndShotHeavy = {0};
@@ -1594,7 +1595,7 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
     // Two square panels fill the width; the report bar takes what is left.
     float playW = std::min(W * 0.80f, H * 1.066667f);  // 512/480 of the screen height
     float playX = (W - playW) * 0.5f;
-    float topH  = H * 0.22f;      // name + terrain + support stack
+    float topH  = H * 0.26f;      // name + terrain + two full-width support rows
     bool ranged = v.ranged;
     float gap = ranged ? playW * 0.05f : 0.0f;
 
@@ -1635,10 +1636,10 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
     // and size them from the width, leaving a readable report bar below.
     float basePx = (gUiFontReady && gUiFont.baseSize > 0) ? (float)gUiFont.baseSize : 16.0f;
     int wantScale = 2;
-    float reportNeed = 5.0f * basePx * wantScale * 1.12f + 16.0f;
-    if (reportNeed > H * 0.34f) {
+    float reportNeed = 5.0f * basePx * wantScale * 1.12f + 32.0f;
+    if (reportNeed > H * 0.36f) {
         wantScale = 1;
-        reportNeed = 5.0f * basePx * 1.12f + 16.0f;
+        reportNeed = 5.0f * basePx * 1.12f + 24.0f;
     }
     float minReport = std::max(H * 0.14f, reportNeed);
     float panH = std::min(playW * 0.50f, H - topH - minReport);
@@ -1672,6 +1673,7 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
 
     Box headerInner = insetBox(headerBox, playW * 0.03f, tabH + topH * 0.05f,
                                playW * 0.03f, topH * 0.05f);
+    Box headerFull = headerInner;
     float gutter = playW * 0.02f;
     Box leftCol = cutLeft(headerInner, (headerInner.w - gutter) * 0.5f);
     cutLeft(headerInner, gutter);
@@ -1682,8 +1684,8 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
     rightCol = insetBox(rightCol, innerPad, 0, 0, 0);
 
     // Each side: [name | HP] / terrain / support, stacked vertically.
-    float nameRowH = topH * 0.34f;
-    float terrRowH = topH * 0.16f;
+    float nameRowH = topH * 0.28f;
+    float terrRowH = topH * 0.18f;
     Box lNameRow = cutTop(leftCol, nameRowH);
     Box rNameRow = cutTop(rightCol, nameRowH);
     Box lTerrRow = cutTop(leftCol, terrRowH);
@@ -1691,12 +1693,16 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
     Box lSupport = leftCol;
     Box rSupport = rightCol;
 
-    float hpS = std::min(nameRowH * 0.86f, topH * 0.32f);
+    // The original HP box is 44x56 (yellow frame around a navy number well).
+    float hpH = std::min(nameRowH * 0.98f, topH * 0.34f);
+    float hpW = hpH * (44.0f / 56.0f);
     float hpGap = playW * 0.015f;
-    Box lHp = cutRight(lNameRow, hpS);
+    Box lHp = cutRight(lNameRow, hpW);
     cutRight(lNameRow, hpGap);
-    Box rHp = cutLeft(rNameRow, hpS);
+    Box rHp = cutLeft(rNameRow, hpW);
     cutLeft(rNameRow, hpGap);
+    lHp.y += (lHp.h - hpH) * 0.5f; lHp.h = hpH;
+    rHp.y += (rHp.h - hpH) * 0.5f; rHp.h = hpH;
 
     auto textW = [&](const std::string& s, int size) {
         return gUiFontReady
@@ -1725,12 +1731,13 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
             DrawText(s, (int)x, (int)y, 16, c);
     };
 
-    int lNameSize = fitText(TL.name, lNameRow, (int)(topH * 0.24f), 8);
-    int rNameSize = fitText(TR.name, rNameRow, (int)(topH * 0.24f), 8);
-    drawTextAt(TL.name, lNameRow.x, lNameRow.y + (lNameRow.h - textH(lNameSize)) * 0.5f,
-               lNameSize, TXT);
-    drawTextAt(TR.name, rNameRow.x + rNameRow.w - textW(TR.name, rNameSize),
-               rNameRow.y + (rNameRow.h - textH(rNameSize)) * 0.5f, rNameSize, TXT);
+    int nameStart = (int)(topH * 0.24f);
+    int nameSize = std::min(fitText(TL.name, lNameRow, nameStart, 8),
+                            fitText(TR.name, rNameRow, nameStart, 8));
+    drawTextAt(TL.name, lNameRow.x, lNameRow.y + (lNameRow.h - textH(nameSize)) * 0.5f,
+               nameSize, TXT);
+    drawTextAt(TR.name, rNameRow.x + rNameRow.w - textW(TR.name, nameSize),
+               rNameRow.y + (rNameRow.h - textH(nameSize)) * 0.5f, nameSize, TXT);
 
     // Terrain name and the defence percentage that applies to this side.
     auto sideTerrainPct = [&](const CombatSide& s) {
@@ -1741,11 +1748,12 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
         std::string nm = (terr >= 0 && terr < (int)gTerrainNames.size())
                              ? gTerrainNames[terr] : "?";
         std::string pct = TextFormat("%+d%%", sideTerrainPct(s));
-        int size = 8;
-        while (size < 24 && textH(size + 1) <= area.h * 0.92f &&
-               textW(nm, size + 1) + textW(pct, size + 1) + area.h * 0.25f <= area.w)
-            ++size;
         float gapT = area.h * 0.25f;
+        int size = 16;   // 2x the original 16 px face
+        while (size > 8 &&
+               (textH(size) > area.h * 0.95f ||
+                textW(nm, size) + gapT + textW(pct, size) > area.w))
+            --size;
         float total = textW(nm, size) + gapT + textW(pct, size);
         float x = rightAlign ? (area.x + area.w - total) : area.x;
         drawTextAt(nm, x, area.y + (area.h - textH(size)) * 0.5f, size, DIM);
@@ -1756,19 +1764,32 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
     terrainLine(v.right, rTerrRow, true);
 
     auto hpBox = [&](const Box& b, int val) {
-        DrawRectangleRec({b.x, b.y, b.w, b.h}, PANEL);
-        DrawRectangleLinesEx({b.x, b.y, b.w, b.h},
-                             std::max(2.0f, topH * 0.030f), BORDER);
+        if (gUnitFrameTex.id) {
+            DrawTexturePro(gUnitFrameTex,
+                           {0, 0, (float)gUnitFrameTex.width, (float)gUnitFrameTex.height},
+                           {b.x, b.y, b.w, b.h}, {0, 0}, 0, WHITE);
+        } else {
+            DrawRectangleRec({b.x, b.y, b.w, b.h}, PANEL);
+            DrawRectangleLinesEx({b.x, b.y, b.w, b.h},
+                                 std::max(2.0f, topH * 0.030f), BORDER);
+        }
         const char* txt = TextFormat("%d", val);
-        float fs = b.h * 0.70f;
+        float fs = b.h * 0.80f;
         if (gUiFontReady) {
             int scale = (int)std::lround(fs / (double)gUiFont.baseSize);
             if (scale < 1) scale = 1;
             fs = (float)gUiFont.baseSize * scale;
             float sp = std::max(1.0f, (float)scale);
-            Vector2 m = MeasureTextEx(gUiFont, txt, fs, sp);
+            float scalePx = fs / (float)gUiFont.baseSize;
+            int gi = GetGlyphIndex(gUiFont, (unsigned char)txt[0]);
+            float inkW = (float)gUiFont.recs[gi].width * scalePx;
+            float inkH = (float)gUiFont.recs[gi].height * scalePx;
+            float offX = (float)gUiFont.glyphs[gi].offsetX * scalePx;
+            float offY = (float)gUiFont.glyphs[gi].offsetY * scalePx;
+            float inkLeft = b.x + (b.w - inkW) * 0.5f;
+            float inkTop = b.y + (b.h - inkH) * 0.5f;
             DrawTextEx(gUiFont, txt,
-                       {b.x + (b.w - m.x) * 0.5f, b.y + (b.h - m.y) * 0.5f},
+                       {inkLeft - offX, inkTop - offY},
                        fs, sp, BORDER);
         } else {
             DrawText(txt, (int)(b.x + b.w * 0.33f), (int)(b.y + b.h * 0.12f),
@@ -1828,53 +1849,58 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
     hpBox(rHp, impact ? nR1 : nR0);
 
     // Header separator between the terrain row and the support lists.
-    float ruleY = lSupport.y - std::max(3.0f, topH * 0.025f);
-    DrawLineEx({playX + playW * 0.02f, ruleY},
-               {playX + playW * 0.98f, ruleY}, 1.5f,
+    float supTop = lSupport.y;
+    float ruleY = supTop - std::max(3.0f, topH * 0.025f);
+    DrawLineEx({headerFull.x, ruleY},
+               {headerFull.x + headerFull.w, ruleY}, 1.5f,
                Color{255, 255, 255, 45});
 
     // ----- support contributor lists (vertical remainder of each column)
     auto supportRow = [&](const CombatSide& side, const Box& area) {
         bool attacker = (side.unit == v.r.atkSlot);
         const auto& list = attacker ? v.r.supportAtkUnits : v.r.supportDefUnits;
-        int scale = 1;
+        // Secondary text is 2x the original 16 px font; keep integer scaling.
+        int scale = 2;
         if (gUiFontReady && gUiFont.baseSize > 0) {
-            // Two wrapped rows must fit the remaining header height.
-            scale = (int)(area.h / (2.0f * 1.55f) / (float)gUiFont.baseSize);
-            scale = std::clamp(scale, 1, 3);
-            while (scale > 1 && (float)gUiFont.baseSize * scale * 1.55f * 2 > area.h)
+            while (scale > 1 && (float)gUiFont.baseSize * scale * 1.10f > area.h)
                 --scale;
         }
-        float fs = gUiFontReady ? (float)gUiFont.baseSize * scale : 16.0f;
-        float sp = gUiFontReady ? (float)scale : 1.0f;
+        float fs = gUiFontReady ? (float)gUiFont.baseSize * scale : 32.0f;
+        float sp = gUiFontReady ? (float)scale : 2.0f;
         auto rowText = [&](float x, float y, const char* s, Color c) {
             if (gUiFontReady) DrawTextEx(gUiFont, s, {x, y}, fs, sp, c);
-            else DrawText(s, (int)x, (int)y, 16, c);
+            else DrawText(s, (int)x, (int)y, 32, c);
         };
         auto rowWidth = [&](const char* s) {
             return gUiFontReady ? MeasureTextEx(gUiFont, s, fs, sp).x
-                                : (float)MeasureText(s, 16);
+                                : (float)MeasureText(s, 32);
         };
+        std::vector<const SupportContribution*> allies;
         int total = 0;
-        for (const SupportContribution& c : list) total += c.value;
-        float y = area.y + 2.0f;
-        const float rowH = fs * 1.55f;
-        const float sz = fs * 1.40f;
+        for (const SupportContribution& c : list) {
+            total += c.value;
+            if (c.slot < 0 || c.slot >= (int)gMission.units.size()) continue;
+            if (gMission.units[c.slot].owner == side.team) allies.push_back(&c);
+        }
+        float y = area.y + 1.0f;
+        const float rowH = fs * 1.15f;
+        const float sz = fs * 1.05f;
+        const int maxRows = (rowH * 2.0f <= area.h + 0.5f) ? 2 : 1;
+        y = area.y + std::max(0.0f, (area.h - rowH * (float)maxRows) * 0.5f);
         const char* head = TextFormat("%s +%d", attacker ? "ASUP" : "DSUP", total);
         rowText(area.x, y, head, total > 0 ? BORDER : DIM);
         float x = area.x + rowWidth(head) + 10.0f;
         int row = 0, count = 0;
-        for (const SupportContribution& c : list) {
-            if (c.slot < 0 || c.slot >= (int)gMission.units.size()) continue;
+        for (const SupportContribution* pc : allies) {
+            const SupportContribution& c = *pc;
             const Unit& N = gMission.units[c.slot];
-            if (N.owner != side.team) continue;
             const char* txt = TextFormat("x%d +%d", c.count, c.value);
             float tw = rowWidth(txt);
             float itemW = sz + 3 + tw + 8;
             if (itemW > area.w) break;
             if (x + itemW > area.x + area.w) {
-                if (row >= 1 || y + rowH * 2 > area.y + area.h) break;
-                row = 1;
+                if (row >= maxRows - 1) break;
+                row = maxRows - 1;
                 x = area.x;
                 y += rowH;
             }
@@ -1888,13 +1914,26 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
             x += tw + 8.0f;
             ++count;
         }
-        if (!count) rowText(x, y, "none", DIM);
+        if (allies.empty()) {
+            rowText(x, y, "none", DIM);
+        } else if (count < (int)allies.size()) {
+            const char* more = TextFormat("+%d", (int)allies.size() - count);
+            if (x + rowWidth(more) <= area.x + area.w) rowText(x, y, more, DIM);
+        }
     };
-    supportRow(v.left, lSupport);
-    supportRow(v.right, rSupport);
-    // Centre divider keeps the two header columns visually separate.
+    // Support lists span the full header width, one row per side, so the 32 px
+    // text can show every contributor without running into the other side.
+    float supAvail = headerFull.y + headerFull.h - supTop;
+    float supH = std::max(1.0f,
+                          std::min(uiFontPixels(16) * 1.20f, supAvail * 0.5f));
+    Box lSup{headerFull.x, supTop, headerFull.w, supH};
+    Box rSup{headerFull.x, supTop + supH, headerFull.w, supH};
+    supportRow(v.left, lSup);
+    supportRow(v.right, rSup);
+    // Centre divider only spans the name/terrain rows; the support rows are
+    // full-width and labelled.
     DrawLineEx({playX + playW * 0.50f, headerBox.y + tabH},
-               {playX + playW * 0.50f, headerBox.y + headerBox.h - 2.0f},
+               {playX + playW * 0.50f, ruleY},
                1.5f, Color{255, 255, 255, 35});
 
     // ----- middle: terrain close-ups + ride-in + simultaneous fire
@@ -2045,7 +2084,32 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
             float f = span > 1e-6f ? (lt - a.x) / span : 1.0f;
             out = {a.y + (b.y - a.y) * f, a.z + (b.z - a.z) * f};
         };
-        for (int i = 0; i < count0; ++i) {
+        // Draw far slots first so closer units (larger depth) overlay them.
+        auto currentDepth = [&](int i) {
+            Vector2 p, baseSlot;
+            if (!curves.empty()) {
+                const EntryCurve& cv = curves[std::min<int>(i, (int)curves.size() - 1)];
+                curveAt(cv, t - cv.t0, p);
+                baseSlot = cv.slot;
+            } else {
+                float sx = mirror ? (1.0f - FORM[i][0]) : FORM[i][0];
+                p = {sx, FORM[i][1]};
+                baseSlot = p;
+            }
+            if (!persp.empty()) {
+                const PerspSlot& ps = persp[std::min<int>(i, (int)persp.size() - 1)];
+                p.y += ps.slot.y - baseSlot.y;
+            }
+            return p.y;
+        };
+        std::vector<int> drawOrder;
+        drawOrder.reserve(count0);
+        for (int i = 0; i < count0; ++i) drawOrder.push_back(i);
+        std::stable_sort(drawOrder.begin(), drawOrder.end(),
+                         [&](int a, int b) { return currentDepth(a) < currentDepth(b); });
+
+        for (int oi = 0; oi < count0; ++oi) {
+            int i = drawOrder[oi];
             if (i >= count1) {
                 float death = killArrival(mirror ? 1 : 0, i - count1);
                 if (t >= death) continue;      // slot already exploded
@@ -2486,7 +2550,8 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
     std::snprintf(m4, sizeof(m4), "TER %d/%d", r.terrainDefA, r.terrainDefD);
     std::snprintf(m5, sizeof(m5), "MODE %s", v.ranged ? "RANGED" : "DIRECT");
 
-    const float colGap = playW * 0.025f;
+    const float colGap = playW * 0.02f;
+    const float colW = (reportInner.w - 2.0f * colGap) / 3.0f;
     const float avail = reportInner.w;
     float wL = 0, wC = 0, wR = 0;
     auto measureCols = [&](int s) {
@@ -2506,6 +2571,7 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
         float lh = basePx * s * 1.12f;
         measureCols(s);
         if (5.0f * lh + 10.0f <= reportInner.h &&
+            std::max(std::max(wL, wC), wR) <= colW &&
             wL + wC + wR + 2.0f * colGap <= avail) {
             rscale = s;
             break;
@@ -2519,15 +2585,15 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
         else DrawText(s, (int)x, (int)y, (int)rfs, c);
     };
 
-    // Columns are laid out from their measured widths, never from fixed
-    // fractions, so long values cannot run into the next group.
+    // Three equal columns span the full report width; each header is centred
+    // inside its column and the values start at the column's left edge.
     measureCols(rscale);
     float colL = reportInner.x;
-    float colC = colL + wL + colGap;
-    float colR = colC + wC + colGap;
-    Box debugL{colL, reportInner.y, wL, reportInner.h};
-    Box debugC{colC, reportInner.y, wC, reportInner.h};
-    Box debugR{colR, reportInner.y, wR, reportInner.h};
+    float colC = colL + colW + colGap;
+    float colR = colC + colW + colGap;
+    Box debugL{colL, reportInner.y, colW, reportInner.h};
+    Box debugC{colC, reportInner.y, colW, reportInner.h};
+    Box debugR{colR, reportInner.y, colW, reportInner.h};
     float y0 = reportInner.y +
                std::max(0.0f, (reportInner.h - 5.0f * lh) * 0.5f);
 
@@ -2535,9 +2601,9 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
         return gUiFontReady ? MeasureTextEx(gUiFont, s, rfs, rsp).x
                             : (float)MeasureText(s, (int)rfs);
     };
-    line(colL + (wL - lineW("PLAYER")) * 0.5f, y0, "PLAYER", BORDER);
-    line(colC + (wC - lineW("SIMULATION")) * 0.5f, y0, "SIMULATION", BORDER);
-    line(colR + (wR - lineW("ENEMY")) * 0.5f, y0, "ENEMY", BORDER);
+    line(colL + (colW - lineW("PLAYER")) * 0.5f, y0, "PLAYER", BORDER);
+    line(colC + (colW - lineW("SIMULATION")) * 0.5f, y0, "SIMULATION", BORDER);
+    line(colR + (colW - lineW("ENEMY")) * 0.5f, y0, "ENEMY", BORDER);
     y0 += lh;
 
     line(colL, y0, l1, TXT);
@@ -2570,10 +2636,8 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
                              1.0f, SKYBLUE);
         DrawRectangleLinesEx({rTerrRow.x, rTerrRow.y, rTerrRow.w, rTerrRow.h},
                              1.0f, SKYBLUE);
-        DrawRectangleLinesEx({lSupport.x, lSupport.y, lSupport.w, lSupport.h},
-                             1.0f, PINK);
-        DrawRectangleLinesEx({rSupport.x, rSupport.y, rSupport.w, rSupport.h},
-                             1.0f, PINK);
+        DrawRectangleLinesEx({lSup.x, lSup.y, lSup.w, lSup.h}, 1.0f, PINK);
+        DrawRectangleLinesEx({rSup.x, rSup.y, rSup.w, rSup.h}, 1.0f, PINK);
         DrawRectangleLinesEx({axPanel, panY, panW, panH}, 1.0f, LIME);
         DrawRectangleLinesEx({dxPanel, panY, panW, panH}, 1.0f, LIME);
         DrawRectangleLinesEx({reportBox.x, reportBox.y, reportBox.w, reportBox.h},
@@ -2869,6 +2933,8 @@ int main(int argc, char** argv) {
 
     Texture2D playerTex = LoadTexture((gAssetDir + "art/units_bank09.png").c_str());
     Texture2D enemyTex = LoadTexture((gAssetDir + "art/units_bank10.png").c_str());
+    gUnitFrameTex = LoadTexture((gAssetDir + "art/ui_unit_frame.png").c_str());
+    if (gUnitFrameTex.id) SetTextureFilter(gUnitFrameTex, TEXTURE_FILTER_POINT);
     Texture2D bgTex = {0};
     if (!gMission.background.empty()) {
         std::string bgPath = gAssetDir + gMission.background;
@@ -4223,8 +4289,23 @@ int main(int argc, char** argv) {
             DrawPolyLinesEx({cx, cy}, 6, gHexSize - 2, 0, 2.5f, kRed);
         }
 
-        for (const auto& u : gMission.units) {
-            if (u.hp <= 0 || u.carried) continue;
+        // Far map units first, nearer (lower on screen) units overlay them.
+        std::vector<int> mapOrder;
+        for (int i = 0; i < (int)gMission.units.size(); ++i) {
+            const Unit& u = gMission.units[i];
+            if (u.hp > 0 && !u.carried) mapOrder.push_back(i);
+        }
+        auto mapDepth = [&](int i) {
+            const Unit& u = gMission.units[i];
+            if (u.py >= 0) return u.py + usz / 2;
+            float cx, cy;
+            hexCenter(u.x, u.y, cx, cy);
+            return cy;
+        };
+        std::stable_sort(mapOrder.begin(), mapOrder.end(),
+                         [&](int a, int b) { return mapDepth(a) < mapDepth(b); });
+        for (int ui : mapOrder) {
+            const Unit& u = gMission.units[ui];
             drawUnitSprite(gMission, u, playerTex, enemyTex);
             float cx, cy;
             hexCenter(u.x, u.y, cx, cy);
@@ -4557,6 +4638,7 @@ int main(int argc, char** argv) {
 
     UnloadTexture(playerTex);
     UnloadTexture(enemyTex);
+    if (gUnitFrameTex.id) UnloadTexture(gUnitFrameTex);
     if (bgTex.id != 0) UnloadTexture(bgTex);
     if (gBackdrop.id != 0) UnloadTexture(gBackdrop);
     UnloadSound(sndSelect);

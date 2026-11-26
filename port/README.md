@@ -378,18 +378,25 @@ picking all use the same hex geometry.
 Every resolved attack switches to a battle screen modeled on the original:
 
 * **exact original geometry**: a **512×480 playfield centred in the 640×480
-  screen** (black pillars each side). The header takes 22% of the height, the
+  screen** (black pillars each side). The header takes 26% of the height, the
   terrain panels fill the middle, and the report bar takes the rest (with a
   measured minimum). The combat field is exactly two
   **128×128 logical (256×256 pixel) panels** side by side.
 * **hierarchical layout**: every region is a nested box (header → side columns
-  → name/terrain/support rows; report → three measured columns). Text is
-  measured and scaled to fit its own box, so long names, terrain lines and
-  support lists cannot overlap each other or the panels.
-* **top bar**: both unit names and the yellow **HP boxes** (initial HP + 1).
-  Below each name is the terrain line: terrain name plus that side's effective
-  defence percentage (0% for aircraft, which ignore terrain). Under the rule is
-  the support list, wrapping to at most two measured rows.
+  → name/terrain rows → full-width support rows; report → three equal
+  columns). Text is measured and scaled to fit its own box, so long names,
+  terrain lines and support lists cannot overlap each other or the panels.
+* **top bar**: both unit names share one fitted font size. The HP number well
+  uses the original 44×56 yellow frame sprite
+  (`assets/art/ui_unit_frame.png`) with the digit centred. Below each name is
+  the terrain line: terrain name plus that side's effective defence percentage
+  (0% for aircraft). The ASUP/DSUP rows span the full header width at 2x the
+  original font, with a `+N` marker if a list still overflows.
+* **report**: three equal columns across the full width, 2x the original font,
+  headers centred and values aligned to each column edge.
+* **draw order**: combat armies and world-map units are sorted by current
+  screen depth each frame; far units draw first, nearer units overlay them
+  (fixes overlapping giants).
 * **middle**: the two original combat terrain close-ups, drawn at native
   aspect (terrain texture fills every pixel - no black bands). The PNGs are
   opaque (their transparent areas were pre-filled) and the two panels overlap

@@ -231,14 +231,21 @@ Sound playback is guarded by `IsSoundValid`, so headless/no-audio runs work.
 The battle screen is laid out with nested boxes (`Box` + `cutTop` / `cutLeft` /
 `cutRight` / `insetBox`), not fixed fractions:
 
-* root: header (`22%` height) / terrain panels / report bar;
+* root: header (`26%` height) / terrain panels / report bar;
 * header: two mirrored columns, each a vertical stack of
-  **name + HP box** (horizontal, HP toward the centre), **terrain line**
-  (`name  +N%`), separator rule, and the **support list**;
-* support entries wrap to at most two measured rows and are clipped by the
-  column width, so long lists never run into the neighbouring side;
-* report: three columns sized from the measured text widths, vertically
-  centred, with a scale step-down if the lines or widths do not fit.
+  **name + HP box** (horizontal, HP toward the centre), then a **terrain line**
+  (`name  +N%`); both names use the same fitted font size;
+* the HP number well uses the original 44x56 yellow frame sprite
+  (`assets/art/ui_unit_frame.png`, extracted from the 640x480 battle
+  framebuffer by `tools/export_unit_frame.py`) with the digit centred on its
+  ink bounds;
+* support lists sit below the columns as **two full-width rows** (`ASUP` then
+  `DSUP`) at 2x the original 16 px font, so the larger text can show every
+  contributor; overflow adds a `+N` marker;
+* report: three **equal** columns spanning the full width, each header centred
+  and values starting at the column edge, at 2x the original font;
+* all unit drawing (combat and world map) is depth-sorted: far units first,
+  nearer units overlay them (giants included).
 
 The terrain line uses `gTerrainNames[side.terrain]` and the effective defence
 percentage from the combat result (`terrainDefA` / `terrainDefD`, which is 0 for
