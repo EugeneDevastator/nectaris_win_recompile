@@ -1585,7 +1585,7 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
     int W = GetScreenWidth(), H = GetScreenHeight();
     const Color NAVY = {0, 0, 80, 255};
     const Color PANEL = {0, 0, 64, 255};
-    const Color BORDER = {224, 192, 24, 255};
+    const Color BORDER = {248, 248, 0, 255};   // original game UI yellow
     const Color TXT = {236, 236, 240, 255};
     const Color DIM = {168, 168, 178, 255};
     ClearBackground(BLACK);
@@ -1855,26 +1855,10 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
                {headerFull.x + headerFull.w, ruleY}, 1.5f,
                Color{255, 255, 255, 45});
 
-    // ----- support contributor lists (vertical remainder of each column)
+    // ----- support contributor lists (one per side, inside that side's column)
     auto supportRow = [&](const CombatSide& side, const Box& area) {
         bool attacker = (side.unit == v.r.atkSlot);
         const auto& list = attacker ? v.r.supportAtkUnits : v.r.supportDefUnits;
-        // Secondary text is 2x the original 16 px font; keep integer scaling.
-        int scale = 2;
-        if (gUiFontReady && gUiFont.baseSize > 0) {
-            while (scale > 1 && (float)gUiFont.baseSize * scale * 1.10f > area.h)
-                --scale;
-        }
-        float fs = gUiFontReady ? (float)gUiFont.baseSize * scale : 32.0f;
-        float sp = gUiFontReady ? (float)scale : 2.0f;
-        auto rowText = [&](float x, float y, const char* s, Color c) {
-            if (gUiFontReady) DrawTextEx(gUiFont, s, {x, y}, fs, sp, c);
-            else DrawText(s, (int)x, (int)y, 32, c);
-        };
-        auto rowWidth = [&](const char* s) {
-            return gUiFontReady ? MeasureTextEx(gUiFont, s, fs, sp).x
-                                : (float)MeasureText(s, 32);
-        };
         std::vector<const SupportContribution*> allies;
         int total = 0;
         for (const SupportContribution& c : list) {
@@ -1882,22 +1866,59 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
             if (c.slot < 0 || c.slot >= (int)gMission.units.size()) continue;
             if (gMission.units[c.slot].owner == side.team) allies.push_back(&c);
         }
-        float y = area.y + 1.0f;
+        std::string head = TextFormat("%s +%d", attacker ? "ASUP" : "DSUP", total);
+        std::vector<std::string> labels;
+        labels.reserve(allies.size());
+        for (const SupportContribution* pc : allies)
+            labels.push_back(TextFormat("x%d +%d", pc->count, pc->value));
+
+        auto fontPx = [&](int sc) {
+            return gUiFontReady ? (float)gUiFont.baseSize * sc : 32.0f;
+        };
+        auto spacing = [&](int sc) { return gUiFontReady ? (float)sc : 2.0f; };
+        auto strW = [&](const std::string& s, float f, float sp) {
+            return gUiFontReady ? MeasureTextEx(gUiFont, s.c_str(), f, sp).x
+                                : (float)MeasureText(s.c_str(), (int)f);
+        };
+        // Shrink the secondary text until the whole list fits this side's
+        // panel on one line (label, icons and every contributor).
+        int scale = 2;
+        float fs = fontPx(scale);
+        float sp = spacing(scale);
+        auto oneLineW = [&](float f, float s) {
+            float w = strW(head, f, s) + f * 0.30f;
+            float icon = f * 0.95f;
+            for (const std::string& t : labels)
+                w += icon + f * 0.12f + strW(t, f, s) + f * 0.30f;
+            return w;
+        };
+        while (gUiFontReady && scale > 1 &&
+               (oneLineW(fs, sp) > area.w || fs * 1.15f > area.h)) {
+            --scale;
+            fs = fontPx(scale);
+            sp = spacing(scale);
+        }
+        auto rowText = [&](float x, float y, const std::string& s, Color c) {
+            if (gUiFontReady) DrawTextEx(gUiFont, s.c_str(), {x, y}, fs, sp, c);
+            else DrawText(s.c_str(), (int)x, (int)y, (int)fs, c);
+        };
         const float rowH = fs * 1.15f;
-        const float sz = fs * 1.05f;
-        const int maxRows = (rowH * 2.0f <= area.h + 0.5f) ? 2 : 1;
-        y = area.y + std::max(0.0f, (area.h - rowH * (float)maxRows) * 0.5f);
-        const char* head = TextFormat("%s +%d", attacker ? "ASUP" : "DSUP", total);
+        const float sz = fs * 0.95f;
+        const float inkH = fs * 0.75f;   // visible glyph height at this size
+        const float gapHead = fs * 0.30f;
+        const float gapIcon = fs * 0.12f;
+        const float gapItem = fs * 0.30f;
+        int maxRows = (rowH * 2.0f <= area.h + 0.5f) ? 2 : 1;
+        float y = area.y + std::max(0.0f, (area.h - rowH * (float)maxRows) * 0.5f);
         rowText(area.x, y, head, total > 0 ? BORDER : DIM);
-        float x = area.x + rowWidth(head) + 10.0f;
+        float x = area.x + strW(head, fs, sp) + gapHead;
         int row = 0, count = 0;
-        for (const SupportContribution* pc : allies) {
-            const SupportContribution& c = *pc;
+        for (size_t ai = 0; ai < allies.size(); ++ai) {
+            const SupportContribution& c = *allies[ai];
             const Unit& N = gMission.units[c.slot];
-            const char* txt = TextFormat("x%d +%d", c.count, c.value);
-            float tw = rowWidth(txt);
-            float itemW = sz + 3 + tw + 8;
-            if (itemW > area.w) break;
+            const std::string& txt = labels[ai];
+            float tw = strW(txt, fs, sp);
+            float itemW = sz + gapIcon + tw + gapItem;
             if (x + itemW > area.x + area.w) {
                 if (row >= maxRows - 1) break;
                 row = maxRows - 1;
@@ -1906,34 +1927,39 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
             }
             Texture2D& tex = mapUnitTexture(N.type, side.team, false, false);
             if (tex.id) {
+                // Map icons have transparent padding at the top; centre the
+                // icon square on the text's visible glyph band so the icon and
+                // its "xN +V" label share one line.
+                float iconY = y + (inkH - sz) * 0.5f;
                 DrawTexturePro(tex, {0, 0, (float)tex.width, (float)tex.height},
-                               {x, y, sz, sz}, {0, 0}, 0, WHITE);
+                               {x, iconY, sz, sz}, {0, 0}, 0, WHITE);
             }
-            x += sz + 3;
+            x += sz + gapIcon;
             rowText(x, y, txt, BORDER);
-            x += tw + 8.0f;
+            x += tw + gapItem;
             ++count;
         }
         if (allies.empty()) {
             rowText(x, y, "none", DIM);
         } else if (count < (int)allies.size()) {
-            const char* more = TextFormat("+%d", (int)allies.size() - count);
-            if (x + rowWidth(more) <= area.x + area.w) rowText(x, y, more, DIM);
+            std::string more = TextFormat("+%d", (int)allies.size() - count);
+            if (x + strW(more, fs, sp) <= area.x + area.w)
+                rowText(x, y, more, DIM);
         }
     };
-    // Support lists span the full header width, one row per side, so the 32 px
-    // text can show every contributor without running into the other side.
+    // Each support list lives in its own half of the header, under the unit
+    // panel it belongs to.
     float supAvail = headerFull.y + headerFull.h - supTop;
     float supH = std::max(1.0f,
                           std::min(uiFontPixels(16) * 1.20f, supAvail * 0.5f));
-    Box lSup{headerFull.x, supTop, headerFull.w, supH};
-    Box rSup{headerFull.x, supTop + supH, headerFull.w, supH};
+    Box lSup{leftCol.x, supTop, leftCol.w, supH};
+    Box rSup{rightCol.x, supTop, rightCol.w, supH};
     supportRow(v.left, lSup);
     supportRow(v.right, rSup);
-    // Centre divider only spans the name/terrain rows; the support rows are
-    // full-width and labelled.
+    // Centre divider between the two halves; the support rows now live inside
+    // their own column, so the divider spans the whole header.
     DrawLineEx({playX + playW * 0.50f, headerBox.y + tabH},
-               {playX + playW * 0.50f, ruleY},
+               {playX + playW * 0.50f, headerBox.y + headerBox.h},
                1.5f, Color{255, 255, 255, 35});
 
     // ----- middle: terrain close-ups + ride-in + simultaneous fire
@@ -2522,6 +2548,13 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
         };
         if (leftFires) impact(toL, nL0, killedR, R.type, v.left.damage, 1);
         if (rightFires) impact(toR, nR0, killedL, L.type, v.right.damage, 0);
+    }
+
+    // Ranged combat separates the two panels with a physical screen divider.
+    // Paint it opaque over every projectile/muzzle flash so shots vanish into
+    // the seam and reappear on the far side, as in the original game.
+    if (ranged && gap > 0.0f) {
+        DrawRectangleRec({axPanel + panW, panY, gap, panH}, BLACK);
     }
 
     // ----- bottom: persistent simulation report (integer-scaled original font)
