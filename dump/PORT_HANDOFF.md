@@ -226,6 +226,27 @@ Sound playback is guarded by `IsSoundValid`, so headless/no-audio runs work.
 
 ---
 
+## Combat screen layout (hierarchical)
+
+The battle screen is laid out with nested boxes (`Box` + `cutTop` / `cutLeft` /
+`cutRight` / `insetBox`), not fixed fractions:
+
+* root: header (`22%` height) / terrain panels / report bar;
+* header: two mirrored columns, each a vertical stack of
+  **name + HP box** (horizontal, HP toward the centre), **terrain line**
+  (`name  +N%`), separator rule, and the **support list**;
+* support entries wrap to at most two measured rows and are clipped by the
+  column width, so long lists never run into the neighbouring side;
+* report: three columns sized from the measured text widths, vertically
+  centred, with a scale step-down if the lines or widths do not fit.
+
+The terrain line uses `gTerrainNames[side.terrain]` and the effective defence
+percentage from the combat result (`terrainDefA` / `terrainDefD`, which is 0 for
+aircraft).  The surround diagram tags are left/right aligned inside their box
+so `DEF` and `SURR` cannot collide.
+
+---
+
 ## World-map UI (mock-based, Nov 2026)
 
 Source design: `ui_mocks/nectarisUntitled.png`.  The mock is a layout/style

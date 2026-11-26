@@ -378,10 +378,18 @@ picking all use the same hex geometry.
 Every resolved attack switches to a battle screen modeled on the original:
 
 * **exact original geometry**: a **512×480 playfield centred in the 640×480
-  screen** (black pillars each side). Top bar = 20% height, terrain field from
-  30% to 83.3%, bottom bar = 16.7%. The combat field is exactly two
+  screen** (black pillars each side). The header takes 22% of the height, the
+  terrain panels fill the middle, and the report bar takes the rest (with a
+  measured minimum). The combat field is exactly two
   **128×128 logical (256×256 pixel) panels** side by side.
+* **hierarchical layout**: every region is a nested box (header → side columns
+  → name/terrain/support rows; report → three measured columns). Text is
+  measured and scaled to fit its own box, so long names, terrain lines and
+  support lists cannot overlap each other or the panels.
 * **top bar**: both unit names and the yellow **HP boxes** (initial HP + 1).
+  Below each name is the terrain line: terrain name plus that side's effective
+  defence percentage (0% for aircraft, which ignore terrain). Under the rule is
+  the support list, wrapping to at most two measured rows.
 * **middle**: the two original combat terrain close-ups, drawn at native
   aspect (terrain texture fills every pixel - no black bands). The PNGs are
   opaque (their transparent areas were pre-filled) and the two panels overlap
