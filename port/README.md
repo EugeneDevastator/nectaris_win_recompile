@@ -381,8 +381,8 @@ layout coordinate space always match exactly, which keeps the sidebar and map
 frame aligned after a resize.
 
 Infantry units use the six-frame directional impostor set for a two-frame walk
-cycle while they slide between hexes; the phase freezes on the last frame when
-the unit stops. Other unit classes keep the rotated map-icon sprites.
+cycle while their combat slot slides in; the phase freezes on the last frame
+when the unit stops. Other unit classes keep their static directional frames.
 
 ## Combat screen
 

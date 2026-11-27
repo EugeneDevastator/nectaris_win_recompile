@@ -1065,38 +1065,6 @@ static Texture2D& mapUnitTexture(int type, int owner, bool acted, bool flipped) 
     return flipped ? gUnitMapFlipTex[type] : gUnitMapTex[type];
 }
 
-// Apply the combat team recolour (blue art -> green) to a single draw call.
-// Used by the world map so animated infantry match the combat sprites.
-static void beginUnitTint(int type, bool enemy) {
-    if (!gUnitRecolor.id) return;
-    Vector4 tint = enemy ? Vector4{0.42f, 0.95f, 0.52f, 1.0f}
-                         : Vector4{1.0f, 1.0f, 1.0f, 1.0f};
-    float amount = enemy ? 1.0f : 0.0f;
-    SetShaderValue(gUnitRecolor, gUnitTintLoc, &tint, SHADER_UNIFORM_VEC4);
-    SetShaderValue(gUnitRecolor, gUnitAmountLoc, &amount, SHADER_UNIFORM_FLOAT);
-    auto& lut = gUnitLut[type];
-    int n = (int)std::min<size_t>(lut.size(), 16);
-    if (n > 0) {
-        float fromv[48], tov[48];
-        for (int k = 0; k < n; ++k) {
-            fromv[k * 3 + 0] = lut[k].first.x;
-            fromv[k * 3 + 1] = lut[k].first.y;
-            fromv[k * 3 + 2] = lut[k].first.z;
-            tov[k * 3 + 0] = lut[k].second.x;
-            tov[k * 3 + 1] = lut[k].second.y;
-            tov[k * 3 + 2] = lut[k].second.z;
-        }
-        SetShaderValueV(gUnitRecolor, gUnitLutFromLoc, fromv, SHADER_UNIFORM_VEC3, n);
-        SetShaderValueV(gUnitRecolor, gUnitLutToLoc, tov, SHADER_UNIFORM_VEC3, n);
-    }
-    SetShaderValue(gUnitRecolor, gUnitLutCountLoc, &n, SHADER_UNIFORM_INT);
-    BeginShaderMode(gUnitRecolor);
-}
-
-static void endUnitTint() {
-    if (gUnitRecolor.id) EndShaderMode();
-}
-
 static void drawUnitSprite(const Mission& m, const Unit& u, Texture2D playerTex, Texture2D enemyTex) {
     // The bank icons are left-facing side views.  The original map only turns
     // the icon in 45-degree sectors: straight left/right stay horizontal, the
@@ -1116,35 +1084,6 @@ static void drawUnitSprite(const Mission& m, const Unit& u, Texture2D playerTex,
     // raylib subtracts `origin` from the destination, so pass the centre point
     float cx = (u.px >= 0) ? u.px + size / 2 : hx;
     float cy = (u.py >= 0) ? u.py + size / 2 : hy;
-
-    // Infantry walk with the 6-frame directional impostor set.  Each facing
-    // has two walk frames; the phase only advances while the unit is moving,
-    // so a stopped unit keeps whatever frame it reached.
-    bool infantry = u.type >= 0 && u.type < (int)gTypes.size() &&
-                    gTypes[u.type].moveClass == 3;
-    if (infantry && !u.acted && gImpostorAtlas.id &&
-        !gImpostorRects[u.type].empty()) {
-        int sec = ((int)std::lround((u.facing + 90.0f) / 45.0f) % 8 + 8) % 8;
-        static const int second[3] = {3, 2, 5};
-        int base = gImpostorDirs[u.type][sec];
-        int frames = (int)gImpostorRects[u.type].size();
-        int alt = (base >= 0 && base < 3) ? second[base] : base;
-        int step = (int)(u.animT / 0.12f) & 1;
-        int frame = (step && alt < frames) ? alt : base;
-        frame = (frames > 0) ? (frame % frames + frames) % frames : 0;
-        const ImpostorRect& r = gImpostorRects[u.type][frame];
-        float sc = size / (float)std::max(1, std::max(r.w, r.h));
-        float w = r.w * sc, h = r.h * sc;
-        Rectangle src{(float)r.x, (float)r.y, (float)r.w, (float)r.h};
-        if (gImpostorFlips[u.type][sec]) src.width = -(float)r.w;
-        Rectangle dst{cx - w * 0.5f, cy - h * 0.5f, w, h};
-        bool enemy = (u.owner == 1);
-        if (enemy) beginUnitTint(u.type, true);
-        DrawTexturePro(gImpostorAtlas, src, dst, {0, 0}, 0, WHITE);
-        if (enemy) endUnitTint();
-        return;
-    }
-
     Rectangle src{0, 0, (float)tex.width, (float)tex.height};
     Rectangle dst{cx, cy, size, size};
     DrawTexturePro(tex, src, dst, {size / 2, size / 2}, turn[sector], WHITE);
@@ -2220,12 +2159,14 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
             bool autoFlip = false;
             int autoDir = std::min(3, std::max(0, frameCount - 1));
             int dbgSec = -1;
+            float walkT = 0.0f;
             if (!curves.empty()) {
                 const EntryCurve& cv = curves[std::min<int>(i, (int)curves.size() - 1)];
                 slotUv = cv.slot;
                 float local = t - cv.t0;
                 curveAt(cv, local, posUv);
                 settled = (local * speed >= cv.duration);
+                walkT = std::clamp(local * speed, 0.0f, cv.duration);
                 // Use the whole recorded displacement for the facing so the
                 // flip never changes once the unit stops; the per-unit table
                 // maps compass sectors to atlas frames.
@@ -2253,6 +2194,22 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
                 autoDir = 0;
                 autoFlip = mirror;
                 dbgSec = mirror ? 4 : 0;
+            }
+            // Infantry: alternate the two walk frames while the slot is sliding
+            // in.  walkT stops at the arrival time, so a stopped unit keeps the
+            // last frame it reached.
+            if (frameCount > 0 && type >= 0 && type < (int)gTypes.size() &&
+                gTypes[type].moveClass == 3 && !gImpostorSide[type]) {
+                int secWalk = settled ? 0 : dbgSec;
+                if (secWalk < 0) secWalk = 0;
+                int base = gImpostorDirs[type][secWalk] % frameCount;
+                int alt = base;
+                if (base == 0) alt = 3;
+                else if (base == 1) alt = 2;
+                else if (base == 2) alt = 5;
+                if (alt >= frameCount) alt = base;
+                int step = (int)(walkT / 0.12f) & 1;
+                autoDir = step ? alt : base;
             }
             // Perspective/sprite settings are user-editable per slot; a slot
             // edit also shifts the whole recorded path by the same delta.
@@ -4328,11 +4285,6 @@ int main(int argc, char** argv) {
                 u.px += (tx - u.px) * 0.25f;
                 u.py += (ty - u.py) * 0.25f;
             }
-            // Advance the infantry walk cycle only while the sprite is actually
-            // moving; a stopped unit keeps the last frame it reached.
-            if (u.px >= 0 &&
-                (std::fabs(u.px - tx) > 0.5f || std::fabs(u.py - ty) > 0.5f))
-                u.animT += dt;
         }
         for (auto& f : fx) f.t -= dt;
         fx.erase(std::remove_if(fx.begin(), fx.end(),
