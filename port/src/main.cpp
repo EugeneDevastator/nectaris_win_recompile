@@ -2202,7 +2202,7 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
             // unit keeps the last frame it reached.
             if (frameCount > 0 && type >= 0 && type < (int)gTypes.size() &&
                 gTypes[type].moveClass == 3 && !gImpostorSide[type]) {
-                int step = (int)(walkT / 0.12f) & 1;
+                int step = (int)(walkT / 0.18f) & 1;   // 1.5x slower than 0.12 s
                 autoDir = (step && 3 < frameCount) ? 3 : 0;
                 autoFlip = mirror;
             }
