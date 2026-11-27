@@ -572,7 +572,8 @@ static bool captureFactoryAt(Mission& m, Unit& u, int x, int y) {
     return true;
 }
 
-static bool loadMission(const std::string& path) {    json j = loadJson(path);
+static bool loadMission(const std::string& path) {    try {
+    json j = loadJson(path);
     gPanX = gPanY = 0.0f;
     gMapNeedsCenter = true;
     gMission = Mission{};
@@ -584,25 +585,33 @@ static bool loadMission(const std::string& path) {    json j = loadJson(path);
     if (gMission.w <= 0 || gMission.h <= 0) return false;
     gMission.terrain.assign(gMission.w * gMission.h, 1);
     if (j.contains("terrain") && j["terrain"].is_array()) {
-        for (int y = 0; y < gMission.h; ++y)
-            for (int x = 0; x < gMission.w; ++x)
-                gMission.terrain[y * gMission.w + x] =
-                    j["terrain"][y][x].get<int>();
+        const auto& rows = j["terrain"];
+        for (int y = 0; y < gMission.h; ++y) {
+            if (y >= (int)rows.size() || !rows[y].is_array()) continue;
+            const auto& row = rows[y];
+            for (int x = 0; x < gMission.w; ++x) {
+                if (x < (int)row.size() && row[x].is_number_integer())
+                    gMission.terrain[y * gMission.w + x] = row[x].get<int>();
+            }
+        }
     }
-    for (const auto& ju : j["units"]) {
-        Unit u;
-        u.type = ju.value("type", 0);
-        u.owner = ju.value("owner", 0);
-        u.x = ju.value("x", 0);
-        u.y = ju.value("y", 0);
-        u.hp = ju.value("hp", 7);
-        u.facing = ju.value("facing", 90.0f);
-        // XP lives in the original HP byte (bits 3..7); rank is xp / 4.
-        // Mission files may specify either "xp" or the older "rank" tier.
-        u.rank = ju.value("rank", 0);
-        u.xp = ju.value("xp", std::clamp(u.rank, 0, 7) * 4);
-        u.rank = rankFromXp(u.xp, gCombatRules.rankDivisor);
-        gMission.units.push_back(u);
+    if (j.contains("units") && j["units"].is_array()) {
+        for (const auto& ju : j["units"]) {
+            if (!ju.is_object()) continue;
+            Unit u;
+            u.type = ju.value("type", 0);
+            u.owner = ju.value("owner", 0);
+            u.x = ju.value("x", 0);
+            u.y = ju.value("y", 0);
+            u.hp = ju.value("hp", 7);
+            u.facing = ju.value("facing", 90.0f);
+            // XP lives in the original HP byte (bits 3..7); rank is xp / 4.
+            // Mission files may specify either "xp" or the older "rank" tier.
+            u.rank = ju.value("rank", 0);
+            u.xp = ju.value("xp", std::clamp(u.rank, 0, 7) * 4);
+            u.rank = rankFromXp(u.xp, gCombatRules.rankDivisor);
+            gMission.units.push_back(u);
+        }
     }
     if (j.contains("garrison") && j["garrison"].is_array()) {
         for (const auto& ju : j["garrison"]) {
@@ -649,6 +658,11 @@ static bool loadMission(const std::string& path) {    json j = loadJson(path);
     gBackdropDirty = true;
     updateMapGeometry();
     return true;
+    } catch (const std::exception& e) {
+        std::cerr << "[mission] failed to load " << path << ": " << e.what()
+                  << std::endl;
+        return false;
+    }
 }
 
 // ------------------------------------------------------------------ combat
@@ -1051,6 +1065,38 @@ static Texture2D& mapUnitTexture(int type, int owner, bool acted, bool flipped) 
     return flipped ? gUnitMapFlipTex[type] : gUnitMapTex[type];
 }
 
+// Apply the combat team recolour (blue art -> green) to a single draw call.
+// Used by the world map so animated infantry match the combat sprites.
+static void beginUnitTint(int type, bool enemy) {
+    if (!gUnitRecolor.id) return;
+    Vector4 tint = enemy ? Vector4{0.42f, 0.95f, 0.52f, 1.0f}
+                         : Vector4{1.0f, 1.0f, 1.0f, 1.0f};
+    float amount = enemy ? 1.0f : 0.0f;
+    SetShaderValue(gUnitRecolor, gUnitTintLoc, &tint, SHADER_UNIFORM_VEC4);
+    SetShaderValue(gUnitRecolor, gUnitAmountLoc, &amount, SHADER_UNIFORM_FLOAT);
+    auto& lut = gUnitLut[type];
+    int n = (int)std::min<size_t>(lut.size(), 16);
+    if (n > 0) {
+        float fromv[48], tov[48];
+        for (int k = 0; k < n; ++k) {
+            fromv[k * 3 + 0] = lut[k].first.x;
+            fromv[k * 3 + 1] = lut[k].first.y;
+            fromv[k * 3 + 2] = lut[k].first.z;
+            tov[k * 3 + 0] = lut[k].second.x;
+            tov[k * 3 + 1] = lut[k].second.y;
+            tov[k * 3 + 2] = lut[k].second.z;
+        }
+        SetShaderValueV(gUnitRecolor, gUnitLutFromLoc, fromv, SHADER_UNIFORM_VEC3, n);
+        SetShaderValueV(gUnitRecolor, gUnitLutToLoc, tov, SHADER_UNIFORM_VEC3, n);
+    }
+    SetShaderValue(gUnitRecolor, gUnitLutCountLoc, &n, SHADER_UNIFORM_INT);
+    BeginShaderMode(gUnitRecolor);
+}
+
+static void endUnitTint() {
+    if (gUnitRecolor.id) EndShaderMode();
+}
+
 static void drawUnitSprite(const Mission& m, const Unit& u, Texture2D playerTex, Texture2D enemyTex) {
     // The bank icons are left-facing side views.  The original map only turns
     // the icon in 45-degree sectors: straight left/right stay horizontal, the
@@ -1070,6 +1116,35 @@ static void drawUnitSprite(const Mission& m, const Unit& u, Texture2D playerTex,
     // raylib subtracts `origin` from the destination, so pass the centre point
     float cx = (u.px >= 0) ? u.px + size / 2 : hx;
     float cy = (u.py >= 0) ? u.py + size / 2 : hy;
+
+    // Infantry walk with the 6-frame directional impostor set.  Each facing
+    // has two walk frames; the phase only advances while the unit is moving,
+    // so a stopped unit keeps whatever frame it reached.
+    bool infantry = u.type >= 0 && u.type < (int)gTypes.size() &&
+                    gTypes[u.type].moveClass == 3;
+    if (infantry && !u.acted && gImpostorAtlas.id &&
+        !gImpostorRects[u.type].empty()) {
+        int sec = ((int)std::lround((u.facing + 90.0f) / 45.0f) % 8 + 8) % 8;
+        static const int second[3] = {3, 2, 5};
+        int base = gImpostorDirs[u.type][sec];
+        int frames = (int)gImpostorRects[u.type].size();
+        int alt = (base >= 0 && base < 3) ? second[base] : base;
+        int step = (int)(u.animT / 0.12f) & 1;
+        int frame = (step && alt < frames) ? alt : base;
+        frame = (frames > 0) ? (frame % frames + frames) % frames : 0;
+        const ImpostorRect& r = gImpostorRects[u.type][frame];
+        float sc = size / (float)std::max(1, std::max(r.w, r.h));
+        float w = r.w * sc, h = r.h * sc;
+        Rectangle src{(float)r.x, (float)r.y, (float)r.w, (float)r.h};
+        if (gImpostorFlips[u.type][sec]) src.width = -(float)r.w;
+        Rectangle dst{cx - w * 0.5f, cy - h * 0.5f, w, h};
+        bool enemy = (u.owner == 1);
+        if (enemy) beginUnitTint(u.type, true);
+        DrawTexturePro(gImpostorAtlas, src, dst, {0, 0}, 0, WHITE);
+        if (enemy) endUnitTint();
+        return;
+    }
+
     Rectangle src{0, 0, (float)tex.width, (float)tex.height};
     Rectangle dst{cx, cy, size, size};
     DrawTexturePro(tex, src, dst, {size / 2, size / 2}, turn[sector], WHITE);
@@ -4004,28 +4079,32 @@ int main(int argc, char** argv) {
         }
         if (IsKeyPressed(KEY_F1)) debug = !debug;
         if (IsKeyPressed(KEY_N) && !campaign.empty()) {
-            campaignIdx = (campaignIdx + 1) % (int)campaign.size();
-            loadMission(campaign[campaignIdx]);
-            missionPath = campaign[campaignIdx];
-            resetSelection();
-            resetActionModes();
-            resetAiTurn();
-            fx.clear();
-            gCombatQueue.clear();
-            gCv.active = false;
-            currentPlayer = 0;
+            int next = (campaignIdx + 1) % (int)campaign.size();
+            if (loadMission(campaign[next])) {
+                campaignIdx = next;
+                missionPath = campaign[next];
+                resetSelection();
+                resetActionModes();
+                resetAiTurn();
+                fx.clear();
+                gCombatQueue.clear();
+                gCv.active = false;
+                currentPlayer = 0;
+            }
         }
         if (IsKeyPressed(KEY_B) && !campaign.empty()) {
-            campaignIdx = (campaignIdx - 1 + (int)campaign.size()) % (int)campaign.size();
-            loadMission(campaign[campaignIdx]);
-            missionPath = campaign[campaignIdx];
-            resetSelection();
-            resetActionModes();
-            resetAiTurn();
-            fx.clear();
-            gCombatQueue.clear();
-            gCv.active = false;
-            currentPlayer = 0;
+            int next = (campaignIdx - 1 + (int)campaign.size()) % (int)campaign.size();
+            if (loadMission(campaign[next])) {
+                campaignIdx = next;
+                missionPath = campaign[next];
+                resetSelection();
+                resetActionModes();
+                resetAiTurn();
+                fx.clear();
+                gCombatQueue.clear();
+                gCv.active = false;
+                currentPlayer = 0;
+            }
         }
         if (IsKeyPressed(KEY_ESCAPE))
             resetSelection();
@@ -4249,6 +4328,11 @@ int main(int argc, char** argv) {
                 u.px += (tx - u.px) * 0.25f;
                 u.py += (ty - u.py) * 0.25f;
             }
+            // Advance the infantry walk cycle only while the sprite is actually
+            // moving; a stopped unit keeps the last frame it reached.
+            if (u.px >= 0 &&
+                (std::fabs(u.px - tx) > 0.5f || std::fabs(u.py - ty) > 0.5f))
+                u.animT += dt;
         }
         for (auto& f : fx) f.t -= dt;
         fx.erase(std::remove_if(fx.begin(), fx.end(),

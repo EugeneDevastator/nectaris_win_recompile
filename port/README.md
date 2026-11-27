@@ -380,6 +380,10 @@ High-DPI framebuffer scaling is disabled so the window client size and the
 layout coordinate space always match exactly, which keeps the sidebar and map
 frame aligned after a resize.
 
+Infantry units use the six-frame directional impostor set for a two-frame walk
+cycle while they slide between hexes; the phase freezes on the last frame when
+the unit stops. Other unit classes keep the rotated map-icon sprites.
+
 ## Combat screen
 
 Every resolved attack switches to a battle screen modeled on the original:

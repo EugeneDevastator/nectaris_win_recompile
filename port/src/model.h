@@ -35,6 +35,7 @@ struct Unit {
     bool moved = false;     // used its movement this turn (can still attack)
     float px = -1, py = -1; // smoothed pixel position
     float facing = 90;      // map heading: atan2(dy,dx) - 90 (0 = down, 90 = left)
+    float animT = 0.0f;     // walk-cycle phase; only advances while moving
     int xp = 0;             // 0..31 (original: bits 3..7 of the HP byte)
 
     // Transport state.  A transport stores one cargo formation by slot index;
