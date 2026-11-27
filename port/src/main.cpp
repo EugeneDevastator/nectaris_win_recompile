@@ -2918,7 +2918,6 @@ int main(int argc, char** argv) {
     if (unitshot) SetConfigFlags(FLAG_WINDOW_HIDDEN);
     if (backdropshot) SetConfigFlags(FLAG_WINDOW_HIDDEN);
     if (factoryshot) SetConfigFlags(FLAG_WINDOW_HIDDEN);
-    SetConfigFlags(FLAG_WINDOW_HIGHDPI);
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(mapW + panelW, std::max(mapH, 720), "Nectaris - portable");
     SetWindowMinSize(900, 600);

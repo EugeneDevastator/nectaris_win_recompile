@@ -376,6 +376,9 @@ picking all use the same hex geometry.
 The window is freely resizable (minimum 900x600). The right-hand status panel
 keeps the width it had when the mission opened; resizing only grows or shrinks
 the world-map viewport, and the map recentres itself when the viewport changes.
+High-DPI framebuffer scaling is disabled so the window client size and the
+layout coordinate space always match exactly, which keeps the sidebar and map
+frame aligned after a resize.
 
 ## Combat screen
 
