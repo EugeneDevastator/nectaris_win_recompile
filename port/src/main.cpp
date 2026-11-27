@@ -2195,21 +2195,16 @@ static void drawCombatScreen(const CombatView& v, Texture2D playerTex, Texture2D
                 autoFlip = mirror;
                 dbgSec = mirror ? 4 : 0;
             }
-            // Infantry: alternate the two walk frames while the slot is sliding
-            // in.  walkT stops at the arrival time, so a stopped unit keeps the
-            // last frame it reached.
+            // Infantry: alternate the two east-facing walk frames while the
+            // slot is sliding in.  Combat formations always face the enemy, so
+            // the entry path direction is not used here; the right side is
+            // simply mirrored.  walkT stops at the arrival time, so a stopped
+            // unit keeps the last frame it reached.
             if (frameCount > 0 && type >= 0 && type < (int)gTypes.size() &&
                 gTypes[type].moveClass == 3 && !gImpostorSide[type]) {
-                int secWalk = settled ? 0 : dbgSec;
-                if (secWalk < 0) secWalk = 0;
-                int base = gImpostorDirs[type][secWalk] % frameCount;
-                int alt = base;
-                if (base == 0) alt = 3;
-                else if (base == 1) alt = 2;
-                else if (base == 2) alt = 5;
-                if (alt >= frameCount) alt = base;
                 int step = (int)(walkT / 0.12f) & 1;
-                autoDir = step ? alt : base;
+                autoDir = (step && 3 < frameCount) ? 3 : 0;
+                autoFlip = mirror;
             }
             // Perspective/sprite settings are user-editable per slot; a slot
             // edit also shifts the whole recorded path by the same delta.

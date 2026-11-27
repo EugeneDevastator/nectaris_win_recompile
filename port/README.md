@@ -380,8 +380,8 @@ High-DPI framebuffer scaling is disabled so the window client size and the
 layout coordinate space always match exactly, which keeps the sidebar and map
 frame aligned after a resize.
 
-Infantry units use the six-frame directional impostor set for a two-frame walk
-cycle while their combat slot slides in; the phase freezes on the last frame
+Infantry units use the two east-facing walk frames (0 and 3) while their combat
+slot slides in; the right side is mirrored. The phase freezes on the last frame
 when the unit stops. Other unit classes keep their static directional frames.
 
 ## Combat screen
