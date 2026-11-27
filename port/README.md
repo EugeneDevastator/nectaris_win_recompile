@@ -373,6 +373,10 @@ The tactical map is drawn as **flat-top hexagons** (odd-column offset), matching
 the original's `FUN_00403490` adjacency. Movement range, attack range and mouse
 picking all use the same hex geometry.
 
+The window is freely resizable (minimum 900x600). The right-hand status panel
+keeps the width it had when the mission opened; resizing only grows or shrinks
+the world-map viewport, and the map recentres itself when the viewport changes.
+
 ## Combat screen
 
 Every resolved attack switches to a battle screen modeled on the original:

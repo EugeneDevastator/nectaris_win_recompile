@@ -2919,7 +2919,9 @@ int main(int argc, char** argv) {
     if (backdropshot) SetConfigFlags(FLAG_WINDOW_HIDDEN);
     if (factoryshot) SetConfigFlags(FLAG_WINDOW_HIDDEN);
     SetConfigFlags(FLAG_WINDOW_HIGHDPI);
+    SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(mapW + panelW, std::max(mapH, 720), "Nectaris - portable");
+    SetWindowMinSize(900, 600);
     SetExitKey(KEY_NULL);          // ESC is the in-game cancel key, not quit
     SetTargetFPS(60);
     loadUiFont();
@@ -3897,7 +3899,12 @@ int main(int argc, char** argv) {
         // ----- world-map layout, computed before hit-testing so the map
         // viewport can clip the cursor and the art stays centred in its frame.
         const int scrW = GetScreenWidth(), scrH = GetScreenHeight();
-        const int sideW = std::clamp((int)(scrW * 0.33f), 420, 600);
+        // The sidebar keeps the width it had when the mission first opened;
+        // resizing the window only grows/shrinks the world-map viewport.
+        static int sidePanelW = 0;
+        if (sidePanelW <= 0)
+            sidePanelW = std::clamp((int)(scrW * 0.33f), 420, 600);
+        const int sideW = sidePanelW;
         const int mapAreaW = scrW - sideW;
         Rectangle mapFrame{6.0f, 6.0f, (float)(mapAreaW - 12),
                            (float)(scrH - 12)};
